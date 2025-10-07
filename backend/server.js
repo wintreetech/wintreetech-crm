@@ -11,7 +11,7 @@ const app = express();
 
 const allowedOrigins = [
 	"http://localhost:5173", // your frontend dev URL
-	//"https://yourdomain.com", // production frontend URL
+	"https://wintreetech-crm-frontend.onrender.com/", // production frontend URL
 ];
 
 // Applicattion Level Middleware
