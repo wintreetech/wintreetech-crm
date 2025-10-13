@@ -2,32 +2,39 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 
-// Multer storage configuration
+// --- Multer Storage Configuration ---
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
-		const companyName = req.body.companyName;
+		const companyName = req.body.companyName?.trim();
 		if (!companyName) return cb(new Error("Company name is required"));
 
-		// Create folder dynamically: merchant/companyName
+		// 🗂️ Create folder dynamically: merchant/companyName
 		const dir = path.join("merchant", companyName);
 		fs.mkdirSync(dir, { recursive: true });
 		cb(null, dir);
 	},
+
 	filename: function (req, file, cb) {
-		cb(null, file.originalname); // Keep original file name
+		// 🕒 Add timestamp to avoid overwriting files with same name
+		const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+		const safeName = file.originalname.replace(/\s+/g, "_");
+		cb(null, `${uniqueSuffix}-${safeName}`);
 	},
 });
 
-// File filter to allow only PDFs
+// --- File Filter (Accept Anything) ---
 const fileFilter = (req, file, cb) => {
-	if (file.mimetype === "application/pdf") {
-		cb(null, true);
-	} else {
-		cb(new Error("Only PDF files are allowed"), false);
-	}
+	// ✅ Accept all file types
+	cb(null, true);
 };
 
-// Multer upload instance
-const upload = multer({ storage, fileFilter });
+// --- Multer Instance ---
+const upload = multer({
+	storage,
+	fileFilter,
+	limits: {
+		fileSize: 100 * 1024 * 1024, // 100MB limit for safety
+	},
+});
 
 export default upload;

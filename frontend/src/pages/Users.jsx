@@ -8,6 +8,7 @@ import api from "../api";
 
 function User() {
 	const { allUsers, setAllUsers } = useAuthStore();
+	const user = JSON.parse(localStorage.getItem("currentUser"));
 
 	const [currentPage, setCurrentPage] = useState(1);
 	const usersPerPage = 9;
@@ -104,7 +105,7 @@ function User() {
 								<td colSpan={5} className="text-center py-6">
 									Loading users...
 								</td>
-							</tr>
+							</tr> //.filter((value) => value.department === user.department)
 						) : currentUsers.length > 0 ? (
 							currentUsers.map((user) => (
 								<tr key={user._id} className="border-t hover:bg-gray-50">
@@ -137,6 +138,7 @@ function User() {
 			</div>
 
 			{/* Pagination Controls */}
+
 			<div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
 				<button
 					onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}

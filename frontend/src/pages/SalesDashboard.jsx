@@ -192,7 +192,7 @@ function SalesDashboard() {
 									<td className="py-3 px-4">
 										<span
 											className={`px-2 py-1 rounded-full text-xs ${
-												lead.status === "status"
+												lead.status === "Open"
 													? "bg-yellow-100 text-yellow-800"
 													: "bg-red-100 text-red-800"
 											}`}
@@ -203,7 +203,7 @@ function SalesDashboard() {
 									<td className="py-3 px-4">
 										<span
 											className={`px-2 py-1 text-xs ${
-												lead.status === "open"
+												lead.status === "Open"
 													? "bg-yellow-100 text-yellow-800"
 													: "bg-red-100 text-red-800"
 											}`}

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Upload, CheckCircle2 } from "lucide-react";
-import axios from "axios";
+
+import api from "../../api";
 
 const LEAD_STATUSES = [
 	{ key: "under_discussion", label: "Under Discussion", autoDone: true },
@@ -13,6 +14,11 @@ const LEAD_STATUSES = [
 		label: "Integration Initiated",
 		noUpload: true,
 	},
+	{
+		key: "revised_rate",
+		label: "Revised Rate",
+		noUpload: true,
+	},
 ];
 
 function LeadWorkflowModal({ isOpen, onClose, lead, onUpdateStatus }) {
@@ -22,59 +28,59 @@ function LeadWorkflowModal({ isOpen, onClose, lead, onUpdateStatus }) {
 	const [uploadedFiles, setUploadedFiles] = useState({});
 	const [loading, setLoading] = useState(false);
 
-	// ✅ Handle file upload with API call
-	const handleFileChange = async (e, statusKey) => {
-		const file = e.target.files[0];
-		if (!file) return;
+	// // ✅ Handle file upload with API call
+	// const handleFileChange = async (e, statusKey) => {
+	// 	const file = e.target.files[0];
+	// 	if (!file) return;
 
-		try {
-			setLoading(true);
-			const formData = new FormData();
-			formData.append("file", file);
-			formData.append("companyName", lead.companyName);
+	// 	try {
+	// 		setLoading(true);
+	// 		const formData = new FormData();
+	// 		formData.append("file", file);
+	// 		formData.append("companyName", lead.companyName);
 
-			const response = await axios.post(
-				"http://localhost:3939/api/v1/sales/upload",
-				formData,
-				{ headers: { "Content-Type": "multipart/form-data" } }
-			);
+	// 		const response = await api.post(
+	// 			"http://localhost:3939/api/v1/sales/upload",
+	// 			formData,
+	// 			{ headers: { "Content-Type": "multipart/form-data" } }
+	// 		);
 
-			setUploadedFiles((prev) => ({
-				...prev,
-				[statusKey]: file.name,
-			}));
+	// 		setUploadedFiles((prev) => ({
+	// 			...prev,
+	// 			[statusKey]: file.name,
+	// 		}));
 
-			console.log("File uploaded:", response.data);
-		} catch (error) {
-			console.error("Upload error:", error.response?.data || error.message);
-		} finally {
-			setLoading(false);
-		}
-	};
+	// 		console.log("File uploaded:", response.data);
+	// 	} catch (error) {
+	// 		console.error("Upload error:", error.response?.data || error.message);
+	// 	} finally {
+	// 		setLoading(false);
+	// 	}
+	// };
 
-	// ✅ Handle status update with API call
-	const handleStatusClick = async (statusKey) => {
-		try {
-			setLoading(true);
-			const response = await axios.put(
-				`http://localhost:3939/api/v1/sales/${lead._id}`,
-				{
-					substatus: statusKey,
-				}
-			);
+	// // ✅ Handle status update with API call
+	// const handleStatusClick = async (statusKey) => {
+	// 	try {
+	// 		setLoading(true);
+	// 		const response = await axios.put(
+	// 			`http://localhost:3939/api/v1/sales/${lead._id}`,
+	// 			{
+	// 				substatus: statusKey,
+	// 			}
+	// 		);
 
-			setActiveStatus(statusKey);
-			onUpdateStatus?.(statusKey); // Notify parent to refresh leads
-			console.log("Status updated:", response.data);
-		} catch (error) {
-			console.error(
-				"Status update error:",
-				error.response?.data || error.message
-			);
-		} finally {
-			setLoading(false);
-		}
-	};
+	// 		setActiveStatus(statusKey);
+	// 		onUpdateStatus?.(statusKey); // Notify parent to refresh leads
+	// 		console.log("Status updated:", response.data);
+	// 	} catch (error) {
+	// 		console.error(
+	// 			"Status update error:",
+	// 			error.response?.data || error.message
+	// 		);
+	// 	} finally {
+	// 		setLoading(false);
+	// 	}
+	// };
 
 	return (
 		<dialog open={isOpen} className="modal">
@@ -118,6 +124,7 @@ function LeadWorkflowModal({ isOpen, onClose, lead, onUpdateStatus }) {
 											<input
 												type="file"
 												className="hidden"
+												multiple
 												onChange={(e) => handleFileChange(e, status.key)}
 											/>
 											{uploadedFiles[status.key] || "Upload"}

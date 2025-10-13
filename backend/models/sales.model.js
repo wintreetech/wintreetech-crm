@@ -53,6 +53,7 @@ const SalesSchema = new Schema(
 				"Agreement sent",
 				"Agreement Sign",
 				"Integration initiated",
+				"Revised rate",
 			],
 			validate: {
 				validator: function (v) {

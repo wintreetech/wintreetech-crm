@@ -8,18 +8,26 @@ const salesDataSchema = new Schema({
 	},
 	companyData: [
 		{
-			fileName: {
+			subStatus: {
 				type: String,
-				required: true,
+				requird: [true, "subStatus is required"],
 			},
-			fileUrl: {
-				type: String,
-				required: true,
-			},
-			uploadedAt: {
-				type: Date,
-				default: Date.now,
-			},
+			upload: [
+				{
+					fileName: {
+						type: String,
+						required: true,
+					},
+					fileUrl: {
+						type: String,
+						required: true,
+					},
+					uploadedAt: {
+						type: Date,
+						default: Date.now,
+					},
+				},
+			],
 		},
 	],
 });

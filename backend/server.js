@@ -9,10 +9,7 @@ import routes from "./routes/index.js";
 dotenv.config();
 const app = express();
 
-const allowedOrigins = [
-	"http://localhost:5173", // your frontend dev URL
-	//"https://yourdomain.com", // production frontend URL
-];
+const allowedOrigins = ["http://localhost:5174", "http://localhost:5173"];
 
 // Applicattion Level Middleware
 app.use(express.json());
