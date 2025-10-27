@@ -21,18 +21,18 @@ function SalesDashboard() {
 
 	const totalPages = Math.ceil(leads.length / leadsPerPage);
 
+	const fetchLeads = async () => {
+		try {
+			const res = await axios.get("http://localhost:3939/api/v1/sales");
+			setLeads(res.data.data.reverse()); // make sure your API returns { data: [...] }
+		} catch (error) {
+			console.error("Error fetching leads:", error);
+			toast.error("Failed to load leads");
+		}
+	};
+
 	// ✅ Fetch leads when component mounts
 	useEffect(() => {
-		const fetchLeads = async () => {
-			try {
-				const res = await axios.get("http://localhost:3939/api/v1/sales");
-				setLeads(res.data.data.reverse()); // make sure your API returns { data: [...] }
-			} catch (error) {
-				console.error("Error fetching leads:", error);
-				toast.error("Failed to load leads");
-			}
-		};
-
 		fetchLeads();
 	}, []);
 
@@ -64,17 +64,25 @@ function SalesDashboard() {
 		}
 	};
 
-	const handleStatusUpdate = (newStatus) => {
-		console.log(`Lead ${selectedLead?.companyName} status updated:`, newStatus);
-		// Call API to update lead status
-	};
+	const updateLeadStatus = async (leadId, newStatus) => {
+		try {
+			const response = await axios.patch(
+				`http://localhost:3939/api/v1/sales/${leadId}`,
+				{ status: newStatus }
+			);
 
-	const handleDocumentUpload = (statusKey, file) => {
-		console.log(
-			`File uploaded for ${selectedLead?.companyName}, step: ${statusKey}`,
-			file
-		);
-		// Call API to upload document
+			// Update local leads state
+			setLeads((prev) =>
+				prev.map((lead) =>
+					lead._id === leadId ? { ...lead, status: newStatus } : lead
+				)
+			);
+
+			toast.success(`Lead status updated to ${newStatus}`);
+		} catch (error) {
+			console.error("Error updating status:", error);
+			toast.error("Failed to update status");
+		}
 	};
 
 	return (
@@ -136,23 +144,13 @@ function SalesDashboard() {
 
 				{/* Search & Filters */}
 				<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-					<div className="relative w-full md:w-1/2">
+					<div className="relative w-full">
 						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
 						<input
 							type="text"
 							placeholder="Search leads by name or email..."
 							className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
 						/>
-					</div>
-
-					<div className="flex gap-2">
-						<button className="border rounded-lg px-3 py-2 flex items-center gap-2">
-							<Filter className="w-4 h-4" />
-							All Status
-						</button>
-						<button className="border rounded-lg px-3 py-2">
-							Date Created
-						</button>
 					</div>
 				</div>
 
@@ -170,11 +168,14 @@ function SalesDashboard() {
 								<th className="py-2 px-4">Lead Workflow</th>
 								<th className="py-2 px-4 hidden md:table-cell">Value</th>
 								<th className="py-2 px-4 hidden md:table-cell">Created Date</th>
+								<th className="p-3 border-b font-medium hidden sm:table-cell">
+									Actions
+								</th>
 							</tr>
 						</thead>
 						<tbody>
 							{currentLeads.map((lead) => (
-								<tr key={lead.id} className="border-b hover:bg-gray-50">
+								<tr key={lead._id} className="border-b hover:bg-gray-50">
 									<td className="py-3 px-4 font-medium">{lead.companyName}</td>
 									<td className="py-3 px-4 text-gray-600">
 										{lead.companyEmail} <br /> {lead.companyMobileNo}
@@ -232,6 +233,28 @@ function SalesDashboard() {
 											day: "numeric",
 										})}
 									</td>
+									{/* Actions */}
+									<td className="p-3 hidden sm:flex gap-2">
+										{lead.status === "Open" &&
+											lead.subStatus === "Annexture" && (
+												<>
+													<button
+														onClick={() => updateLeadStatus(lead._id, "Active")}
+														className="px-2 py-1 bg-gray-100 rounded text-gray-800 hover:bg-gray-200 transition"
+													>
+														✅
+													</button>
+													<button
+														onClick={() =>
+															updateLeadStatus(lead._id, "Suspended")
+														}
+														className="px-2 py-1 bg-gray-100 rounded text-gray-800 hover:bg-gray-200 transition"
+													>
+														❌
+													</button>
+												</>
+											)}
+									</td>
 								</tr>
 							))}
 						</tbody>
@@ -268,8 +291,6 @@ function SalesDashboard() {
 					isOpen={workflowOpen}
 					onClose={() => setWorkflowOpen(false)}
 					lead={selectedLead}
-					onUpdateStatus={handleStatusUpdate}
-					onUploadDocument={handleDocumentUpload}
 				/>
 			)}
 		</div>

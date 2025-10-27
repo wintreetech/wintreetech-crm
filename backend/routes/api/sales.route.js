@@ -8,6 +8,8 @@ import {
 	deleteSalesLead,
 	getAllSalesLeads,
 	uploadSalesCustomerLeadData,
+	getCompanyDocuments,
+	deleteSalesCustomerLeadData,
 } from "../../controller/sales.controller.js";
 import upload from "../../utils/upload.js";
 
@@ -24,9 +26,16 @@ router.get("/:id", getSalesLead);
 router.put("/:id", updateSalesLead);
 
 // Route to delete a sales lead by ID
-router.delete("/:id", deleteSalesLead);
+router.delete("/lead//:id", deleteSalesLead);
+
+// Delete a document
+router.delete("/document/:id", deleteSalesCustomerLeadData);
 
 // Upload Route
 router.post("/upload", upload.array("file"), uploadSalesCustomerLeadData);
+
+// Fetch all documents for a company
+router.get("/:companyName/:subStatus", getCompanyDocuments);
+router.get("/:companyName", getCompanyDocuments);
 
 export default router;

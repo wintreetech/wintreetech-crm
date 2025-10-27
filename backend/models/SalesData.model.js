@@ -1,37 +1,20 @@
 import { Schema, model } from "mongoose";
 
+const uploadSchema = new Schema({
+	fileName: { type: String, required: true },
+	fileUrl: { type: String, required: true },
+	uploadedAt: { type: Date, default: Date.now },
+});
+
+const companyDataSchema = new Schema({
+	subStatus: { type: String, required: true },
+	upload: [uploadSchema],
+});
+
 const salesDataSchema = new Schema({
-	companyName: {
-		type: String,
-		required: true,
-		trim: true,
-	},
-	companyData: [
-		{
-			subStatus: {
-				type: String,
-				requird: [true, "subStatus is required"],
-			},
-			upload: [
-				{
-					fileName: {
-						type: String,
-						required: true,
-					},
-					fileUrl: {
-						type: String,
-						required: true,
-					},
-					uploadedAt: {
-						type: Date,
-						default: Date.now,
-					},
-				},
-			],
-		},
-	],
+	companyName: { type: String, required: true, trim: true },
+	companyData: [companyDataSchema],
 });
 
 const SalesDataModel = model("SalesData", salesDataSchema);
-
 export default SalesDataModel;

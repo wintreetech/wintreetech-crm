@@ -18,50 +18,20 @@ const SalesSchema = new Schema(
 			required: [true, "Company name is required"],
 			trim: true,
 		},
+		legalName: {
+			type: String,
+			required: [true, "Legal name is required"],
+			trim: true,
+		},
 		companyWebsite: {
 			type: String,
 			required: [true, "Company website is required"],
 			trim: true,
-			match: [
-				/^(https?:\/\/)?([\w\d\-]+\.)+[\w]{2,}(\/.*)?$/,
-				"Please enter a valid URL",
-			],
 		},
-		companyMobileNo: {
+		username: {
 			type: String,
-			required: [true, "Company mobile number is required"],
+			required: [true, "Username or email is required"],
 			trim: true,
-			validate: {
-				validator: function (v) {
-					return /^\d{10}$/.test(v);
-				},
-				message: (props) =>
-					`${props.value} is not a valid 10-digit mobile number`,
-			},
-		},
-		status: {
-			type: String,
-			enum: ["Open", "Active", "Suspended"],
-			default: "Open",
-		},
-		subStatus: {
-			type: String,
-			enum: [
-				"Under Discussion",
-				"Pricing proposal sent",
-				"Docs Review",
-				"Agreement sent",
-				"Agreement Sign",
-				"Integration initiated",
-				"Revised rate",
-			],
-			validate: {
-				validator: function (v) {
-					// Only allow subStatus if status is Open
-					return this.status === "Open" ? !!v : v === undefined || v === null;
-				},
-				message: "SubStatus is only allowed when status is 'Open'",
-			},
 		},
 		companyEmail: {
 			type: String,
@@ -75,6 +45,29 @@ const SalesSchema = new Schema(
 				"Please enter a valid email",
 			],
 		},
+		status: {
+			type: String,
+			enum: ["Open", "Active", "Suspended"],
+			default: "Open",
+		},
+		subStatus: {
+			type: String,
+			enum: [
+				"Under Discussion",
+				"Pricing Proposal",
+				"KYC Docs",
+				"Upload Contract",
+				"Signed Contract & Complete",
+				"Annexture",
+			],
+			default: "Under Discussion",
+			validate: {
+				validator: function (v) {
+					return this.status === "Open" ? !!v : v === undefined || v === null;
+				},
+				message: "SubStatus is only allowed when status is 'Open'",
+			},
+		},
 		monthlyDealSize: {
 			type: Number,
 			default: 0,
@@ -83,12 +76,10 @@ const SalesSchema = new Schema(
 		dealOwner: {
 			type: String,
 			trim: true,
-			required: true,
 		},
 		contactName: {
 			type: String,
 			trim: true,
-			required: true,
 		},
 		companyNotes: {
 			type: String,

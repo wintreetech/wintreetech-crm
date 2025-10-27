@@ -10,15 +10,23 @@ function User() {
 	const { allUsers, setAllUsers } = useAuthStore();
 	const user = JSON.parse(localStorage.getItem("currentUser"));
 
+	let visibleUsers = allUsers;
+
+	if (user?.role === "admin") {
+		visibleUsers = allUsers.filter(
+			(u) => u.department && u.department === user.department
+		);
+	}
+
 	const [currentPage, setCurrentPage] = useState(1);
 	const usersPerPage = 9;
 	const [registerModalOpen, setRegisterModalOpen] = useState(false);
 
 	// Pagination
-	const totalPages = Math.ceil(allUsers.length / usersPerPage);
+	const totalPages = Math.ceil(visibleUsers.length / usersPerPage);
 	const indexOfLastUser = currentPage * usersPerPage;
 	const indexOfFirstUser = indexOfLastUser - usersPerPage;
-	const currentUsers = allUsers.slice(indexOfFirstUser, indexOfLastUser);
+	const currentUsers = visibleUsers.slice(indexOfFirstUser, indexOfLastUser);
 	const [loading, setLoading] = useState(false);
 
 	const fetchUsers = async () => {

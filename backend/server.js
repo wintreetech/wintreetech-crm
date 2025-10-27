@@ -5,14 +5,19 @@ import cookieParser from "cookie-parser";
 import dbConnection from "./dbConnection/dbConnection.js";
 import { keys } from "./utils/keys.js";
 import routes from "./routes/index.js";
+import { fileURLToPath } from "url";
+import path from "path";
 
 dotenv.config();
-const app = express();
 
+const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const allowedOrigins = ["http://localhost:5174", "http://localhost:5173"];
 
 // Applicattion Level Middleware
 app.use(express.json());
+
 app.use(
 	cors({
 		origin: function (origin, callback) {
@@ -31,6 +36,14 @@ app.use(
 );
 app.use(cookieParser());
 app.use(routes);
+
+// Serve uploaded files
+app.use("/merchant", express.static(path.join(__dirname, "merchant")));
+
+// Optional: default fallback
+app.use((req, res) => {
+	res.status(404).json({ message: "Route not found" });
+});
 
 const { port } = keys;
 app.listen(port, () => {

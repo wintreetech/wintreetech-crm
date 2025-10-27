@@ -1,13 +1,14 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 function LeadModal({ isOpen, onClose, onSubmit }) {
 	const initialFormData = {
 		leadSource: "",
-		companyName: "",
-		companyWebsite: "",
-		companyMobileNo: "",
-		companyEmail: "",
 		partner: "",
+		companyName: "",
+		legalName: "",
+		companyWebsite: "",
+		username: "",
+		companyEmail: "",
 		status: "Open",
 		subStatus: "Under Discussion",
 		monthlyDealSize: "",
@@ -19,16 +20,19 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 
 	const [formData, setFormData] = useState(initialFormData);
 
-	// Handle input change
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({ ...prev, [name]: value }));
 	};
 
-	// Handle submit
-	const handleSubmit = async (e) => {
+	const handleSubmit = (e) => {
 		e.preventDefault();
-		onSubmit(formData);
+		const submissionData = {
+			...formData,
+			status: "Open",
+			subStatus: "Under Discussion",
+		};
+		onSubmit(submissionData);
 		onClose();
 		setFormData(initialFormData);
 	};
@@ -36,11 +40,10 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 	return (
 		<dialog open={isOpen} className="modal modal-bottom sm:modal-middle">
 			<div className="modal-box w-11/12 max-w-3xl">
-				<h3 className="font-bold text-xl mb-4">Add Lead</h3>
+				<h3 className="font-bold text-xl mb-6 text-center">Add Lead</h3>
 
-				<form onSubmit={handleSubmit} className="space-y-4">
-					{/* Grid Layout for Inputs */}
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<form onSubmit={handleSubmit} className="space-y-5">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 						{/* Lead Source */}
 						<div>
 							<label className="block text-sm font-medium mb-1">
@@ -60,9 +63,10 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 								<option value="Social Media">Social Media</option>
 							</select>
 						</div>
+
 						{/* Partner */}
 						<div>
-							<label className="block text-sm font-medium mb-1">Partners</label>
+							<label className="block text-sm font-medium mb-1">Partner</label>
 							<select
 								name="partner"
 								value={formData.partner}
@@ -79,12 +83,27 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 						{/* Company Name */}
 						<div>
 							<label className="block text-sm font-medium mb-1">
-								Company Name
+								Company Name (DBA)
 							</label>
 							<input
 								type="text"
 								name="companyName"
 								value={formData.companyName}
+								onChange={handleChange}
+								className="input input-bordered w-full"
+								required
+							/>
+						</div>
+
+						{/* Legal Name */}
+						<div>
+							<label className="block text-sm font-medium mb-1">
+								Legal Name
+							</label>
+							<input
+								type="text"
+								name="legalName"
+								value={formData.legalName}
 								onChange={handleChange}
 								className="input input-bordered w-full"
 								required
@@ -101,21 +120,23 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 								name="companyWebsite"
 								value={formData.companyWebsite}
 								onChange={handleChange}
+								placeholder="https://example.com"
 								className="input input-bordered w-full"
 								required
 							/>
 						</div>
 
-						{/* Company Mobile Number */}
+						{/* Username or Email */}
 						<div>
 							<label className="block text-sm font-medium mb-1">
-								Company Mobile Number
+								Username or Email
 							</label>
 							<input
-								type="tel"
-								name="companyMobileNo"
-								value={formData.companyMobileNo}
+								type="text"
+								name="username"
+								value={formData.username}
 								onChange={handleChange}
+								placeholder="Enter username or email"
 								className="input input-bordered w-full"
 								required
 							/>
@@ -131,51 +152,11 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 								name="companyEmail"
 								value={formData.companyEmail}
 								onChange={handleChange}
+								placeholder="contact@company.com"
 								className="input input-bordered w-full"
 								required
 							/>
 						</div>
-
-						{/* Status */}
-						{/* <div>
-							<label className="block text-sm font-medium mb-1">Status</label>
-							<select
-								name="status"
-								value={formData.status}
-								onChange={handleChange}
-								className="select select-bordered w-full"
-							>
-								<option value="Open">Open</option>
-								<option value="Active">Active</option>
-								<option value="Suspended">Suspended</option>
-							</select>
-						</div> */}
-
-						{/* SubStatus (Only if Open) */}
-						{/* {formData.status === "Open" && (
-							<div>
-								<label className="block text-sm font-medium mb-1">
-									Sub-Status
-								</label>
-								<select
-									name="subStatus"
-									value={formData.subStatus}
-									onChange={handleChange}
-									className="select select-bordered w-full"
-								>
-									<option value="Under Discussion">Under Discussion</option>
-									<option value="Pricing proposal sent">
-										Pricing proposal sent
-									</option>
-									<option value="Docs Review">Docs Review</option>
-									<option value="Agreement sent">Agreement sent</option>
-									<option value="Agreement Sign">Agreement Sign</option>
-									<option value="Integration initiated">
-										Integration initiated
-									</option>
-								</select>
-							</div>
-						)} */}
 
 						{/* Monthly Deal Size */}
 						<div>
@@ -187,6 +168,7 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 								name="monthlyDealSize"
 								value={formData.monthlyDealSize}
 								onChange={handleChange}
+								placeholder="Enter deal size in USD"
 								className="input input-bordered w-full"
 							/>
 						</div>
@@ -201,20 +183,22 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 								name="dealOwner"
 								value={formData.dealOwner}
 								onChange={handleChange}
+								placeholder="Enter deal owner's name"
 								className="input input-bordered w-full"
 							/>
 						</div>
 
-						{/* Name of the contact */}
+						{/* Contact Name */}
 						<div>
 							<label className="block text-sm font-medium mb-1">
-								Name of the Contact
+								Contact Name
 							</label>
 							<input
 								type="text"
 								name="contactName"
 								value={formData.contactName}
 								onChange={handleChange}
+								placeholder="Enter primary contact"
 								className="input input-bordered w-full"
 							/>
 						</div>
@@ -228,6 +212,7 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 								name="companyNotes"
 								value={formData.companyNotes}
 								onChange={handleChange}
+								placeholder="Enter notes about the company"
 								className="textarea textarea-bordered w-full"
 							/>
 						</div>
@@ -241,13 +226,14 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 								name="remarks"
 								value={formData.remarks}
 								onChange={handleChange}
+								placeholder="Any additional remarks"
 								className="textarea textarea-bordered w-full"
 							/>
 						</div>
 					</div>
 
 					{/* Actions */}
-					<div className="modal-action">
+					<div className="modal-action justify-end">
 						<button type="button" className="btn" onClick={onClose}>
 							Cancel
 						</button>
