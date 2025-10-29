@@ -2,14 +2,14 @@ import express from "express";
 const router = express.Router();
 
 import {
-	createSalesLead,
-	getSalesLead,
-	updateSalesLead,
-	deleteSalesLead,
-	getAllSalesLeads,
-	uploadSalesCustomerLeadData,
-	getCompanyDocuments,
-	deleteSalesCustomerLeadData,
+  createSalesLead,
+  getSalesLead,
+  updateSalesLead,
+  deleteSalesLead,
+  getAllSalesLeads,
+  uploadSalesCustomerLeadData,
+  getCompanyDocuments,
+  deleteSalesCustomerLeadData,
 } from "../../controller/sales.controller.js";
 import upload from "../../utils/upload.js";
 
@@ -26,7 +26,7 @@ router.get("/:id", getSalesLead);
 router.put("/:id", updateSalesLead);
 
 // Route to delete a sales lead by ID
-router.delete("/lead//:id", deleteSalesLead);
+router.delete("/lead/:id", deleteSalesLead);
 
 // Delete a document
 router.delete("/document/:id", deleteSalesCustomerLeadData);
