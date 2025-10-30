@@ -1,6 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-function LeadModal({ isOpen, onClose, onSubmit }) {
+function LeadModal({
+  isLoading,
+  isOpen,
+  onClose,
+  onSubmit,
+  initialData = null,
+  mode = "create",
+}) {
   const initialFormData = {
     leadSource: "",
     partner: "",
@@ -20,21 +27,38 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
 
   const [formData, setFormData] = useState(initialFormData);
 
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setFormData({ ...initialFormData, ...initialData });
+    } else {
+      setFormData(initialFormData);
+    }
+  }, [isOpen, initialData]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const submissionData = {
-      ...formData,
-      status: "Open",
-      subStatus: "Under Discussion",
-    };
-    onSubmit(submissionData);
+
+    const payload =
+      mode === "create"
+        ? {
+            ...formData,
+            status: formData.status || "Open",
+            subStatus: formData.subStatus || "Under Discussion",
+          }
+        : { ...formData }; // don't overwrite status/subStatus in edit unless user changed
+
+    await onSubmit(payload);
+
+    // Close & reset locally
     onClose();
     setFormData(initialFormData);
+
+    if (!isOpen) return null;
   };
 
   return (
@@ -237,8 +261,19 @@ function LeadModal({ isOpen, onClose, onSubmit }) {
             <button type="button" className="btn" onClick={onClose}>
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              Save Lead
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={isLoading}
+            >
+              {isLoading
+                ? mode === "edit"
+                  ? "Updating..."
+                  : "Saving..."
+                : mode === "edit"
+                ? "Update Lead"
+                : "Save Lead"}
             </button>
           </div>
         </form>

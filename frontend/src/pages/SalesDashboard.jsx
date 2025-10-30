@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Filter, Check, X } from "lucide-react";
+import { Plus, Search, Filter, Pen, Check, X } from "lucide-react";
 import LeadModal from "../component/Sales/LeadModal";
 import LeadWorkflowModal from "../component/Sales/LeadWorkflowModal";
 import axios from "axios";
@@ -11,6 +11,7 @@ import {
   selectLeads,
   selectSalesLoading,
 } from "../store/slices/Sales.slice";
+import { updateLead } from "../store/thunks/sales.thunks";
 
 function SalesDashboard() {
   const dispatch = useDispatch();
@@ -25,6 +26,8 @@ function SalesDashboard() {
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [avatarOpen, setAvatarOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingLead, setEditingLead] = useState(null);
 
   // Fetch leads on mount
   useEffect(() => {
@@ -69,6 +72,28 @@ function SalesDashboard() {
     }
   };
 
+  const handleLeadUpdate = async (payload) => {
+    const id = payload._id;
+
+    if (!id) {
+      toast.error("Missing lead id");
+      return;
+    }
+
+    try {
+      const { message } = await dispatch(
+        updateLead({ id, data: payload })
+      ).unwrap();
+      toast.success(message || "Lead updated");
+      setEditOpen(false);
+      setEditingLead(null);
+    } catch (err) {
+      toast.error(
+        typeof err === "string" ? err : err?.message || "Update failed"
+      );
+    }
+  };
+
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
       {/* Add Lead Button */}
@@ -80,12 +105,27 @@ function SalesDashboard() {
           <Plus className="w-4 h-4" />
           Add Lead
         </button>
-
+        {/* Create */}
         <LeadModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
           onSubmit={handleLeadSubmit}
         />
+
+        {/* Edit Lead Modal */}
+        {editingLead && (
+          <LeadModal
+            isLoading={loading}
+            isOpen={editOpen}
+            onClose={() => {
+              setEditOpen(false);
+              setEditingLead(null);
+            }}
+            onSubmit={handleLeadUpdate}
+            initialData={editingLead}
+            mode="edit"
+          />
+        )}
       </div>
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -152,9 +192,7 @@ function SalesDashboard() {
                 <th className="py-2 px-4">Lead Workflow</th>
                 <th className="py-2 px-4 hidden md:table-cell">Value</th>
                 <th className="py-2 px-4 hidden md:table-cell">Created Date</th>
-                <th className="p-3 border-b font-medium hidden sm:table-cell">
-                  Actions
-                </th>
+                <th className="py-2 px-4 hidden sm:table-cell">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -216,6 +254,19 @@ function SalesDashboard() {
                       month: "short",
                       day: "numeric",
                     })}
+                  </td>
+                  <td className="py-3 px-4 hidden md:table-cell">
+                    <button
+                      onClick={() => {
+                        setEditingLead(lead); // prefill from store
+                        setEditOpen(true);
+                      }}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150"
+                      title="Edit Lead"
+                      aria-label="Edit Lead"
+                    >
+                      <Pen className="w-4 h-4" />
+                    </button>
                   </td>
                   {/* Actions */}
                   <td className="p-3 hidden sm:flex gap-2">

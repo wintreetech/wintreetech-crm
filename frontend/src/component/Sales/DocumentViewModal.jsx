@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Download,
-  Trash,
-  UploadCloud,
-  X,
-  FileText,
-  Folders,
-  Loader2,
-} from "lucide-react";
+import { Download, Trash, X, FileText, Folders, Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -77,16 +69,12 @@ function DocumentViewModal({
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Phase: {title}
               </p>
-              {error ? (
+              {/* {error ? (
                 <p className="text-xs text-red-500 mt-1">{error}</p>
-              ) : null}
+              ) : null} */}
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
-              <UploadCloud className="w-4 h-4" />
-              Upload
-            </button>
             <button
               onClick={onViewDocumentClose}
               className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors"

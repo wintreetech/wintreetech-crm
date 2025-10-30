@@ -30,39 +30,6 @@ const getSalesLead = async (req, res) => {
   }
 };
 
-// Update a sales lead by ID
-// const updateSalesLead = async (req, res) => {
-// 	try {
-// 		const { id: _id } = req.params;
-
-// 		const lead = await SalesModel.findById({ _id });
-
-// 		if (!lead) {
-// 			return res.status(404).json({
-// 				success: false,
-// 				message: "sales lead not found",
-// 			});
-// 		}
-
-// 		// If you want to enforce that only "Open" leads can change subStatus:
-// 		// Allow subStatus change for any status
-// 		if (req.body.subStatus) {
-// 			lead.subStatus = req.body.subStatus;
-// 		}
-
-// 		if (req.body.subStatus && lead.status !== "Open") {
-// 			console.warn("Updating subStatus while status is not Open");
-// 		}
-
-// 		Object.assign(lead, req.body);
-// 		const updatedLead = await lead.save();
-
-// 		res.status(200).json({ success: true, data: updatedLead });
-// 	} catch (error) {
-// 		res.status(400).json({ success: false, error: error.message });
-// 	}
-// };
-
 const updateSalesLead = async (req, res) => {
   try {
     const { id: _id } = req.params;

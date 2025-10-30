@@ -124,3 +124,21 @@ export const deleteDocument = createAsyncThunk(
 );
 
 // ------- Documents ops end -------
+
+// ------- Lead ops start -------
+export const updateLead = createAsyncThunk(
+  "sales/updateLead",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const res = await api.put(`/sales/${id}`, data);
+      return {
+        lead: res.data?.data, // updated lead from backend
+        message: res.data?.message || "Lead updated",
+      };
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || err?.message || "Failed to update lead"
+      );
+    }
+  }
+);

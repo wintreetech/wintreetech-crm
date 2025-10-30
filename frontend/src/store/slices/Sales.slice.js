@@ -5,6 +5,7 @@ import {
   deleteDocument,
   docKey,
   uploadDocuments,
+  updateLead,
 } from "../thunks/sales.thunks";
 
 // empty bucket for the document data fallback
@@ -134,6 +135,26 @@ const salesSlice = createSlice({
       .addCase(createLead.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // update lead
+      .addCase(updateLead.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateLead.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload?.lead;
+        if (!updated?._id) return;
+        const idx = state.list.findIndex((l) => l._id === updated._id);
+        if (idx !== -1) state.list[idx] = { ...state.list[idx], ...updated };
+        else state.list.unshift(updated);
+      })
+      .addCase(updateLead.rejected, (state, action) => {
+        state.loading = false;
+        console.error("error in the update lead", action.error);
+        state.error =
+          action.payload || action.error?.message || "Failed to update lead";
       })
 
       // updateLeadStatus
