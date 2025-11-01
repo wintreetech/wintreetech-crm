@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 function LeadModal({
   isLoading,
@@ -43,6 +44,10 @@ function LeadModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (formData.monthlyDealSize < 0) {
+      toast.error("Monthly deal size should not be negative");
+    }
+
     const payload =
       mode === "create"
         ? {
@@ -64,7 +69,9 @@ function LeadModal({
   return (
     <dialog open={isOpen} className="modal modal-bottom sm:modal-middle">
       <div className="modal-box w-11/12 max-w-3xl">
-        <h3 className="font-bold text-xl mb-6 text-center">Add Lead</h3>
+        <h3 className="font-bold text-xl mb-6 text-center">
+          {mode === "edit" ? "Edit" : "Add"} Lead
+        </h3>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -194,6 +201,7 @@ function LeadModal({
                 onChange={handleChange}
                 placeholder="Enter deal size in USD"
                 className="input input-bordered w-full"
+                min={0}
               />
             </div>
 

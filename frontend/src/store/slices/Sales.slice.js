@@ -16,6 +16,7 @@ export const EMPTY_BUCKET = Object.freeze({
 });
 
 // Thunks
+// Get all existing leads
 export const fetchLeads = createAsyncThunk(
   "sales/fetchLeads",
   async (_, { rejectWithValue }) => {
@@ -30,6 +31,7 @@ export const fetchLeads = createAsyncThunk(
   }
 );
 
+// Create a fresh new lead
 export const createLead = createAsyncThunk(
   "sales/createLead",
   async (payload, { rejectWithValue }) => {
@@ -52,11 +54,12 @@ export const createLead = createAsyncThunk(
   }
 );
 
+// updates the lead status and subStatus
 export const updateLeadStatus = createAsyncThunk(
   "sales/updateLeadStatus",
   async ({ id, status }, { rejectWithValue }) => {
     try {
-      const res = await api.patch(`sales/${id}`, { status });
+      const res = await api.put(`/sales/${id}`, { subStatus: status });
       return {
         lead: res.data?.data,
         message: res.data?.message || "Status updated",
@@ -69,6 +72,7 @@ export const updateLeadStatus = createAsyncThunk(
   }
 );
 
+// Delete an existing lead
 const deleteLead = createAsyncThunk(
   "sales/deleteLead",
   async (id, { rejectWithValue }) => {
@@ -181,14 +185,14 @@ const salesSlice = createSlice({
         s.documents[key].error = null;
       })
       .addCase(uploadDocuments.fulfilled, (s, a) => {
-        const { key, docs, leadId, newSubStatus } = a.payload;
+        const { key, docs, leadId, subStatus } = a.payload;
         s.documents[key] = { items: docs, loading: false, error: null };
 
         // Upsert the lead so the UI shows the updated status/subStatus immediately
-        if (leadId && newSubStatus) {
+        if (leadId && subStatus) {
           const idx = s.list.findIndex((l) => l._id === leadId);
           if (idx >= 0) {
-            s.list[idx] = { ...s.list[idx], subStatus: newSubStatus };
+            s.list[idx] = { ...s.list[idx], subStatus };
           }
         }
       })

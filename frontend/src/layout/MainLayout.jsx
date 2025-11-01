@@ -11,8 +11,8 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useDispatch } from "react-redux";
-import { logout } from "../store/slices/Auth.slice.js";
+import { useDispatch, useSelector } from "react-redux";
+import { logout, selectCurrentUser } from "../store/slices/Auth.slice.js";
 
 function MainLayout() {
   const dispatch = useDispatch();
@@ -22,8 +22,7 @@ function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [avatarOpen, setAvatarOpen] = useState(false);
 
-  const storedUser = localStorage.getItem("currentUser");
-  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+  const currentUser = useSelector(selectCurrentUser);
 
   const showSidebar =
     currentUser.role === "superadmin" || currentUser.role === "admin";
@@ -38,6 +37,7 @@ function MainLayout() {
     navigate("/login");
     toast.success("Logout Successfully");
   };
+
   const formatTitle = (path, user) => {
     // root
     if (path === "/") return "Home Dashboard";
@@ -125,13 +125,7 @@ function MainLayout() {
         <div>
           <h1 className="text-xl font-semibold leading-tight">{pageTitle}</h1>
           <p className="text-gray-400 text-xs">
-            Welcome back,{" "}
-            {currentUser.username.charAt(0).toUpperCase() +
-              currentUser.username.slice(1)}{" "}
             (
-            {currentUser.role.charAt(0).toUpperCase() +
-              currentUser.role.slice(1)}
-            ) (
             {currentUser.department.charAt(0).toUpperCase() +
               currentUser.department.slice(1)}
             )
@@ -139,13 +133,21 @@ function MainLayout() {
         </div>
 
         {/* Right: Avatar Dropdown */}
-        <div className="relative flex">
-          <button
-            onClick={() => setAvatarOpen(!avatarOpen)}
-            className="bg-white text-black w-10 h-10 rounded-full  flex items-center justify-center text-[18px] font-semibold shadow-lg hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
-          >
-            {currentUser?.username.charAt(0).toUpperCase()}
-          </button>
+        <div className="relative">
+          <div className="flex items-center space-x-4">
+            <div className="flex flex-col justify-end items-end">
+              <p className="text-lg font-semibold text-white capitalize">
+                hi, {currentUser?.username}
+              </p>
+              <p className="text-sm text-gray-300">{currentUser?.role}</p>
+            </div>
+            <button
+              onClick={() => setAvatarOpen(!avatarOpen)}
+              className="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center text-[18px] font-semibold shadow-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+            >
+              {currentUser?.username.charAt(0).toUpperCase()}
+            </button>
+          </div>
 
           {avatarOpen && (
             <ul className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl p-2 z-50 text-sm border border-gray-200">

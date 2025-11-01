@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Pen } from "lucide-react";
 import toast from "react-hot-toast";
 import RegisterModal from "../component/RegisterModal";
 import api from "../api";
@@ -10,6 +10,7 @@ import {
   registerUser,
   selectAllUsers,
   selectUsersLoading,
+  updateUser,
 } from "../store/slices/Users.slice";
 
 function User() {
@@ -20,11 +21,19 @@ function User() {
   const allUsers = useSelector(selectAllUsers);
   const loading = useSelector(selectUsersLoading);
 
+  // Role based permission
+  const hasPermission =
+    currentUser?.role === "admin" || currentUser?.role === "superadmin";
+
   // Local UI state
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 9;
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [search, setSearch] = useState("");
+
+  // for edit modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   // Fetch all users on mount
   useEffect(() => {
@@ -74,6 +83,26 @@ function User() {
     }
   };
 
+  // Edit and update existing user
+  const handleUpdate = async (formData) => {
+    try {
+      if (!formData?._id) {
+        toast.error("Missing user id");
+        return;
+      }
+
+      const { message } = await dispatch(
+        updateUser({ id: formData._id, data: formData })
+      ).unwrap();
+
+      toast.success(message || "User updated");
+      setEditOpen(false);
+      setEditingUser(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Keep page in range if filtering shrinks the list
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
@@ -101,6 +130,20 @@ function User() {
         onClose={() => setRegisterModalOpen(false)}
         onSubmit={handleUserSubmit}
       />
+
+      {/* Edit User Modal (reuse RegisterModal) */}
+      {editOpen && editingUser && (
+        <RegisterModal
+          isOpen={editOpen}
+          onClose={() => {
+            setEditOpen(false);
+            setEditingUser(null);
+          }}
+          onSubmit={handleUpdate}
+          initialData={editingUser} // <-- prefill
+          mode="edit" // <-- let modal switch labels/behavior
+        />
+      )}
 
       {/* Search */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
@@ -132,6 +175,7 @@ function User() {
               <th className="py-2 px-4">Role</th>
               <th className="py-2 px-4">Department</th>
               <th className="py-2 px-4">Created At</th>
+              {hasPermission && <th className="py-2 px-4">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -144,9 +188,21 @@ function User() {
             ) : currentUsers.length > 0 ? (
               currentUsers.map((user) => (
                 <tr key={user._id} className="border-t hover:bg-gray-50">
-                  <td className="py-3 px-4">{user.username}</td>
+                  <td className="py-3 px-4 capitalize">{user.username}</td>
                   <td className="py-3 px-4">{user.email}</td>
-                  <td className="py-3 px-4 capitalize">{user.role}</td>
+                  <td className="py-3 px-4 capitalize">
+                    <span
+                      className={`px-2 capitalize rounded-xl text-black ${
+                        {
+                          admin: "bg-indigo-100 text-indigo-600",
+                          superadmin: "bg-yellow-100 text-yellow-600",
+                          user: "bg-emerald-100 text-emerald-600",
+                        }[user.role?.toLowerCase()] || "bg-gray-400"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                  </td>
                   <td className="py-3 px-4">
                     <span
                       className={`px-2 capitalize rounded-xl text-black ${
@@ -172,6 +228,22 @@ function User() {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
+                  </td>
+                  {/* Edit */}
+                  <td className="py-3 px-4 flex justify-center">
+                    {hasPermission && (
+                      <button
+                        onClick={() => {
+                          setEditingUser(user); // prefill from store
+                          setEditOpen(true);
+                        }}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150"
+                        title="Edit User"
+                        aria-label="Edit User"
+                      >
+                        <Pen className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

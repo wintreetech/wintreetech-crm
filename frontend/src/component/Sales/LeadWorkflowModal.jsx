@@ -6,6 +6,7 @@ import {
   Files,
   Signature,
   Workflow,
+  X,
 } from "lucide-react";
 
 const workflowPhases = [
@@ -62,7 +63,7 @@ function LeadWorkflowModal({ isOpen, onClose, lead }) {
           onClick={onClose}
           className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
         >
-          ✕
+          <X />
         </button>
       </div>
     </dialog>

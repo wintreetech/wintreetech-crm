@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { selectDocumentsBucket } from "../../store/slices/Sales.slice";
 import { uploadDocuments } from "../../store/thunks/sales.thunks";
+import { selectCurrentUser } from "../../store/slices/Auth.slice";
 
 function UploadModal({
   title,
@@ -14,6 +15,8 @@ function UploadModal({
 }) {
   const dispatch = useDispatch();
   const [files, setFiles] = useState([]);
+
+  const currentUser = useSelector(selectCurrentUser);
 
   // Use bucket-level loading from Redux (same key the docs view uses)
   const bucket = useSelector((state) =>
@@ -39,6 +42,7 @@ function UploadModal({
           companyName: lead.companyName,
           subStatus: title,
           leadId: lead._id,
+          uploadedBy: currentUser.username,
         })
       ).unwrap();
 

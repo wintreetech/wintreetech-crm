@@ -85,11 +85,11 @@ const getAllSalesLeads = async (req, res) => {
 // Upload Document
 const uploadSalesCustomerLeadData = async (req, res) => {
   try {
-    const { companyName, subStatus } = req.body;
+    const { companyName, subStatus, uploadedBy } = req.body;
 
-    if (!companyName || !subStatus) {
+    if (!companyName || !subStatus || !uploadedBy) {
       return res.status(400).json({
-        error: "Company name and subStatus are required",
+        error: "Required fields are missing",
       });
     }
 
@@ -113,6 +113,7 @@ const uploadSalesCustomerLeadData = async (req, res) => {
         )}/merchant/${encodeURIComponent(companyName)}/${encodeURIComponent(
           subStatus
         )}/${encodeURIComponent(file.filename)}`,
+        uploadedBy,
         uploadedAt: new Date(),
       };
     });

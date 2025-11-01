@@ -34,6 +34,23 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+export const updateUser = createAsyncThunk(
+  "users/update",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const res = await api.put(`/auth/${id}`, data);
+      return {
+        user: res.data?.data,
+        message: res.data?.message || "User updated",
+      };
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || err?.message || "Failed to update user"
+      );
+    }
+  }
+);
+
 // State
 const initialState = {
   list: [],
@@ -85,6 +102,27 @@ const usersSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // updateUser
+      .addCase(updateUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload?.user;
+        if (!updated?.id) return;
+
+        const idx = state.list.findIndex((u) => u._id === updated.id);
+        if (idx !== -1) {
+          state.list[idx] = { ...state.list[idx], ...updated };
+        }
+      })
+      .addCase(updateUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload || action.error?.message || "Failed to update user";
       });
   },
 });

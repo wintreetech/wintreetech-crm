@@ -95,41 +95,52 @@ function DocumentViewModal({
               No documents found for this phase.
             </p>
           ) : (
-            documents.map((doc, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <FileText className="w-6 h-6 text-primary" />
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {doc.fileName}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Uploaded By Shubham Makwana On{" "}
-                      {new Date(doc.uploadedAt).toLocaleDateString()}
-                    </p>
+            documents.map((doc, idx) => {
+              const uploadedAt = new Date(doc.uploadedAt);
+              const formattedDate = uploadedAt.toLocaleDateString("en-GB");
+
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-lg p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-6 h-6 text-primary" />
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {doc.fileName}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Uploaded By{" "}
+                        <span className="font-bold capitalize">
+                          {doc.uploadedBy}
+                        </span>{" "}
+                        on{" "}
+                        <span className="font-bold capitalize">
+                          {formattedDate}
+                        </span>{" "}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={doc.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+                    >
+                      <Download className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+                    </a>
+                    <button
+                      onClick={() => handleDeleteDocument(doc._id)}
+                      className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
+                    >
+                      <Trash className="w-5 h-5 text-red-500 dark:text-red-400" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={doc.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-lg hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
-                  >
-                    <Download className="w-5 h-5 text-gray-700 dark:text-gray-200" />
-                  </a>
-                  <button
-                    onClick={() => handleDeleteDocument(doc._id)}
-                    className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
-                  >
-                    <Trash className="w-5 h-5 text-red-500 dark:text-red-400" />
-                  </button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

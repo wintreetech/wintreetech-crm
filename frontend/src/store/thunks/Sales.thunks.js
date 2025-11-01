@@ -41,8 +41,20 @@ export const fetchDocuments = createAsyncThunk(
 // Upload a document
 export const uploadDocuments = createAsyncThunk(
   "sales/uploadDocuments",
-  async ({ files, companyName, subStatus, leadId }, { rejectWithValue }) => {
+  async (
+    { files, companyName, subStatus, uploadedBy, leadId },
+    { rejectWithValue }
+  ) => {
     try {
+      console.log(
+        "file upload data",
+        files,
+        companyName,
+        subStatus,
+        uploadedBy,
+        leadId
+      );
+
       // 1) Check if this phase already has docs (to detect first upload)
       let isFirstUpload = false;
       try {
@@ -71,6 +83,7 @@ export const uploadDocuments = createAsyncThunk(
       files.forEach((file) => formData.append("file", file)); // backend expects "file"
       formData.append("companyName", companyName);
       formData.append("subStatus", subStatus);
+      formData.append("uploadedBy", uploadedBy);
 
       const uploadRes = await api.post(`/sales/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -91,7 +104,7 @@ export const uploadDocuments = createAsyncThunk(
         docs,
         isFirstUpload,
         leadId,
-        newSubStatus: subStatus,
+        subStatus,
         message: uploadRes.data?.message || "File(s) uploaded",
       };
     } catch (err) {
@@ -107,11 +120,11 @@ export const uploadDocuments = createAsyncThunk(
 // Delete a document
 export const deleteDocument = createAsyncThunk(
   "sales/deleteDocument",
-  async ({ id, companyName, subStatus }, { rejectWithValue }) => {
+  async ({ id, companyName, subStatus, uploadedBy }, { rejectWithValue }) => {
     try {
       const res = await api.delete(`/sales/document/${id}`);
       if (res.data?.success) {
-        return { id, key: docKey({ companyName, subStatus }) };
+        return { id, key: docKey({ companyName, subStatus, uploadedBy }) };
       }
 
       return rejectWithValue(res.data?.error || "Failed to delete document.");
@@ -142,3 +155,5 @@ export const updateLead = createAsyncThunk(
     }
   }
 );
+
+// ------- Lead ops end -------

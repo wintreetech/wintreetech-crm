@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, Filter, Pen, Check, X } from "lucide-react";
 import LeadModal from "../component/Sales/LeadModal";
 import LeadWorkflowModal from "../component/Sales/LeadWorkflowModal";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -12,11 +11,18 @@ import {
   selectSalesLoading,
 } from "../store/slices/Sales.slice";
 import { updateLead } from "../store/thunks/sales.thunks";
+import { selectCurrentUser } from "../store/slices/Auth.slice";
 
 function SalesDashboard() {
   const dispatch = useDispatch();
   const leads = useSelector(selectLeads);
   const loading = useSelector(selectSalesLoading);
+
+  const currentUser = useSelector(selectCurrentUser);
+
+  // Role based permission
+  const hasPermission =
+    currentUser?.role === "admin" || currentUser?.role === "superadmin";
 
   // UI state
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,7 +31,6 @@ function SalesDashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
-  const [avatarOpen, setAvatarOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
 
@@ -72,6 +77,7 @@ function SalesDashboard() {
     }
   };
 
+  // Edit and update lead data
   const handleLeadUpdate = async (payload) => {
     const id = payload._id;
 
@@ -192,7 +198,9 @@ function SalesDashboard() {
                 <th className="py-2 px-4">Lead Workflow</th>
                 <th className="py-2 px-4 hidden md:table-cell">Value</th>
                 <th className="py-2 px-4 hidden md:table-cell">Created Date</th>
-                <th className="py-2 px-4 hidden sm:table-cell">Actions</th>
+                {hasPermission && (
+                  <th className="py-2 px-4 hidden sm:table-cell">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -255,18 +263,21 @@ function SalesDashboard() {
                       day: "numeric",
                     })}
                   </td>
-                  <td className="py-3 px-4 hidden md:table-cell">
-                    <button
-                      onClick={() => {
-                        setEditingLead(lead); // prefill from store
-                        setEditOpen(true);
-                      }}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150"
-                      title="Edit Lead"
-                      aria-label="Edit Lead"
-                    >
-                      <Pen className="w-4 h-4" />
-                    </button>
+                  {/* Edit */}
+                  <td className="py-3 px-4 flex justify-center items-center">
+                    {hasPermission && (
+                      <button
+                        onClick={() => {
+                          setEditingLead(lead); // prefill from store
+                          setEditOpen(true);
+                        }}
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150"
+                        title="Edit Lead"
+                        aria-label="Edit Lead"
+                      >
+                        <Pen className="w-4 h-4" />
+                      </button>
+                    )}
                   </td>
                   {/* Actions */}
                   <td className="p-3 hidden sm:flex gap-2">
