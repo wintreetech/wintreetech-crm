@@ -137,7 +137,7 @@ function MainLayout() {
           <div className="flex items-center space-x-4">
             <div className="flex flex-col justify-end items-end">
               <p className="text-lg font-semibold text-white capitalize">
-                hi, {currentUser?.username}
+                hi, {currentUser?.username.split(" ")[0]}
               </p>
               <p className="text-sm text-gray-300">{currentUser?.role}</p>
             </div>

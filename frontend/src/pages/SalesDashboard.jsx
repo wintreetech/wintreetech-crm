@@ -12,6 +12,7 @@ import {
 } from "../store/slices/Sales.slice";
 import { updateLead } from "../store/thunks/sales.thunks";
 import { selectCurrentUser } from "../store/slices/Auth.slice";
+import InfoTooltip from "../component/InfoTooltip";
 
 function SalesDashboard() {
   const dispatch = useDispatch();
@@ -23,6 +24,9 @@ function SalesDashboard() {
   // Role based permission
   const hasPermission =
     currentUser?.role === "admin" || currentUser?.role === "superadmin";
+
+  // Search
+  const [search, setSearch] = useState("");
 
   // UI state
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,14 +45,47 @@ function SalesDashboard() {
       .catch((err) => toast.error(err || "Failed to load leads"));
   }, [dispatch]);
 
-  // Pagination
+  // Filtered Search results
+  const filteredLeads = useMemo(() => {
+    // if no search return all the data
+    if (!search.trim()) return leads;
+
+    const q = search.toLowerCase();
+
+    // See if any field in lead matches the search term
+    return leads.filter((l) => {
+      return (
+        (l.companyName && l.companyName.toLowerCase().includes(q)) ||
+        (l.companyEmail && l.companyEmail.toLowerCase().includes(q)) ||
+        (l.companyMobileNo &&
+          String(l.companyMobileNo).toLowerCase().includes(q)) ||
+        (l.leadSource && l.leadSource.toLowerCase().includes(q)) ||
+        (l.partner && l.partner.toLowerCase().includes(q)) ||
+        (l.status && l.status.toLowerCase().includes(q)) ||
+        (l.subStatus && l.subStatus.toLowerCase().includes(q)) ||
+        (l.dealOwner && l.dealOwner.toLowerCase().includes(q)) ||
+        (l.contactName && l.contactName.toLowerCase().includes(q))
+      );
+    });
+  }, [leads, search]);
+
+  // Pagination on filtered results
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredLeads.length / leadsPerPage)
+  );
   const indexOfLastLead = currentPage * leadsPerPage;
   const indexOfFirstLead = indexOfLastLead - leadsPerPage;
-  const totalPages = Math.max(1, Math.ceil(leads.length / leadsPerPage));
+
   const currentLeads = useMemo(
-    () => leads.slice(indexOfFirstLead, indexOfLastLead),
-    [leads, indexOfFirstLead, indexOfLastLead]
+    () => filteredLeads.slice(indexOfFirstLead, indexOfLastLead),
+    [filteredLeads, indexOfFirstLead, indexOfLastLead]
   );
+
+  // Keep page in range if the filter shrinks the list
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   // Create lead (from modal)
   const handleLeadSubmit = async (data) => {
@@ -174,19 +211,28 @@ function SalesDashboard() {
 
         {/* Search & Filters */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <div className="relative w-full md:w-1/2">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search leads by name or email..."
-              className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div className="relative w-full md:w-1/2 flex items-center gap-2">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+                placeholder="Search leads by name or email or partner..."
+                className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <InfoTooltip message="You can search leads by company name, email, phone, source, partner, status, sub-status, deal owner, or contact name." />
           </div>
         </div>
 
         {/* Leads Table */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 rounded-lg">
-          <table className="min-w-max text-left text-xs sm:text-sm">
+          <table className="min-w-max w-full text-left text-xs sm:text-sm">
             <thead>
               <tr className="text-gray-500 border-b">
                 <th className="py-2 px-4">Lead Name</th>
