@@ -2,14 +2,15 @@ import express from "express";
 const router = express.Router();
 
 import {
-  createSalesLead,
-  getSalesLead,
-  updateSalesLead,
-  deleteSalesLead,
-  getAllSalesLeads,
-  uploadSalesCustomerLeadData,
-  getCompanyDocuments,
-  deleteSalesCustomerLeadData,
+	createSalesLead,
+	getSalesLead,
+	updateSalesLead,
+	deleteSalesLead,
+	getAllSalesLeads,
+	uploadSalesCustomerLeadData,
+	getCompanyDocuments,
+	deleteSalesCustomerLeadData,
+	generateDownloadLink,
 } from "../../controller/sales.controller.js";
 import upload from "../../utils/upload.js";
 
@@ -32,7 +33,8 @@ router.delete("/lead/:id", deleteSalesLead);
 router.delete("/document/:id", deleteSalesCustomerLeadData);
 
 // Upload Route
-router.post("/upload", upload.array("file"), uploadSalesCustomerLeadData);
+router.post("/upload", upload.array("files", 10), uploadSalesCustomerLeadData);
+router.post("/download", generateDownloadLink);
 
 // Fetch all documents for a company
 router.get("/:companyName/:subStatus", getCompanyDocuments);
