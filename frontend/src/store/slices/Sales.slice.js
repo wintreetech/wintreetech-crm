@@ -6,7 +6,7 @@ import {
 	docKey,
 	uploadDocuments,
 	updateLead,
-} from "../thunks/sales.thunks";
+} from "../thunks/sales.thunks.js";
 
 // empty bucket for the document data fallback
 export const EMPTY_BUCKET = Object.freeze({

@@ -120,18 +120,13 @@ function DocumentViewModal({
 									<div className="flex items-center gap-3">
 										<FileText className="w-6 h-6 text-primary" />
 										<div>
-											<p className="font-medium text-gray-900 dark:text-white">
+											<p className="font-medium text-gray-900 dark:text-white mb-0.5">
 												{doc.fileName}
 											</p>
 											<p className="text-xs text-gray-500 dark:text-gray-400">
 												Uploaded By{" "}
-												<span className="font-bold capitalize">
-													{doc.uploadedBy}
-												</span>{" "}
-												on{" "}
-												<span className="font-bold capitalize">
-													{formattedDate}
-												</span>{" "}
+												<span className="capitalize">{doc.uploadedBy}</span> on{" "}
+												<span className="capitalize">{formattedDate}</span>{" "}
 											</p>
 										</div>
 									</div>

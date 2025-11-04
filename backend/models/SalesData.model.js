@@ -1,5 +1,4 @@
 import { Schema, model } from "mongoose";
-import { type } from "os";
 
 const uploadSchema = new Schema({
 	fileName: { type: String, required: true },

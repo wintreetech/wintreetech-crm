@@ -1,11 +1,9 @@
 import SalesModel from "../models/sales.model.js";
 import SalesDataModel from "../models/SalesData.model.js";
-
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import s3 from "../utils/s3Client.js";
 import { keys } from "../utils/keys.js";
-
 const { S3_BUCKET_NAME } = keys.aws;
 
 // Create a new sales lead
@@ -87,130 +85,7 @@ const getAllSalesLeads = async (req, res) => {
 	}
 };
 
-// Upload Document
-// const uploadSalesCustomerLeadData = async (req, res) => {
-// 	try {
-// 		const { companyName, subStatus, uploadedBy } = req.body;
-
-// 		if (!companyName || !subStatus || !uploadedBy) {
-// 			return res.status(400).json({
-// 				error: "Required fields are missing",
-// 			});
-// 		}
-
-// 		if (!req.files || req.files.length === 0) {
-// 			return res.status(400).json({ error: "No files uploaded" });
-// 		}
-
-// 		// Create folder structure dynamically
-// 		const targetDir = path.join("merchant", companyName, subStatus);
-// 		fs.mkdirSync(targetDir, { recursive: true });
-
-// 		// Move each file from temp → actual folder
-// 		const filesData = req.files.map((file) => {
-// 			const newPath = path.join(targetDir, file.filename);
-// 			fs.renameSync(file.path, newPath);
-
-// 			return {
-// 				fileName: file.originalname,
-// 				fileUrl: `${req.protocol}://${req.get(
-// 					"host"
-// 				)}/merchant/${encodeURIComponent(companyName)}/${encodeURIComponent(
-// 					subStatus
-// 				)}/${encodeURIComponent(file.filename)}`,
-// 				uploadedBy,
-// 				uploadedAt: new Date(),
-// 			};
-// 		});
-
-// 		// Check if the company already exists
-// 		let companyDoc = await SalesDataModel.findOne({ companyName });
-
-// 		if (!companyDoc) {
-// 			// Create a new company entry
-// 			companyDoc = await SalesDataModel.create({
-// 				companyName,
-// 				companyData: [{ subStatus, upload: filesData }],
-// 			});
-// 		} else {
-// 			// Find subStatus index
-// 			const subStatusIndex = companyDoc.companyData.findIndex(
-// 				(cd) => cd.subStatus === subStatus
-// 			);
-
-// 			if (subStatusIndex > -1) {
-// 				// Append new files to existing subStatus
-// 				companyDoc.companyData[subStatusIndex].upload.push(...filesData);
-// 			} else {
-// 				// Add new subStatus entry
-// 				companyDoc.companyData.push({ subStatus, upload: filesData });
-// 			}
-
-// 			await companyDoc.save();
-// 		}
-
-// 		res.status(200).json({
-// 			message: "File(s) uploaded successfully",
-// 			data: companyDoc,
-// 		});
-// 	} catch (error) {
-// 		console.error("Upload error:", error);
-// 		res.status(500).json({ error: "Something went wrong" });
-// 	}
-// };
-
-// const uploadSalesCustomerLeadData = async (req, res) => {
-// 	try {
-// 		const { companyName, subStatus, uploadedBy } = req.body;
-
-// 		if (!companyName || !subStatus || !uploadedBy) {
-// 			return res.status(400).json({ error: "Required fields are missing" });
-// 		}
-
-// 		if (!req.files || req.files.length === 0) {
-// 			return res.status(400).json({ error: "No files uploaded" });
-// 		}
-
-// 		// S3 stores the file info in req.files[i].location
-// 		const filesData = req.files.map((file) => ({
-// 			fileName: file.originalname,
-// 			fileUrl: file.location, // S3 public or private URL
-// 			uploadedBy,
-// 			uploadedAt: new Date(),
-// 		}));
-
-// 		// Find or create the company record
-// 		let companyDoc = await SalesDataModel.findOne({ companyName });
-
-// 		if (!companyDoc) {
-// 			companyDoc = await SalesDataModel.create({
-// 				companyName,
-// 				companyData: [{ subStatus, upload: filesData }],
-// 			});
-// 		} else {
-// 			const subStatusIndex = companyDoc.companyData.findIndex(
-// 				(cd) => cd.subStatus === subStatus
-// 			);
-
-// 			if (subStatusIndex > -1) {
-// 				companyDoc.companyData[subStatusIndex].upload.push(...filesData);
-// 			} else {
-// 				companyDoc.companyData.push({ subStatus, upload: filesData });
-// 			}
-
-// 			await companyDoc.save();
-// 		}
-
-// 		res.status(200).json({
-// 			message: "File(s) uploaded successfully to S3",
-// 			data: companyDoc,
-// 		});
-// 	} catch (error) {
-// 		console.error("S3 Upload error:", error);
-// 		res.status(500).json({ error: "Something went wrong during upload" });
-// 	}
-// };
-
+// Upload Document to the AWS & MongoDb Both
 const uploadSalesCustomerLeadData = async (req, res) => {
 	try {
 		const { companyName, subStatus, uploadedBy } = req.body;
@@ -262,69 +137,37 @@ const uploadSalesCustomerLeadData = async (req, res) => {
 	}
 };
 
-// Delete Document
-// const deleteSalesCustomerLeadData = async (req, res) => {
-// 	try {
-// 		const { id } = req.params; // document id
+// Download Documents from the AWS
+const generateDownloadLink = async (req, res) => {
+	try {
+		const { fileUrl } = req.body;
+		if (!fileUrl) {
+			return res.status(400).json({ error: "Missing fileUrl" });
+		}
 
-// 		// Find the company that contains this document
-// 		const company = await SalesDataModel.findOne({
-// 			"companyData.upload._id": id,
-// 		});
+		const url = new URL(fileUrl);
+		const key = decodeURIComponent(url.pathname.substring(1));
 
-// 		if (!company) {
-// 			return res
-// 				.status(404)
-// 				.json({ success: false, error: "Document not found" });
-// 		}
+		const command = new GetObjectCommand({
+			Bucket: S3_BUCKET_NAME,
+			Key: key,
+			ResponseContentDisposition: "attachment",
+		});
 
-// 		let filePath = null;
+		const signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+		return res.json({ downloadUrl: signedUrl });
+	} catch (err) {
+		console.error("❌ Error generating signed URL:", err);
+		return res.status(500).json({ error: err.message });
+	}
+};
 
-// 		// Loop through companyData to find and remove the document
-// 		company.companyData.forEach((subStatusData) => {
-// 			const docIndex = subStatusData.upload.findIndex(
-// 				(doc) => doc._id.toString() === id
-// 			);
-
-// 			if (docIndex > -1) {
-// 				// Store file path for deletion
-// 				const fileUrl = subStatusData.upload[docIndex].fileUrl;
-// 				const urlParts = fileUrl.split("/"); // assuming your URL structure
-// 				const relativePathIndex = urlParts.findIndex(
-// 					(part) => part === "merchant"
-// 				);
-// 				if (relativePathIndex > -1) {
-// 					filePath = path.join(...urlParts.slice(relativePathIndex));
-// 				}
-
-// 				// Remove the document from array
-// 				subStatusData.upload.splice(docIndex, 1);
-// 			}
-// 		});
-
-// 		await company.save();
-
-// 		// Delete the file from disk
-// 		if (filePath && fs.existsSync(filePath)) {
-// 			fs.unlinkSync(filePath);
-// 		}
-
-// 		res
-// 			.status(200)
-// 			.json({ success: true, message: "Document deleted successfully" });
-// 	} catch (error) {
-// 		console.error("Delete document error:", error);
-// 		res
-// 			.status(500)
-// 			.json({ success: false, error: "Failed to delete document" });
-// 	}
-// };
-
+// Delete Documents from the AWS & MongoDb Both
 const deleteSalesCustomerLeadData = async (req, res) => {
 	try {
 		const { id } = req.params;
 
-		// Find the company that contains this document
+		// 🔍 Find company containing this document
 		const company = await SalesDataModel.findOne({
 			"companyData.upload._id": id,
 		});
@@ -332,14 +175,14 @@ const deleteSalesCustomerLeadData = async (req, res) => {
 		if (!company) {
 			return res.status(404).json({
 				success: false,
-				error: "Document not found",
+				error: "Document not found in database.",
 			});
 		}
 
 		let s3Key = null;
 
-		// Loop through companyData to find and remove the document
-		company.companyData.forEach((subStatusData) => {
+		// 🧹 Loop through subStatus sections and find + remove document
+		for (const subStatusData of company.companyData) {
 			const docIndex = subStatusData.upload.findIndex(
 				(doc) => doc._id.toString() === id
 			);
@@ -347,40 +190,48 @@ const deleteSalesCustomerLeadData = async (req, res) => {
 			if (docIndex > -1) {
 				const fileUrl = subStatusData.upload[docIndex].fileUrl;
 
-				// Extract S3 object key from full URL
-				// Example URL: https://your-bucket.s3.amazonaws.com/merchant/company/file.pdf
+				// 🧠 Extract S3 Key correctly (remove the leading / from pathname)
 				const url = new URL(fileUrl);
-				s3Key = decodeURIComponent(url.pathname.substring(1)); // remove leading "/"
+				s3Key = decodeURIComponent(
+					url.pathname.startsWith("/") ? url.pathname.slice(1) : url.pathname
+				);
 
-				// Remove from MongoDB array
+				// 🧹 Remove document entry from MongoDB
 				subStatusData.upload.splice(docIndex, 1);
-			}
-		});
-
-		await company.save();
-
-		// Delete file from S3
-		if (s3Key) {
-			const deleteParams = {
-				Bucket: process.env.AWS_BUCKET_NAME,
-				Key: s3Key,
-			};
-
-			try {
-				await s3.send(new DeleteObjectCommand(deleteParams));
-				console.log("✅ S3 file deleted:", s3Key);
-			} catch (err) {
-				console.error("⚠️ Failed to delete from S3:", err);
+				break;
 			}
 		}
 
-		res.status(200).json({
+		await company.save();
+
+		// 🗑️ Delete from S3 if key found
+		if (s3Key) {
+			try {
+				await s3.send(
+					new DeleteObjectCommand({
+						Bucket: S3_BUCKET_NAME,
+						Key: s3Key,
+					})
+				);
+				console.log("✅ Deleted from S3:", s3Key);
+			} catch (err) {
+				console.error("⚠️ Failed to delete from S3:", err.message);
+				return res.status(500).json({
+					success: false,
+					error: "Deleted from DB, but failed to delete from S3",
+				});
+			}
+		} else {
+			console.warn("⚠️ No S3 key found, file may already be missing from S3");
+		}
+
+		return res.status(200).json({
 			success: true,
-			message: "Document deleted successfully",
+			message: "Document deleted successfully from both MongoDB and S3.",
 		});
 	} catch (error) {
-		console.error("Delete document error:", error);
-		res.status(500).json({
+		console.error("❌ Delete document error:", error);
+		return res.status(500).json({
 			success: false,
 			error: "Failed to delete document",
 		});
@@ -426,31 +277,6 @@ const getCompanyDocuments = async (req, res) => {
 	} catch (error) {
 		console.error("Error fetching company data:", error);
 		res.status(500).json({ error: "Error fetching company data" });
-	}
-};
-
-// Download Documents from the AWS
-const generateDownloadLink = async (req, res) => {
-	try {
-		const { fileUrl } = req.body;
-		if (!fileUrl) {
-			return res.status(400).json({ error: "Missing fileUrl" });
-		}
-
-		const url = new URL(fileUrl);
-		const key = decodeURIComponent(url.pathname.substring(1));
-
-		const command = new GetObjectCommand({
-			Bucket: S3_BUCKET_NAME,
-			Key: key,
-			ResponseContentDisposition: "attachment",
-		});
-
-		const signedUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
-		return res.json({ downloadUrl: signedUrl });
-	} catch (err) {
-		console.error("❌ Error generating signed URL:", err);
-		return res.status(500).json({ error: err.message });
 	}
 };
 

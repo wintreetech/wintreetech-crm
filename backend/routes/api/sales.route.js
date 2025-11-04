@@ -29,12 +29,14 @@ router.put("/:id", updateSalesLead);
 // Route to delete a sales lead by ID
 router.delete("/lead/:id", deleteSalesLead);
 
-// Delete a document
-router.delete("/document/:id", deleteSalesCustomerLeadData);
-
 // Upload Route
 router.post("/upload", upload.array("files", 10), uploadSalesCustomerLeadData);
+
+// Download Route
 router.post("/download", generateDownloadLink);
+
+// Delete Route
+router.delete("/document/:id", deleteSalesCustomerLeadData);
 
 // Fetch all documents for a company
 router.get("/:companyName/:subStatus", getCompanyDocuments);
