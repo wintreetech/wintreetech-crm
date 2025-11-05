@@ -54,7 +54,7 @@ export const createLead = createAsyncThunk(
   }
 );
 
-// updates the lead status and subStatus
+// updates the lead subStatus
 export const updateLeadStatus = createAsyncThunk(
   "sales/updateLeadStatus",
   async ({ id, status }, { rejectWithValue }) => {
@@ -65,6 +65,26 @@ export const updateLeadStatus = createAsyncThunk(
         message: res.data?.message || "Status updated",
       };
     } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to update status"
+      );
+    }
+  }
+);
+
+// updates the lead Status
+export const updateStatus = createAsyncThunk(
+  "sales/updateStatus",
+  async ({ id, status }, { rejectWithValue }) => {
+    console.log("function ran from the update status");
+    try {
+      const res = await api.patch(`/sales/status/${id}`, { status });
+      return {
+        lead: res.data?.data,
+        message: res.data?.message || "Status updated",
+      };
+    } catch (err) {
+      console.error(err);
       return rejectWithValue(
         err?.response?.data?.message || "Failed to update status"
       );
@@ -161,7 +181,25 @@ const salesSlice = createSlice({
           action.payload || action.error?.message || "Failed to update lead";
       })
 
-      // updateLeadStatus
+      // update lead status
+      .addCase(updateStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload?.lead;
+        if (updated?._id) {
+          const idx = state.list.findIndex((l) => l._id === updated._id);
+          if (idx >= 0) state.list[idx] = { ...state.list[idx], ...updated };
+        }
+      })
+      .addCase(updateStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // update lead Sub Status
       .addCase(updateLeadStatus.pending, (state) => {
         state.error = null;
       })

@@ -10,6 +10,7 @@ import {
   fetchLeads,
   selectLeads,
   selectSalesLoading,
+  updateStatus,
 } from "../store/slices/Sales.slice";
 import { updateLead } from "../store/thunks/Sales.thunks.js";
 import { selectCurrentUser } from "../store/slices/Auth.slice";
@@ -103,15 +104,17 @@ function SalesDashboard() {
     }
   };
 
-  // Update status
-  const handleStatusChange = async (leadId, newStatus) => {
+  // Update Status of a lead
+  const handleLeadStatusChange = async (leadId, newStatus) => {
+    console.log("function ran ");
     try {
       const { message } = await dispatch(
-        updateLeadStatus({ id: leadId, status: newStatus })
+        updateStatus({ id: leadId, status: newStatus })
       ).unwrap();
       toast.success(message || `Lead status updated to ${newStatus}`);
     } catch (err) {
-      toast.error(err || "Failed to update status");
+      toast.error("Failed to update status");
+      console.error(err);
     }
   };
 
@@ -250,129 +253,163 @@ function SalesDashboard() {
               </tr>
             </thead>
             <tbody>
-              {currentLeads.map((lead) => (
-                <tr key={lead._id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4 font-medium">{lead.companyName}</td>
-                  <td className="py-3 px-4 text-gray-600">
-                    {lead.companyEmail} <br /> {lead.companyMobileNo}
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="px-1 sm:px-2 py-1 rounded-full text-[10px] sm:text-xs md:text-sm">
-                      {lead.leadSource}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className="px-1  rounded-full text-[10px] sm:text-xs md:text-sm">
-                      {lead.partner}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        lead.status === "Open"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {lead.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span
-                      className={`px-2 py-1 text-xs ${
-                        lead.status === "Open"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {lead?.status === "Open" ? `${lead.subStatus}` : "NA"}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <button
-                      className="btn btn-primary btn-sm "
-                      onClick={() => {
-                        setSelectedLead(lead);
-                        setWorkflowOpen(true);
-                      }}
-                    >
-                      View Lead Workflow
-                    </button>
-                  </td>
-                  <td className="py-3 px-4 hidden md:table-cell">
-                    ${lead.monthlyDealSize.toLocaleString()}
-                  </td>
-                  <td className="py-3 px-4 hidden md:table-cell">
-                    {new Date(lead.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </td>
-                  {/* Actions */}
-                  <td className="py-3 px-4 flex justify-center items-center">
-                    {hasPermission && (
-                      /* Edit */
-                      <button
-                        onClick={() => {
-                          setEditingLead(lead); // prefill from store
-                          setEditOpen(true);
-                        }}
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150 cursor-pointer"
-                        title="Edit Lead"
-                        aria-label="Edit Lead"
-                      >
-                        <Pen className="w-4 h-4" />
-                      </button>
-                    )}
-                  </td>
+              {currentLeads.map((lead) => {
+                // For the active and inactive button
+                const canShowToggle =
+                  ["Open", "Active", "Inactive"].includes(lead.status) &&
+                  ["Signed Contract & Complete", "Annexture"].includes(
+                    lead.subStatus
+                  );
 
-                  <td className="p-3 text-center">
-                    {lead.status === "Open" &&
-                      (lead.subStatus === "Signed Contract & Complete" ||
-                        lead.subStatus === "Annexture") && (
-                        <div className="dropdown">
+                return (
+                  <tr key={lead._id} className="border-b hover:bg-gray-50">
+                    <td className="py-3 px-4 font-medium">
+                      {lead.companyName}
+                    </td>
+                    <td className="py-3 px-4 text-gray-600">
+                      {lead.companyEmail} <br /> {lead.companyMobileNo}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="px-1 sm:px-2 py-1 rounded-full text-[10px] sm:text-xs md:text-sm">
+                        {lead.leadSource}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="px-1  rounded-full text-[10px] sm:text-xs md:text-sm">
+                        {lead.partner}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold
+      ${
+        lead.status === "Open"
+          ? "bg-yellow-100 text-yellow-800"
+          : lead.status === "Active"
+          ? "bg-green-100 text-green-800"
+          : lead.status === "Inactive"
+          ? "bg-red-100 text-red-800"
+          : lead.status === "Suspended"
+          ? "bg-gray-200 text-gray-700"
+          : "bg-gray-100 text-gray-800"
+      }`}
+                      >
+                        {lead.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`px-2 py-1 text-xs ${
+                          lead?.status === "Open" ||
+                          lead?.status === "Active" ||
+                          lead?.status === "Inactive"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {lead?.status === "Open" ||
+                        lead?.status === "Active" ||
+                        lead?.status === "Inactive"
+                          ? `${lead.subStatus}`
+                          : "NA"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <button
+                        className="btn btn-primary btn-sm "
+                        onClick={() => {
+                          setSelectedLead(lead);
+                          setWorkflowOpen(true);
+                        }}
+                      >
+                        View Lead Workflow
+                      </button>
+                    </td>
+                    <td className="py-3 px-4">
+                      ${lead.monthlyDealSize.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4">
+                      {new Date(lead.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </td>
+                    {/* Actions */}
+                    {hasPermission && (
+                      <td className="py-3 px-4 flex justify-center items-center">
+                        {/* Edit */}
+                        <button
+                          onClick={() => {
+                            setEditingLead(lead); // prefill from store
+                            setEditOpen(true);
+                          }}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150 cursor-pointer"
+                          title="Edit Lead"
+                          aria-label="Edit Lead"
+                        >
+                          <Pen className="w-4 h-4" />
+                        </button>
+                      </td>
+                    )}
+
+                    <td className="p-3 text-center relative">
+                      {canShowToggle && (
+                        <div className="dropdown dropdown-end">
                           <div
                             tabIndex={0}
                             role="button"
-                            className={`btn btn-sm w-28 ${
-                              (lead.statusValue || "Inactive") === "Active"
+                            className={`btn btn-sm w-28 flex justify-center items-center gap-2 ${
+                              (lead.status || "Inactive") === "Active"
                                 ? "bg-green-500 text-white hover:bg-green-600"
                                 : "bg-red-500 text-white hover:bg-red-600"
                             }`}
                           >
-                            {lead.statusValue || "Inactive"}
+                            {loading ? (
+                              <span className="loading loading-spinner loading-xs"></span>
+                            ) : (
+                              lead.status || "Inactive"
+                            )}
                           </div>
-                          <ul
-                            tabIndex={0}
-                            className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-28 z-10"
-                          >
-                            <li>
-                              <button
-                                onClick={() =>
-                                  handleStatusChange(lead._id, "Active")
-                                }
-                                className="text-green-600 hover:bg-green-100"
-                              >
-                                Active
-                              </button>
-                            </li>
-                            <li>
-                              <button
-                                onClick={() =>
-                                  updateLeadStatus(lead._id, "Inactive")
-                                }
-                                className="text-red-600 hover:bg-red-100"
-                              >
-                                Inactive
-                              </button>
-                            </li>
-                          </ul>
+
+                          {!loading && (
+                            <ul
+                              tabIndex={0}
+                              className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-28 z-[9999]"
+                              style={{
+                                position: "absolute",
+                                top: "100%",
+                                right: 0,
+                              }}
+                            >
+                              <li>
+                                <button
+                                  onClick={() =>
+                                    handleLeadStatusChange(lead._id, "Active")
+                                  }
+                                  className="text-green-600 hover:bg-green-100"
+                                >
+                                  Active
+                                </button>
+                              </li>
+                              <li>
+                                <button
+                                  onClick={() =>
+                                    handleLeadStatusChange(lead._id, "Inactive")
+                                  }
+                                  className="text-red-600 hover:bg-red-100"
+                                >
+                                  Inactive
+                                </button>
+                              </li>
+                            </ul>
+                          )}
                         </div>
                       )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

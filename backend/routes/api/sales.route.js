@@ -2,15 +2,16 @@ import express from "express";
 const router = express.Router();
 
 import {
-	createSalesLead,
-	getSalesLead,
-	updateSalesLead,
-	deleteSalesLead,
-	getAllSalesLeads,
-	uploadSalesCustomerLeadData,
-	getCompanyDocuments,
-	deleteSalesCustomerLeadData,
-	generateDownloadLink,
+  createSalesLead,
+  getSalesLead,
+  updateSalesLead,
+  deleteSalesLead,
+  getAllSalesLeads,
+  uploadSalesCustomerLeadData,
+  getCompanyDocuments,
+  deleteSalesCustomerLeadData,
+  generateDownloadLink,
+  updateSalesLeadStatus,
 } from "../../controller/sales.controller.js";
 import upload from "../../utils/upload.js";
 
@@ -25,6 +26,9 @@ router.get("/:id", getSalesLead);
 
 // Route to update a sales lead by ID
 router.put("/:id", updateSalesLead);
+
+// Route to update a sales lead status by ID
+router.patch("/status/:id", updateSalesLeadStatus);
 
 // Route to delete a sales lead by ID
 router.delete("/lead/:id", deleteSalesLead);

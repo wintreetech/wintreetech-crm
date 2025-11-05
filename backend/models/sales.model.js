@@ -47,7 +47,7 @@ const SalesSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["Open", "Active", "Suspended"],
+      enum: ["Open", "Active", "Suspended", "Inactive"],
       default: "Open",
     },
     subStatus: {
