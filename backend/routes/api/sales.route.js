@@ -2,14 +2,16 @@ import express from "express";
 const router = express.Router();
 
 import {
-	createSalesLead,
-	getSalesLead,
-	updateSalesLead,
-	deleteSalesLead,
-	getAllSalesLeads,
-	uploadSalesCustomerLeadData,
-	getCompanyDocuments,
-	deleteSalesCustomerLeadData,
+  createSalesLead,
+  getSalesLead,
+  updateSalesLead,
+  deleteSalesLead,
+  getAllSalesLeads,
+  uploadSalesCustomerLeadData,
+  getCompanyDocuments,
+  deleteSalesCustomerLeadData,
+  generateDownloadLink,
+  updateSalesLeadStatus,
 } from "../../controller/sales.controller.js";
 import upload from "../../utils/upload.js";
 
@@ -25,14 +27,20 @@ router.get("/:id", getSalesLead);
 // Route to update a sales lead by ID
 router.put("/:id", updateSalesLead);
 
-// Route to delete a sales lead by ID
-router.delete("/lead//:id", deleteSalesLead);
+// Route to update a sales lead status by ID
+router.patch("/status/:id", updateSalesLeadStatus);
 
-// Delete a document
-router.delete("/document/:id", deleteSalesCustomerLeadData);
+// Route to delete a sales lead by ID
+router.delete("/lead/:id", deleteSalesLead);
 
 // Upload Route
-router.post("/upload", upload.array("file"), uploadSalesCustomerLeadData);
+router.post("/upload", upload.array("files", 10), uploadSalesCustomerLeadData);
+
+// Download Route
+router.post("/download", generateDownloadLink);
+
+// Delete Route
+router.delete("/document/:id", deleteSalesCustomerLeadData);
 
 // Fetch all documents for a company
 router.get("/:companyName/:subStatus", getCompanyDocuments);

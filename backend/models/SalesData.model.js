@@ -4,6 +4,7 @@ const uploadSchema = new Schema({
 	fileName: { type: String, required: true },
 	fileUrl: { type: String, required: true },
 	uploadedAt: { type: Date, default: Date.now },
+	uploadedBy: { type: String, required: true },
 });
 
 const companyDataSchema = new Schema({
