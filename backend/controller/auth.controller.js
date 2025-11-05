@@ -37,6 +37,7 @@ const register = async (req, res) => {
     return res.status(201).json({
       message: `Registration successful! You can now give credentials to ${username} for log in`,
       data: {
+        _id: newUser._id,
         username,
         email,
         role,
@@ -146,6 +147,35 @@ const updateUser = async (req, res) => {
   }
 };
 
+// Delete an existing user
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ message: "User id is required" });
+    }
+
+    const deleted = await Auth.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      message: `User "${deleted.username}" deleted successfully`,
+      id: deleted._id,
+    });
+  } catch (err) {
+    // Invalid ObjectId or other DB errors
+    if (err.name === "CastError") {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+    console.error("Delete user error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Get all users
 const AllUser = async (req, res) => {
   try {
@@ -165,4 +195,4 @@ const AllUser = async (req, res) => {
   }
 };
 
-export { register, login, AllUser, updateUser };
+export { register, login, AllUser, updateUser, deleteUser };

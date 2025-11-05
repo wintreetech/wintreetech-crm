@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Filter, Pen, Check, X } from "lucide-react";
+import { Plus, Search, Trash, Pen, Check, X } from "lucide-react";
 import LeadModal from "../component/Sales/LeadModal";
 import LeadWorkflowModal from "../component/Sales/LeadWorkflowModal";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createLead,
+  deleteLead,
   fetchLeads,
   selectLeads,
   selectSalesLoading,
@@ -242,11 +243,10 @@ function SalesDashboard() {
                 <th className="py-2 px-4">Status</th>
                 <th className="py-2 px-4">SubStatus</th>
                 <th className="py-2 px-4">Lead Workflow</th>
-                <th className="py-2 px-4 hidden md:table-cell">Value</th>
-                <th className="py-2 px-4 hidden md:table-cell">Created Date</th>
-                {hasPermission && (
-                  <th className="py-2 px-4 hidden sm:table-cell">Actions</th>
-                )}
+                <th className="py-2 px-4">Value</th>
+                <th className="py-2 px-4">Created Date</th>
+                {hasPermission && <th className="py-2 px-4">Actions</th>}
+                <th className="py-2 px-4">Processing</th>
               </tr>
             </thead>
             <tbody>
@@ -309,15 +309,16 @@ function SalesDashboard() {
                       day: "numeric",
                     })}
                   </td>
-                  {/* Edit */}
+                  {/* Actions */}
                   <td className="py-3 px-4 flex justify-center items-center">
                     {hasPermission && (
+                      /* Edit */
                       <button
                         onClick={() => {
                           setEditingLead(lead); // prefill from store
                           setEditOpen(true);
                         }}
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150 cursor-pointer"
                         title="Edit Lead"
                         aria-label="Edit Lead"
                       >
@@ -325,31 +326,49 @@ function SalesDashboard() {
                       </button>
                     )}
                   </td>
-                  {/* Actions */}
-                  <td className="p-3 hidden sm:flex gap-2">
+
+                  <td className="p-3 text-center">
                     {lead.status === "Open" &&
-                      lead.subStatus === "Annexture" && (
-                        <>
-                          <button
-                            onClick={() =>
-                              handleStatusChange(lead._id, "Active")
-                            }
-                            className="px-2 py-1 bg-gray-100 rounded text-gray-800 hover:bg-gray-200 transition"
-                            title="Activate"
+                      (lead.subStatus === "Signed Contract & Complete" ||
+                        lead.subStatus === "Annexture") && (
+                        <div className="dropdown">
+                          <div
+                            tabIndex={0}
+                            role="button"
+                            className={`btn btn-sm w-28 ${
+                              (lead.statusValue || "Inactive") === "Active"
+                                ? "bg-green-500 text-white hover:bg-green-600"
+                                : "bg-red-500 text-white hover:bg-red-600"
+                            }`}
                           >
-                            <Check className="text-green-500" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              updateLeadStatus(lead._id, "Suspended")
-                            }
-                            className="px-2 py-1 bg-gray-100 rounded text-gray-800 hover:bg-gray-200 transition"
-                            title="Suspend"
+                            {lead.statusValue || "Inactive"}
+                          </div>
+                          <ul
+                            tabIndex={0}
+                            className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-28 z-10"
                           >
-                            {" "}
-                            <X className="text-red-500" />
-                          </button>
-                        </>
+                            <li>
+                              <button
+                                onClick={() =>
+                                  handleStatusChange(lead._id, "Active")
+                                }
+                                className="text-green-600 hover:bg-green-100"
+                              >
+                                Active
+                              </button>
+                            </li>
+                            <li>
+                              <button
+                                onClick={() =>
+                                  updateLeadStatus(lead._id, "Inactive")
+                                }
+                                className="text-red-600 hover:bg-red-100"
+                              >
+                                Inactive
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
                       )}
                   </td>
                 </tr>

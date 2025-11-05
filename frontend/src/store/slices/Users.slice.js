@@ -51,6 +51,23 @@ export const updateUser = createAsyncThunk(
   }
 );
 
+export const deleteUser = createAsyncThunk(
+  "users/deleteUser",
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await api.delete(`auth/${id}`);
+      return {
+        id,
+        message: res?.data?.message || "User deleted successfully",
+      };
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to delete user"
+      );
+    }
+  }
+);
+
 // State
 const initialState = {
   list: [],
@@ -94,6 +111,8 @@ const usersSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
+
+        console.log("new user data", action.payload);
         const created = action.payload?.user;
         if (created) {
           state.list = [created, ...state.list];
@@ -123,6 +142,22 @@ const usersSlice = createSlice({
         state.loading = false;
         state.error =
           action.payload || action.error?.message || "Failed to update user";
+      })
+
+      // deleteUser
+      .addCase(deleteUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteUser.fulfilled, (state, action) => {
+        state.loading = false;
+        const id = action.payload.id;
+        console.log("id from delete user extra reducer", id);
+        state.list = state.list.filter((u) => u._id !== id);
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to delete user";
       });
   },
 });

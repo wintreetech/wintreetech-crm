@@ -6,7 +6,7 @@ import {
   docKey,
   uploadDocuments,
   updateLead,
-} from "../thunks/sales.thunks";
+} from "../thunks/sales.thunks.js";
 
 // empty bucket for the document data fallback
 export const EMPTY_BUCKET = Object.freeze({
@@ -73,12 +73,12 @@ export const updateLeadStatus = createAsyncThunk(
 );
 
 // Delete an existing lead
-const deleteLead = createAsyncThunk(
+export const deleteLead = createAsyncThunk(
   "sales/deleteLead",
   async (id, { rejectWithValue }) => {
     try {
       const res = await api.delete(`/sales/${id}`);
-      return { id, message: res.data?.message || "Lead deleted" };
+      return { id, message: res.data?.message || "Lead deleted successfully" };
     } catch (err) {
       return rejectWithValue(
         err?.response?.data?.message || "Failed to delete lead"
@@ -239,12 +239,21 @@ const salesSlice = createSlice({
       })
 
       // document delete
+      .addCase(deleteDocument.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(deleteDocument.fulfilled, (state, action) => {
         const { id, key } = action.payload;
+        if (!id) return;
         const bucket = state.documents[key];
         if (bucket?.items?.length) {
           bucket.items = bucket.items.filter((d) => d._id !== id);
         }
+      })
+      .addCase(deleteDocument.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to delete document";
       });
   },
 });

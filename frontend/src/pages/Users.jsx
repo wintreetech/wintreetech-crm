@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Pen } from "lucide-react";
+import { Plus, Search, Pen, Trash } from "lucide-react";
 import toast from "react-hot-toast";
 import RegisterModal from "../component/RegisterModal";
-import api from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import { selectCurrentUser } from "../store/slices/Auth.slice";
 import {
+  deleteUser,
   fetchUsers,
   registerUser,
   selectAllUsers,
@@ -83,7 +83,7 @@ function User() {
     }
   };
 
-  // Edit and update existing user
+  // Edit and update an existing user
   const handleUpdate = async (formData) => {
     try {
       if (!formData?._id) {
@@ -100,6 +100,30 @@ function User() {
       setEditingUser(null);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  //Delete an existing user
+  const handleDelete = async (user) => {
+    // optional: prevent deleting yourself
+
+    console.log("user to delete", user);
+
+    if (currentUser?.id === user._id) {
+      toast.error("You cannot delete your own account.");
+      return;
+    }
+
+    const ok = window.confirm(`Delete user "${user.username}"?`);
+    if (!ok) return;
+
+    try {
+      const { message } = await dispatch(deleteUser(user._id)).unwrap();
+      toast.success(message || "User deleted successfully");
+    } catch (err) {
+      toast.error(
+        typeof err === "string" ? err : err?.message || "Delete failed"
+      );
     }
   };
 
@@ -230,19 +254,31 @@ function User() {
                     })}
                   </td>
                   {/* Edit */}
-                  <td className="py-3 px-4 flex justify-center">
+                  <td className="py-3 px-4 flex justify-start">
                     {hasPermission && (
-                      <button
-                        onClick={() => {
-                          setEditingUser(user); // prefill from store
-                          setEditOpen(true);
-                        }}
-                        className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150"
-                        title="Edit User"
-                        aria-label="Edit User"
-                      >
-                        <Pen className="w-4 h-4" />
-                      </button>
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditingUser(user); // prefill from store
+                            setEditOpen(true);
+                          }}
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150 cursor-pointer"
+                          title="Edit User"
+                          aria-label="Edit User"
+                        >
+                          <Pen className="w-4 h-4" />
+                        </button>
+                        {currentUser.id !== user._id && (
+                          <button
+                            onClick={() => handleDelete(user)}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-red-100 text-red-400 hover:bg-red-200 hover:text-red-600 active:scale-95 transition-all duration-150 ml-1 cursor-pointer"
+                            title="Delete User"
+                            aria-label="Delete User"
+                          >
+                            <Trash className="w-4 h-4" />
+                          </button>
+                        )}
+                      </>
                     )}
                   </td>
                 </tr>
