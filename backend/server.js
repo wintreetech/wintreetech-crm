@@ -13,7 +13,7 @@ dotenv.config();
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const allowedOrigins = ["http://localhost:5174", "http://localhost:5173"];
+const allowedOrigins = ["http://localhost:5174", "http://localhost:5173", "https://crm.wintreetech.com"];
 
 // Applicattion Level Middleware
 app.use(express.json());
