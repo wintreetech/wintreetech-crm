@@ -23,6 +23,8 @@ function SalesDashboard() {
 
   const currentUser = useSelector(selectCurrentUser);
 
+  const [loadingLeadId, setLoadingLeadId] = useState(null);
+
   // Role based permission
   const hasPermission =
     currentUser?.role === "admin" || currentUser?.role === "superadmin";
@@ -106,8 +108,8 @@ function SalesDashboard() {
 
   // Update Status of a lead
   const handleLeadStatusChange = async (leadId, newStatus) => {
-    console.log("function ran ");
     try {
+      setLoadingLeadId(leadId);
       const { message } = await dispatch(
         updateStatus({ id: leadId, status: newStatus })
       ).unwrap();
@@ -115,6 +117,8 @@ function SalesDashboard() {
     } catch (err) {
       toast.error("Failed to update status");
       console.error(err);
+    } finally {
+      setLoadingLeadId(null); // stop spinner for this lead
     }
   };
 
@@ -353,33 +357,35 @@ function SalesDashboard() {
                       </td>
                     )}
 
-                    <td className="p-3 text-center relative">
+                    <td className="p-3 text-center relative overflow-visible z-[50]">
                       {canShowToggle && (
-                        <div className="dropdown dropdown-end">
+                        <div className="dropdown dropdown-left dropdown-end relative z-[60]">
+                          {/* Trigger Button */}
                           <div
                             tabIndex={0}
                             role="button"
                             className={`btn btn-sm w-28 flex justify-center items-center gap-2 ${
-                              (lead.status || "Inactive") === "Active"
+                              lead.status === "Active"
                                 ? "bg-green-500 text-white hover:bg-green-600"
                                 : "bg-red-500 text-white hover:bg-red-600"
                             }`}
                           >
-                            {loading ? (
+                            {loadingLeadId === lead._id ? (
                               <span className="loading loading-spinner loading-xs"></span>
+                            ) : lead.status === "Open" ? (
+                              "Inactive"
                             ) : (
                               lead.status || "Inactive"
                             )}
                           </div>
 
+                          {/* Dropdown Menu */}
                           {!loading && (
                             <ul
                               tabIndex={0}
                               className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-28 z-[9999]"
                               style={{
-                                position: "absolute",
-                                top: "100%",
-                                right: 0,
+                                marginBottom: "0.25rem", // gives breathing room from header
                               }}
                             >
                               <li>
