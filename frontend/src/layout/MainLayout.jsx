@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, selectCurrentUser } from "../store/slices/Auth.slice.js";
+import { fetchUsers } from "../store/slices/Users.slice.js";
 
 function MainLayout() {
   const dispatch = useDispatch();
@@ -53,6 +54,15 @@ function MainLayout() {
     // Default: capitalize first letter + " Dashboard"
     return name.charAt(0).toUpperCase() + name.slice(1) + " Dashboard";
   };
+
+  // Fetch all users on mount
+  useEffect(() => {
+    dispatch(fetchUsers())
+      .unwrap()
+      .catch((err) => {
+        toast.error(err || "Failed to fetch users");
+      });
+  }, [dispatch]);
 
   const pageTitle = formatTitle(location.pathname, currentUser);
 

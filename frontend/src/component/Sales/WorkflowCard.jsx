@@ -39,7 +39,7 @@ function WorkflowCard({ title, description, icon: Icon, lead }) {
       <div className="flex items-center justify-between p-5 bg-base-100 rounded-xl border border-base-300 shadow-sm hover:shadow-md hover:bg-base-200 transition-all duration-300">
         {/* Left Section: Icon + Info */}
         <div className="flex items-center gap-4">
-          <div className="bg-blue-50 text-blue-600 p-3 rounded-xl shadow-sm">
+          <div className="bg-blue-50 text-blue-600 dark:bg-blue-800 dark:text-blue-200 p-3 rounded-xl shadow-sm">
             <Icon className="w-5 h-5" />
           </div>
           <div>
@@ -53,13 +53,13 @@ function WorkflowCard({ title, description, icon: Icon, lead }) {
           <div className="flex gap-2">
             <button
               onClick={() => setUploadOpen(!uploadOpen)}
-              className="btn btn-sm bg-blue-50 text-blue-600 border-none hover:bg-blue-100 hover:scale-105 transition-transform"
+              className="btn btn-sm bg-blue-50 text-blue-600 border-none hover:bg-blue-100 hover:scale-105 dark:bg-blue-800 dark:text-blue-200 dark:hover:bg-blue-700 transition-transform"
             >
               <CloudUpload className="w-4 h-4" />
             </button>
             <button
               onClick={() => setDocumentViewOpen(!documentViewOpen)}
-              className="btn btn-sm bg-blue-50 text-blue-600 border-none hover:bg-blue-100 hover:scale-105 transition-transform"
+              className="btn btn-sm bg-blue-50 text-blue-600 border-none hover:bg-blue-100 hover:scale-105 dark:bg-blue-800 dark:text-blue-200 dark:hover:bg-blue-700 transition-transform"
             >
               <Eye className="w-4 h-4" />
             </button>

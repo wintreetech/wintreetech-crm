@@ -146,7 +146,7 @@ function SalesDashboard() {
   };
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
+    <div className="p-4 bg-gray-50 dark:bg-gray-800 min-h-screen">
       {/* Add Lead Button */}
       <div className="flex justify-end mb-4">
         <button
@@ -179,42 +179,54 @@ function SalesDashboard() {
         )}
       </div>
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 text-black">
+        <div className="bg-white rounded-xl p-4 shadow-sm dark:bg-gray-900 dark:text-white">
           <h3 className="text-gray-500 text-sm">Total Leads</h3>
           <p className="text-2xl font-bold">{leads?.length}</p>
           <p className="text-gray-400 text-xs">0 new this period</p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-white rounded-xl p-4 shadow-sm dark:bg-gray-900 dark:text-white">
           <h3 className="text-gray-500 text-sm">In Progress</h3>
           <p className="text-2xl font-bold">
-            {leads?.filter((l) => l.status !== "lost")?.length}
+            {leads?.filter((l) => l.status === "open")?.length}
           </p>
           <p className="text-gray-400 text-xs">Active opportunities</p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-white rounded-xl p-4 shadow-sm dark:bg-gray-900 dark:text-white">
           <h3 className="text-gray-500 text-sm">Total Value</h3>
           <p className="text-2xl font-bold">
             $
             {leads
+              .filter((l) => l.status === "Active")
               .reduce((sum, l) => sum + l.monthlyDealSize, 0)
               .toLocaleString()}
           </p>
-          <p className="text-gray-400 text-xs">$0 won</p>
+          <p className="text-gray-400 text-xs">won</p>
         </div>
 
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-white rounded-xl p-4 shadow-sm dark:bg-gray-900 dark:text-white">
           <h3 className="text-gray-500 text-sm">Conversion Rate</h3>
-          <p className="text-2xl font-bold">0%</p>
+          <p className="text-2xl font-bold">
+            {(() => {
+              const totalLeads = leads.length;
+              const activeLeads = leads.filter(
+                (l) => l.status === "Active"
+              ).length;
+              const conversionRate =
+                totalLeads > 0 ? (activeLeads / totalLeads) * 100 : 0;
+              return `${conversionRate.toFixed(1)}%`;
+            })()}
+          </p>
           <p className="text-gray-400 text-xs">
-            0 of {leads?.length} leads won
+            {leads.filter((e) => e.status !== ("Open" || "Inactive")).length} of{" "}
+            {leads?.length} leads won
           </p>
         </div>
       </div>
       {/* Lead Management Section */}
-      <div className="bg-white rounded-xl shadow-sm p-4">
+      <div className="bg-white rounded-xl shadow-sm p-4 dark:bg-gray-900">
         <h2 className="text-lg font-semibold mb-4">Lead Management</h2>
 
         {/* Search & Filters */}
@@ -240,9 +252,9 @@ function SalesDashboard() {
 
         {/* Leads Table */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 rounded-lg">
-          <table className="min-w-max w-full text-left text-xs sm:text-sm">
+          <table className="min-w-max w-full text-left text-xs sm:text-sm text-black dark:text-white">
             <thead>
-              <tr className="text-gray-500 border-b">
+              <tr className="text-gray-500 dark:text-gray-300 border-b">
                 <th className="py-2 px-4">Lead Name</th>
                 <th className="py-2 px-4">Contact</th>
                 <th className="py-2 px-4">Source</th>
@@ -266,11 +278,14 @@ function SalesDashboard() {
                   );
 
                 return (
-                  <tr key={lead._id} className="border-b hover:bg-gray-50">
+                  <tr
+                    key={lead._id}
+                    className="border-b hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
                     <td className="py-3 px-4 font-medium">
                       {lead.companyName}
                     </td>
-                    <td className="py-3 px-4 text-gray-600">
+                    <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
                       {lead.companyEmail} <br /> {lead.companyMobileNo}
                     </td>
                     <td className="py-3 px-4">
@@ -288,11 +303,11 @@ function SalesDashboard() {
                         className={`px-3 py-1 rounded-full text-xs font-semibold
       ${
         lead.status === "Open"
-          ? "bg-yellow-100 text-yellow-800"
+          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
           : lead.status === "Active"
-          ? "bg-green-100 text-green-800"
+          ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
           : lead.status === "Inactive"
-          ? "bg-red-100 text-red-800"
+          ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
           : lead.status === "Suspended"
           ? "bg-gray-200 text-gray-700"
           : "bg-gray-100 text-gray-800"
@@ -303,11 +318,11 @@ function SalesDashboard() {
                     </td>
                     <td className="py-3 px-4">
                       <span
-                        className={`px-2 py-1 text-xs ${
+                        className={`px-2 py-1 text-xs rounded-full ${
                           lead?.status === "Open" ||
                           lead?.status === "Active" ||
                           lead?.status === "Inactive"
-                            ? "bg-yellow-100 text-yellow-800"
+                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
                             : "bg-red-100 text-red-800"
                         }`}
                       >
@@ -320,7 +335,7 @@ function SalesDashboard() {
                     </td>
                     <td className="py-3 px-4">
                       <button
-                        className="btn btn-primary btn-sm "
+                        className="btn btn-primary btn-sm"
                         onClick={() => {
                           setSelectedLead(lead);
                           setWorkflowOpen(true);
@@ -348,7 +363,8 @@ function SalesDashboard() {
                             setEditingLead(lead); // prefill from store
                             setEditOpen(true);
                           }}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150 cursor-pointer"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150 cursor-pointer dark:bg-gray-800 dark:text-gray-200 
+dark:hover:bg-gray-700 dark:hover:text-white"
                           title="Edit Lead"
                           aria-label="Edit Lead"
                         >
@@ -366,8 +382,8 @@ function SalesDashboard() {
                             role="button"
                             className={`btn btn-sm w-28 flex justify-center items-center gap-2 ${
                               lead.status === "Active"
-                                ? "bg-green-500 text-white hover:bg-green-600"
-                                : "bg-red-500 text-white hover:bg-red-600"
+                                ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
+                                : "bg-red-500 border-red-500 text-white hover:bg-red-600"
                             }`}
                           >
                             {loadingLeadId === lead._id ? (

@@ -51,6 +51,13 @@ const Login = () => {
         {/* Left: Login Form */}
         <div className="p-10 md:p-14 flex flex-col justify-center gap-6">
           <div className=" text-center">
+            <div className="flex justify-center">
+              <img
+                className="w-1/2"
+                src="/WintreeTech_Logo.png"
+                alt="Wintreetech_logo"
+              />
+            </div>
             <h1 className="text-3xl sm:text-4xl text-center font-extrabold text-gray-900 leading-tight">
               Welcome to{" "}
               <span className="text-indigo-600">Wintreetech CRM</span>

@@ -42,6 +42,7 @@ const register = async (req, res) => {
         email,
         role,
         department,
+        createdAt: newUser.createdAt,
       },
     });
   } catch (error) {

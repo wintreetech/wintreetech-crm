@@ -21,7 +21,6 @@ export const registerUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const res = await api.post("auth/register", formData);
-      console.log("from the register user thunk", res);
       return {
         user: res.data?.data,
         message: res.data?.message || "User Created",
@@ -111,8 +110,6 @@ const usersSlice = createSlice({
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
-
-        console.log("new user data", action.payload);
         const created = action.payload?.user;
         if (created) {
           state.list = [created, ...state.list];
@@ -152,7 +149,6 @@ const usersSlice = createSlice({
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.loading = false;
         const id = action.payload.id;
-        console.log("id from delete user extra reducer", id);
         state.list = state.list.filter((u) => u._id !== id);
       })
       .addCase(deleteUser.rejected, (state, action) => {
