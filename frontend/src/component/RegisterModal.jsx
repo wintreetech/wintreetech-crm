@@ -78,7 +78,7 @@ const RegisterModal = ({
 
   return (
     <dialog open={isOpen} className="modal modal-bottom sm:modal-middle">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8 relative">
+      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8 relative dark:bg-gray-900">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -88,14 +88,17 @@ const RegisterModal = ({
           <X />
         </button>
 
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8 dark:text-white">
           {mode === "edit" ? "Edit User" : "Create an Account"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Full Name */}
           <div>
-            <label className="block text-gray-700 mb-2" htmlFor="username">
+            <label
+              className="block text-gray-700 mb-2 dark:text-gray-500"
+              htmlFor="username"
+            >
               Full Name
             </label>
             <input
@@ -111,7 +114,10 @@ const RegisterModal = ({
 
           {/* Email */}
           <div>
-            <label className="block text-gray-700 mb-2" htmlFor="email">
+            <label
+              className="block text-gray-700 mb-2 dark:text-gray-500"
+              htmlFor="email"
+            >
               Email ID
             </label>
             <input
@@ -130,14 +136,17 @@ const RegisterModal = ({
             {/* Role field for admin/superadmin */}
             {hasPermission && (
               <div>
-                <label className="block text-gray-700 mb-2" htmlFor="role">
+                <label
+                  className="block text-gray-700 mb-2 dark:text-gray-500"
+                  htmlFor="role"
+                >
                   Select Role
                 </label>
                 <select
                   name="role"
                   value={form.role}
                   onChange={handleChange}
-                  className="select w-full border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="select w-full border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900"
                   required
                 >
                   <option value="">Pick a role</option>
@@ -152,7 +161,10 @@ const RegisterModal = ({
 
             {/* Department field */}
             <div>
-              <label className="block text-gray-700 mb-2" htmlFor="department">
+              <label
+                className="block text-gray-700 mb-2 dark:text-gray-500"
+                htmlFor="department"
+              >
                 Select Department
               </label>
               <select
@@ -160,7 +172,7 @@ const RegisterModal = ({
                 value={form.department}
                 onChange={handleChange}
                 required
-                className="select w-full border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="select w-full border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900"
               >
                 <option value="">Pick a Department</option>
 
@@ -188,7 +200,10 @@ const RegisterModal = ({
           {mode === "create" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-gray-700 mb-2" htmlFor="password">
+                <label
+                  className="block text-gray-700 mb-2 dark:text-gray-500"
+                  htmlFor="password"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -213,7 +228,7 @@ const RegisterModal = ({
 
               <div>
                 <label
-                  className="block text-gray-700 mb-2"
+                  className="block text-gray-700 mb-2 dark:text-gray-500"
                   htmlFor="confirmPassword"
                 >
                   Confirm Password

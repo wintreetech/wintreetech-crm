@@ -15,6 +15,8 @@ import {
   Legend,
 } from "recharts";
 import { BarChart2, DollarSign, Users, Activity } from "lucide-react";
+import { useSelector } from "react-redux";
+import { selectAllUsers } from "../store/slices/Users.slice.js";
 
 // Sample data
 const salesData = [
@@ -35,20 +37,53 @@ const revenueData = [
   { month: "Jun", revenue: 22000 },
 ];
 
-const departmentPieData = [
-  { name: "Sales", value: 4000, color: "#4f46e5" },
-  { name: "Finance", value: 3000, color: "#10b981" },
-  { name: "Support", value: 2000, color: "#f59e0b" },
-  { name: "Recon", value: 1500, color: "#ef4444" },
-];
-
 const Dashboard = () => {
+  // All users
+  const allUsers = useSelector(selectAllUsers);
+
+  // Generate the pie data dynamically as an array of objects
+  const departmentPieData = [
+    {
+      name: "Sales",
+      value: allUsers.filter((u) => u.department?.toLowerCase() === "sales")
+        .length,
+      color: "#4f46e5",
+    },
+    {
+      name: "Finance",
+      value: allUsers.filter((u) => u.department?.toLowerCase() === "finance")
+        .length,
+      color: "#10b981",
+    },
+    {
+      name: "Support",
+      value: allUsers.filter((u) => u.department?.toLowerCase() === "support")
+        .length,
+      color: "#f59e0b",
+    },
+    {
+      name: "Recon",
+      value: allUsers.filter((u) => u.department?.toLowerCase() === "recon")
+        .length,
+      color: "#ef4444",
+    },
+    {
+      name: "Management",
+      value: allUsers.filter(
+        (u) => u.department?.toLowerCase() === "management"
+      ).length,
+      color: "#F87171",
+    },
+  ];
+
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 bg-gray-100 min-h-screen dark:bg-gray-800">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Welcome</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+            Welcome
+          </h1>
           <p className="text-gray-500 mt-1">
             Manage your CRM and all department dashboards here.
           </p>
@@ -57,32 +92,40 @@ const Dashboard = () => {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white p-5 rounded-2xl shadow flex items-center space-x-4 hover:shadow-lg transition">
+        <div className="bg-white p-5 rounded-2xl shadow flex items-center space-x-4 hover:shadow-lg transition dark:bg-gray-900">
           <Users size={36} className="text-indigo-600" />
           <div>
             <p className="text-gray-500 text-sm">Total Users</p>
-            <h2 className="text-xl font-bold text-gray-800">1,250</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              {allUsers.length}
+            </h2>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-2xl shadow flex items-center space-x-4 hover:shadow-lg transition">
+        <div className="bg-white p-5 rounded-2xl shadow flex items-center space-x-4 hover:shadow-lg transition dark:bg-gray-900">
           <DollarSign size={36} className="text-green-600" />
           <div>
             <p className="text-gray-500 text-sm">Revenue</p>
-            <h2 className="text-xl font-bold text-gray-800">$45,230</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              $45,230
+            </h2>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-2xl shadow flex items-center space-x-4 hover:shadow-lg transition">
+        <div className="bg-white p-5 rounded-2xl shadow flex items-center space-x-4 hover:shadow-lg transition dark:bg-gray-900">
           <BarChart2 size={36} className="text-orange-600" />
           <div>
             <p className="text-gray-500 text-sm">Sales</p>
-            <h2 className="text-xl font-bold text-gray-800">320</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              320
+            </h2>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-2xl shadow flex items-center space-x-4 hover:shadow-lg transition">
+        <div className="bg-white p-5 rounded-2xl shadow flex items-center space-x-4 hover:shadow-lg transition dark:bg-gray-900">
           <Activity size={36} className="text-red-600" />
           <div>
             <p className="text-gray-500 text-sm">Active Sessions</p>
-            <h2 className="text-xl font-bold text-gray-800">98</h2>
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+              98
+            </h2>
           </div>
         </div>
       </div>
@@ -90,8 +133,10 @@ const Dashboard = () => {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Sales Line Chart */}
-        <div className="col-span-2 bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-          <h3 className="font-semibold text-gray-800 mb-4">Monthly Sales</h3>
+        <div className="col-span-2 bg-white p-5 rounded-2xl shadow hover:shadow-lg transition dark:bg-gray-900">
+          <h3 className="font-semibold text-gray-800 mb-4 dark:text-gray-500">
+            Monthly Sales
+          </h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart
               data={salesData}
@@ -112,8 +157,8 @@ const Dashboard = () => {
         </div>
 
         {/* Department Pie Chart */}
-        <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-          <h3 className="font-semibold text-gray-800 mb-4">
+        <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition dark:bg-gray-900">
+          <h3 className="font-semibold text-gray-800 mb-4 dark:text-gray-500">
             Department Distribution
           </h3>
           <ResponsiveContainer width="100%" height={300}>
@@ -137,8 +182,10 @@ const Dashboard = () => {
       </div>
 
       {/* Revenue Bar Chart */}
-      <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition mb-6">
-        <h3 className="font-semibold text-gray-800 mb-4">Monthly Revenue</h3>
+      <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition mb-6 dark:bg-gray-900">
+        <h3 className="font-semibold text-gray-800 mb-4 dark:text-gray-500">
+          Monthly Revenue
+        </h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart
             data={revenueData}
@@ -154,8 +201,10 @@ const Dashboard = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition">
-        <h3 className="font-semibold text-gray-800 mb-4">Recent Activity</h3>
+      <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition dark:bg-gray-900">
+        <h3 className="font-semibold text-gray-800 mb-4 dark:text-gray-500">
+          Recent Activity
+        </h3>
         <ul className="space-y-3">
           <li className="flex justify-between items-center">
             <div>
