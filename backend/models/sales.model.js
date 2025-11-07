@@ -61,12 +61,6 @@ const SalesSchema = new Schema(
         "Annexture",
       ],
       default: "Under Discussion",
-      validate: {
-        validator: function (v) {
-          return this.status === "Open" ? !!v : v === undefined || v === null;
-        },
-        message: "SubStatus is only allowed when status is 'Open'",
-      },
     },
     monthlyDealSize: {
       type: Number,

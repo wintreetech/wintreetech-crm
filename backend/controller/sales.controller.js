@@ -89,10 +89,6 @@ const updateSalesLead = async (req, res) => {
     Object.assign(lead, req.body);
     const updatedLead = await lead.save();
 
-    if (req.body.subStatus && lead.status !== "Open") {
-      console.warn("Updating subStatus while status is not Open");
-    }
-
     res.status(200).json({ success: true, data: updatedLead });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
