@@ -184,6 +184,7 @@ export const updateLead = createAsyncThunk(
         message: res.data?.message || "Lead updated",
       };
     } catch (err) {
+      console.error(err);
       return rejectWithValue(
         err?.response?.data?.message || err?.message || "Failed to update lead"
       );
