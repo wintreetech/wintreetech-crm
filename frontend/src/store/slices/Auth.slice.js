@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import api from "../../api";
+import { decryptData, encryptData } from "../../utils/cryptoUtils";
 
 //Thunks
 export const loginUser = createAsyncThunk(
@@ -8,9 +9,21 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await api.post("/auth/login", credentials);
       const user = res.data.user;
-      localStorage.setItem("currentUser", JSON.stringify(user));
+
+      console.log("User data", user);
+
+      if (!user) {
+        throw new Error("No user returned from server");
+      }
+
+      // Encrypt user data before saving
+      const encryptedUser = await encryptData(user);
+      localStorage.setItem("currentUser", encryptedUser);
+      console.log("item setetd");
+
       return { user, message: res.data.message };
     } catch (err) {
+      console.error(err);
       return rejectWithValue(err.response?.data?.message || "Login failed");
     }
   }
@@ -20,14 +33,14 @@ export const getUserFromStorage = createAsyncThunk(
   "auth/getUserFromStorage",
   async (_, { dispatch }) => {
     try {
-      const storedUser = localStorage.getItem("currentUser");
-      if (storedUser) {
-        const user = JSON.parse(storedUser);
-        dispatch(setCurentUser(user));
-        return user;
-      }
-      return null;
+      const stored = localStorage.getItem("currentUser");
+      if (!stored) return null;
+
+      const user = await decryptData(stored); // ⟵ decrypt here
+      dispatch(setCurentUser(user)); // ⟵ set your state
+      return user;
     } catch (err) {
+      localStorage.removeItem("currentUser");
       console.error("Error retrieving user from localStorage:", err);
       return null;
     }
