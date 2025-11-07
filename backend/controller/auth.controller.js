@@ -61,22 +61,29 @@ const login = async (req, res) => {
     }
 
     const user = await Auth.findOne({ email });
-    if (!user) {
+    if (!user)
       return res.status(401).json({ message: "Invalid email or password" });
-    }
 
     // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    if (!isMatch)
       return res.status(401).json({ message: "Invalid email or password" });
-    }
 
     // Create JWT token
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
+
+    // Set httpOnly cookie
+    res.cookie("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // requires HTTPS in prod
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      path: "/", // send for all routes
+    });
 
     return res.status(200).json({
       message: "Login successful",
@@ -93,6 +100,12 @@ const login = async (req, res) => {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
+};
+
+//  Logout: clear the cookie
+const logout = async (_req, res) => {
+  res.clearCookie("auth_token"), { path: "/" };
+  return res.status(200).json({ message: "Logged out" });
 };
 
 // Update existing user
@@ -196,4 +209,4 @@ const AllUser = async (req, res) => {
   }
 };
 
-export { register, login, AllUser, updateUser, deleteUser };
+export { register, login, logout, AllUser, updateUser, deleteUser };

@@ -10,8 +10,6 @@ export const loginUser = createAsyncThunk(
       const res = await api.post("/auth/login", credentials);
       const user = res.data.user;
 
-      console.log("User data", user);
-
       if (!user) {
         throw new Error("No user returned from server");
       }
@@ -19,12 +17,31 @@ export const loginUser = createAsyncThunk(
       // Encrypt user data before saving
       const encryptedUser = await encryptData(user);
       localStorage.setItem("currentUser", encryptedUser);
-      console.log("item setetd");
 
       return { user, message: res.data.message };
     } catch (err) {
       console.error(err);
       return rejectWithValue(err.response?.data?.message || "Login failed");
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      // server clears the auth cookie
+      await api.post("/auth/logout");
+      // also clear any local persistence you keep
+      try {
+        localStorage.removeItem("currentUser");
+      } catch {}
+      return true;
+    } catch (err) {
+      // even if server fails, we’ll still clear local state in the reducer
+      return rejectWithValue(
+        err?.response?.data?.message || err?.message || "Logout failed"
+      );
     }
   }
 );
@@ -65,15 +82,6 @@ const authSlice = createSlice({
     setCurentUser: (state, action) => {
       state.currentUser = action.payload;
     },
-    logout: (state) => {
-      try {
-        localStorage.removeItem("currentUser");
-        localStorage.clear();
-      } catch (err) {
-        console.error("logout failed", e);
-      }
-      state = initialState;
-    },
   },
   extraReducers: (buider) => {
     buider
@@ -89,6 +97,23 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // logoutUser
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(logoutUser.rejected, (state, action) => {
+        try {
+          localStorage.removeItem("currentUser");
+        } catch {}
+        state.currentUser = null;
+        state.loading = false;
+        state.error = action.payload || "Logout failed";
       });
   },
 });
