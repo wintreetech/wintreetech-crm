@@ -46,23 +46,31 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-2">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 dark:bg-gray-900">
+      <div className="max-w-4xl w-full bg-white rounded-2xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-2 dark:bg-gray-800">
         {/* Left: Login Form */}
         <div className="p-10 md:p-14 flex flex-col justify-center gap-6">
           <div className=" text-center">
             <div className="flex justify-center">
+              {/* <!-- Light mode logo --> */}
               <img
-                className="w-1/2"
+                className="w-1/2 dark:hidden"
                 src="/WintreeTech_Logo.png"
-                alt="Wintreetech_logo"
+                alt="WintreeTech_logo_dark"
+              />
+
+              {/* <!-- Dark mode logo --> */}
+              <img
+                className="w-1/2 hidden dark:inline-block"
+                src="/WintreeTech_Logo_Light.png"
+                alt="WintreeTech_logo_light"
               />
             </div>
-            <h1 className="text-3xl sm:text-4xl text-center font-extrabold text-gray-900 leading-tight">
+            <h1 className="text-3xl sm:text-4xl text-center font-extrabold text-gray-900 leading-tight dark:text-gray-200">
               Welcome to{" "}
               <span className="text-indigo-600">Wintreetech CRM</span>
             </h1>
-            <p className="mt-3 text-gray-600 max-w-xl">
+            <p className="mt-3 text-gray-600 max-w-xl dark:text-gray-400">
               Sign in quickly and securely — your workflow, uninterrupted.
             </p>
           </div>
@@ -104,7 +112,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 focus:outline-none dark:text-gray-400 dark:hover:text-gray-200"
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
@@ -123,7 +131,12 @@ const Login = () => {
         </div>
 
         {/* Right: Illustration */}
-        <div className="hidden md:flex items-center justify-center bg-gradient-to-br from-indigo-50 to-white p-6">
+        <div
+          className="hidden md:flex items-center justify-center 
+  bg-gradient-to-br from-indigo-50 to-white 
+  dark:from-gray-900 dark:to-gray-800 
+  text-gray-800 dark:text-gray-500 p-6"
+        >
           <div className="max-w-xs text-center">
             <svg
               viewBox="0 0 200 200"
