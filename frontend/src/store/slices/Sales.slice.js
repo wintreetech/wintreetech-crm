@@ -76,7 +76,6 @@ export const updateLeadStatus = createAsyncThunk(
 export const updateStatus = createAsyncThunk(
   "sales/updateStatus",
   async ({ id, status }, { rejectWithValue }) => {
-    console.log("function ran from the update status");
     try {
       const res = await api.patch(`/sales/status/${id}`, { status });
       return {
@@ -84,7 +83,7 @@ export const updateStatus = createAsyncThunk(
         message: res.data?.message || "Status updated",
       };
     } catch (err) {
-      console.error(err);
+      console.error("error updating lead", err);
       return rejectWithValue(
         err?.response?.data?.message || "Failed to update status"
       );

@@ -40,6 +40,7 @@ app.use(
   })
 );
 app.use(cookieParser());
+
 app.use(routes);
 
 // Serve uploaded files

@@ -12,7 +12,12 @@ import {
   X,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { logout, selectCurrentUser } from "../store/slices/Auth.slice.js";
+import {
+  logout,
+  logoutUser,
+  selectAuthLoading,
+  selectCurrentUser,
+} from "../store/slices/Auth.slice.js";
 import { fetchUsers } from "../store/slices/Users.slice.js";
 
 function MainLayout() {
@@ -33,10 +38,17 @@ function MainLayout() {
     setSidebarOpen(false);
   };
 
-  const handleLogoutClick = () => {
-    dispatch(logout());
-    navigate("/login");
-    toast.success("Logout Successfully");
+  const handleLogoutClick = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      toast.success("Logout successful");
+    } catch (e) {
+      toast.error(
+        typeof e === "string" ? e : "Logout failed (cleared locally)"
+      );
+    } finally {
+      navigate("/login");
+    }
   };
 
   const formatTitle = (path, user) => {
