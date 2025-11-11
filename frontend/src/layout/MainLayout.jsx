@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -7,18 +7,13 @@ import {
   DollarSign,
   Headphones,
   LayoutDashboard,
-  Menu,
   Users,
-  X,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  logout,
-  logoutUser,
-  selectAuthLoading,
-  selectCurrentUser,
-} from "../store/slices/Auth.slice.js";
+import { logoutUser, selectCurrentUser } from "../store/slices/Auth.slice.js";
 import { fetchUsers } from "../store/slices/Users.slice.js";
+import ALL_ROUTES from "../data/menu.js";
+import SidebarSubmenu from "../component/Submenu/SidebarSubmenu.jsx";
 
 function MainLayout() {
   const dispatch = useDispatch();
@@ -32,6 +27,9 @@ function MainLayout() {
 
   const showSidebar =
     currentUser.role === "superadmin" || currentUser.role === "admin";
+
+  // Ref for the side submenu
+  const asideRef = useRef(null);
 
   const toggleSection = (value) => {
     navigate(`/${value}`);
@@ -191,21 +189,19 @@ function MainLayout() {
         {/* SIDEBAR (Superadmin + Admin only) */}
         {showSidebar && (
           <aside
+            ref={asideRef}
             className={`${
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             } fixed md:static top-0 left-0 h-full w-64 bg-gray-900 text-white p-4 transition-transform duration-300 md:translate-x-0 z-40`}
           >
-            {/* Close button for mobile */}
-            <div className="flex justify-between items-center mb-6 md:hidden">
-              <h2 className="text-xl font-bold">Menu</h2>
-              <button onClick={() => setSidebarOpen(false)}>
-                <X size={20} />
-              </button>
-            </div>
-
             <ul className="space-y-2">
               {allowedSidebarItems.map((item) => (
-                <li key={item.path}>
+                <li
+                  key={item.path}
+                  // expose info for the submenu via dataset (no events needed)
+                  data-path={`/${item.path}`} // e.g., "/support"
+                  data-department={item.department || item.path} // e.g., "support"
+                >
                   <NavLink
                     to={`/${item.path}`}
                     onClick={() => toggleSection(item.path)}
@@ -216,9 +212,6 @@ function MainLayout() {
                         isActive ? "bg-gray-800 text-white" : "text-gray-300",
                       ].join(" ")
                     }
-                    aria-current={({ isActive }) =>
-                      isActive ? "page" : undefined
-                    }
                   >
                     {item.icon}
                     <span className="ml-2">{item.name}</span>
@@ -226,6 +219,13 @@ function MainLayout() {
                 </li>
               ))}
             </ul>
+
+            {/* mount submenu once, it does everything */}
+            <SidebarSubmenu
+              asideRef={asideRef}
+              userRole={currentUser?.role || "user"}
+              allRoutes={ALL_ROUTES}
+            />
           </aside>
         )}
 

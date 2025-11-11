@@ -44,7 +44,7 @@ const workflowPhases = [
 
 function LeadWorkflowModal({ isOpen, onClose, lead }) {
   return (
-    <dialog open={isOpen} className="modal ">
+    <dialog open={isOpen} className="modal">
       <div className="modal-box w-11/12 max-w-2xl">
         <h1 className="text-2xl font-bold mb-2">
           Workflow Phases for {lead.companyName}

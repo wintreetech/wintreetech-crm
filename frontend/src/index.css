@@ -1,2 +1,67 @@
 @import "tailwindcss";
 @plugin "daisyui";
+
+/* Support dashboard */
+.font-display {
+  font-family: "Inter", sans-serif;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #e2e8f0;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #f1f5f9;
+}
+.bg-background-light {
+  background-color: #f1f5f9;
+}
+.bg-card-light {
+  background-color: #ffffff;
+}
+.text-text-light {
+  color: #1e293b;
+}
+.text-text-muted-light {
+  color: #64748b;
+}
+.border-border-light {
+  border-color: #e2e8f0;
+}
+.bg-primary {
+  background-color: #3b82f6;
+}
+
+.bg-primary-hover {
+  background-color: #2563eb;
+}
+
+.text-primary {
+  color: #3b82f6;
+}
+
+.font-display {
+  font-family: "Inter", sans-serif;
+}
+
+/* Scrollbars */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #e2e8f0;
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #f1f5f9;
+}
+
+/* Dark scrollbars */
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #374151;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #111827;
+}

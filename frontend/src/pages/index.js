@@ -6,10 +6,10 @@ import FinanceDashboard from "./FinanceDashboard.jsx";
 import Users from "./Users.jsx";
 
 export {
-	Dashboard,
-	ReconDashboard,
-	SupportDashboard,
-	SalesDashboard,
-	FinanceDashboard,
-	Users,
+  Dashboard,
+  ReconDashboard,
+  SupportDashboard,
+  SalesDashboard,
+  FinanceDashboard,
+  Users,
 };
