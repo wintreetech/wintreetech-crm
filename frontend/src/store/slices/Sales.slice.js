@@ -8,6 +8,7 @@ import {
   updateLead,
   addProcessingUrls,
   deleteProcessingUrl,
+  fetchProcessingUrls,
 } from "../thunks/Sales.thunks.js";
 
 // empty bucket for the document data fallback
@@ -297,6 +298,22 @@ const salesSlice = createSlice({
       .addCase(deleteDocument.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to delete document";
+      })
+
+      // Fetch processing urls
+      .addCase(fetchProcessingUrls.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProcessingUrls.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.processingUrls.trusted = action.payload.trustedUrls;
+        state.processingUrls.ftd = action.payload.ftdUrls;
+      })
+      .addCase(fetchProcessingUrls.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
       })
 
       // Add a processing Url
