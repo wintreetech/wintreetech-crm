@@ -6,6 +6,8 @@ import {
   docKey,
   uploadDocuments,
   updateLead,
+  addProcessingUrls,
+  deleteProcessingUrl,
 } from "../thunks/Sales.thunks.js";
 
 // empty bucket for the document data fallback
@@ -112,6 +114,10 @@ const initialState = {
   loading: false,
   error: null,
   documents: {},
+  processingUrls: {
+    trusted: [],
+    ftd: [],
+  },
 };
 
 // Slice
@@ -291,6 +297,38 @@ const salesSlice = createSlice({
       .addCase(deleteDocument.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to delete document";
+      })
+
+      // Add a processing Url
+      .addCase(addProcessingUrls.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addProcessingUrls.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.processingUrls.trusted = action.payload.trustedUrls;
+        state.processingUrls.ftd = action.payload.ftdUrls;
+      })
+      .addCase(addProcessingUrls.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      })
+
+      // Delete a processing Url
+      .addCase(deleteProcessingUrl.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteProcessingUrl.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.processingUrls.trusted = action.payload.trustedUrls;
+        state.processingUrls.ftd = action.payload.ftdUrls;
+      })
+      .addCase(deleteProcessingUrl.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
       });
   },
 });

@@ -192,4 +192,68 @@ export const updateLead = createAsyncThunk(
   }
 );
 
+// Fetch processing URLs for a lead
+export const fetchProcessingUrls = createAsyncThunk(
+  "sales/fetchProcessingUrls",
+  async (leadId, { rejectWithValue }) => {
+    try {
+      const { data } = await api.get(`/processing-urls/${leadId}`);
+      return {
+        leadId,
+        trustedUrls: data?.data?.trustedUrls || [],
+        ftdUrls: data?.data?.ftdUrls || [],
+      };
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to load processing URLs"
+      );
+    }
+  }
+);
+
+// Add new processing URLs
+export const addProcessingUrls = createAsyncThunk(
+  "sales/addProcessingUrls",
+  async ({ leadId, urls, type }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post(`/processing-urls/${leadId}`, {
+        urls,
+        type,
+      });
+
+      return {
+        leadId,
+        trustedUrls: data?.data?.trustedUrls || [],
+        ftdUrls: data?.data?.ftdUrls || [],
+      };
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to add URLs"
+      );
+    }
+  }
+);
+
+// Delete a processing URL
+export const deleteProcessingUrl = createAsyncThunk(
+  "sales/deleteProcessingUrl",
+  async ({ leadId, url, type }, { rejectWithValue }) => {
+    try {
+      const { data } = await api.delete(`/processing-urls/${leadId}`, {
+        data: { url, type },
+      });
+
+      return {
+        leadId,
+        trustedUrls: data?.data?.trustedUrls || [],
+        ftdUrls: data?.data?.ftdUrls || [],
+      };
+    } catch (err) {
+      return rejectWithValue(
+        err?.response?.data?.message || "Failed to delete URL"
+      );
+    }
+  }
+);
+
 // ------- Lead ops end -------
