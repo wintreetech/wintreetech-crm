@@ -54,7 +54,7 @@ export const addProcessingUrls = async (req, res) => {
 			new Set(
 				urls
 					.map((u) => (typeof u === "string" ? u.trim() : ""))
-					.filter((u) => u && /^https?:\/\//i.test(u))
+					.filter((u) => u.length > 0)
 			)
 		);
 
