@@ -73,8 +73,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   const handleAdd = async () => {
     const parsed = newUrls
       .split("\n")
-      .map((u) => u.trim())
-      .filter((u) => /^https?:\/\//i.test(u));
+      .map((u) => u.trim()).filter((u) => u.length > 0);
     if (!parsed.length) return toast.error("Enter valid URLs.");
 
     try {
