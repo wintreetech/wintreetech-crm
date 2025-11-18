@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "react-hot-toast";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -8,6 +8,9 @@ import {
   Headphones,
   LayoutDashboard,
   Users,
+  Menu,
+  X,
+  ChevronDown,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser, selectCurrentUser } from "../store/slices/Auth.slice.js";
@@ -53,8 +56,9 @@ function MainLayout() {
     // root
     if (path === "/") return "Home Dashboard";
 
-    // Remove leading slash
-    const name = path.replace("/", "").toLowerCase();
+    // Split the path by "/" and take the last non-empty segment
+    const segments = path.split("/").filter(Boolean);
+    const name = segments[segments.length - 1].toLowerCase();
 
     // Special case for superadmin dashboard
     if (name === "dashboard" && user?.role === "superadmin") {
@@ -137,19 +141,106 @@ function MainLayout() {
     return true;
   });
 
+  // ------- Mobile-only submenu helpers (non-breaking, best-effort) -------
+
+  const getChildrenFor = (parent) => {
+    const role = currentUser?.role || "user";
+    const deptKey = parent.department || parent.path;
+
+    const filterByRole = (arr) =>
+      arr.filter((r) => !r.roles || r.roles.includes(role));
+
+    if (Array.isArray(ALL_ROUTES)) {
+      // 1) look for nested .children under an item matching the parent
+      const match = ALL_ROUTES.find(
+        (r) =>
+          r.path === `/${parent.path}` ||
+          r.path === parent.path ||
+          r.department === deptKey ||
+          r.section === deptKey
+      );
+      if (match?.children && Array.isArray(match.children)) {
+        return filterByRole(
+          match.children.map((c) => ({
+            name: c.name || c.title || c.label || c.path,
+            path: typeof c.path === "string" ? c.path.replace(/^\//, "") : "",
+          }))
+        );
+      }
+      // 2) consider flat list grouped by .parent or .section
+      const byParent = ALL_ROUTES.filter(
+        (r) =>
+          r.parent === parent.path ||
+          r.parent === `/${parent.path}` ||
+          r.section === deptKey ||
+          r.department === deptKey
+      );
+      if (byParent.length) {
+        return filterByRole(
+          byParent.map((c) => ({
+            name: c.name || c.title || c.label || c.path,
+            path: typeof c.path === "string" ? c.path.replace(/^\//, "") : "",
+          }))
+        );
+      }
+    } else if (ALL_ROUTES && typeof ALL_ROUTES === "object") {
+      // Object keyed by department/path
+      const bucket =
+        ALL_ROUTES[deptKey] ||
+        ALL_ROUTES[parent.path] ||
+        ALL_ROUTES[`/${parent.path}`];
+      if (Array.isArray(bucket)) {
+        return filterByRole(
+          bucket.map((c) => ({
+            name: c.name || c.title || c.label || c.path,
+            path: typeof c.path === "string" ? c.path.replace(/^\//, "") : "",
+          }))
+        );
+      }
+    }
+    return [];
+  };
+
+  // Track which mobile dropdowns are open
+  const [openMobile, setOpenMobile] = useState({});
+  const toggleMobile = (key) =>
+    setOpenMobile((s) => ({ ...s, [key]: !s[key] }));
+
+  // Precompute mobile children
+  const mobileChildren = useMemo(() => {
+    const map = {};
+    allowedSidebarItems.forEach((it) => {
+      map[it.path] = getChildrenFor(it);
+    });
+    return map;
+  }, [allowedSidebarItems, currentUser?.role]);
+
   return (
     <div className="h-screen flex flex-col">
       {/* TOP HEADER */}
       <header className="flex justify-between items-center bg-gray-900 text-white px-4 py-2 shadow-md">
         {/* Left: Page Info */}
-        <div>
-          <h1 className="text-xl font-semibold leading-tight">{pageTitle}</h1>
-          <p className="text-gray-400 text-xs">
-            (
-            {currentUser.department.charAt(0).toUpperCase() +
-              currentUser.department.slice(1)}
-            )
-          </p>
+        <div className="flex items-center gap-3">
+          {/* Hamburger (mobile/tablet) */}
+          {showSidebar && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden inline-flex items-center justify-center rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              aria-label="Open menu"
+              aria-expanded={sidebarOpen}
+            >
+              <Menu size={22} />
+            </button>
+          )}
+          <div>
+            <h1 className="text-xl font-semibold leading-tight">{pageTitle}</h1>
+            <p className="text-gray-400 text-xs">
+              (
+              {currentUser.department.charAt(0).toUpperCase() +
+                currentUser.department.slice(1)}
+              )
+            </p>
+          </div>
         </div>
 
         {/* Right: Avatar Dropdown */}
@@ -164,6 +255,8 @@ function MainLayout() {
             <button
               onClick={() => setAvatarOpen(!avatarOpen)}
               className="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center text-[18px] font-semibold shadow-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+              aria-label="User menu"
+              aria-expanded={avatarOpen}
             >
               {currentUser?.username.charAt(0).toUpperCase()}
             </button>
@@ -188,45 +281,141 @@ function MainLayout() {
       <div className="flex flex-1 overflow-hidden">
         {/* SIDEBAR (Superadmin + Admin only) */}
         {showSidebar && (
-          <aside
-            ref={asideRef}
-            className={`${
-              sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            } fixed md:static top-0 left-0 h-full w-64 bg-gray-900 text-white p-4 transition-transform duration-300 md:translate-x-0 z-40`}
-          >
-            <ul className="space-y-2">
-              {allowedSidebarItems.map((item) => (
-                <li
-                  key={item.path}
-                  // expose info for the submenu via dataset (no events needed)
-                  data-path={`/${item.path}`} // e.g., "/support"
-                  data-department={item.department || item.path} // e.g., "support"
-                >
-                  <NavLink
-                    to={`/${item.path}`}
-                    onClick={() => toggleSection(item.path)}
-                    className={({ isActive }) =>
-                      [
-                        "flex items-center w-full px-3 py-2 rounded-lg transition",
-                        "hover:bg-gray-800 focus:outline-none",
-                        isActive ? "bg-gray-800 text-white" : "text-gray-300",
-                      ].join(" ")
-                    }
-                  >
-                    {item.icon}
-                    <span className="ml-2">{item.name}</span>
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-
-            {/* mount submenu once, it does everything */}
-            <SidebarSubmenu
-              asideRef={asideRef}
-              userRole={currentUser?.role || "user"}
-              allRoutes={ALL_ROUTES}
+          <>
+            {/* Overlay (mobile only) */}
+            <div
+              className={`fixed inset-0 bg-black/50 z-30 md:hidden transition-opacity ${
+                sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
+              }`}
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden={!sidebarOpen}
             />
-          </aside>
+
+            <aside
+              ref={asideRef}
+              className={`${
+                sidebarOpen ? "translate-x-0" : "-translate-x-full"
+              } fixed md:static top-0 left-0 h-full w-64 bg-gray-900 text-white p-4 transition-transform duration-300 md:translate-x-0 z-40`}
+              aria-label="Sidebar"
+            >
+              {/* Close button (mobile) */}
+              <div className="md:hidden flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-gray-300">Menu</span>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="inline-flex items-center justify-center rounded-lg p-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  aria-label="Close menu"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <ul className="space-y-2">
+                {allowedSidebarItems.map((item) => {
+                  const id = item.path;
+                  const children = mobileChildren[id] || [];
+                  const hasChildren = children.length > 0;
+
+                  return (
+                    <li
+                      key={item.path}
+                      data-path={`/${item.path}`}
+                      data-department={item.department || item.path}
+                      className="group"
+                    >
+                      <div className="flex items-center gap-2">
+                        <NavLink
+                          to={`/${item.path}`}
+                          onClick={() => toggleSection(item.path)}
+                          className={({ isActive }) =>
+                            [
+                              "flex items-center flex-1 px-3 py-2 rounded-lg transition",
+                              "hover:bg-gray-800 focus:outline-none",
+                              isActive
+                                ? "bg-gray-800 text-white"
+                                : "text-gray-300",
+                            ].join(" ")
+                          }
+                        >
+                          {item.icon}
+                          <span className="ml-2">{item.name}</span>
+                        </NavLink>
+
+                        {/* Mobile dropdown toggle (only visible on < md when there ARE children) */}
+                        {hasChildren && (
+                          <button
+                            type="button"
+                            className="md:hidden inline-flex p-2 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            onClick={() => toggleMobile(id)}
+                            aria-expanded={!!openMobile[id]}
+                            aria-controls={`mobile-sub-${id}`}
+                            title={`Toggle ${item.name} submenu`}
+                          >
+                            <ChevronDown
+                              size={18}
+                              className={`transition-transform ${
+                                openMobile[id] ? "rotate-180" : ""
+                              }`}
+                            />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Mobile-only inline submenu */}
+                      {hasChildren && (
+                        <ul
+                          id={`mobile-sub-${id}`}
+                          className={`md:hidden ml-8 mt-1 space-y-1 overflow-hidden transition-[max-height,opacity] duration-300 ${
+                            openMobile[id]
+                              ? "max-h-96 opacity-100"
+                              : "max-h-0 opacity-0"
+                          }`}
+                        >
+                          {children.map((child) => {
+                            // normalize child.path
+                            const childPath =
+                              typeof child.path === "string"
+                                ? child.path.replace(/^\//, "")
+                                : "";
+                            const to = `/${childPath || `${item.path}`}`;
+
+                            return (
+                              <li key={`${id}-${childPath || child.name}`}>
+                                <NavLink
+                                  to={to}
+                                  onClick={() => setSidebarOpen(false)}
+                                  className={({ isActive }) =>
+                                    [
+                                      "block px-3 py-2 rounded-md text-sm transition",
+                                      "hover:bg-gray-800 focus:outline-none",
+                                      isActive
+                                        ? "bg-gray-800 text-white"
+                                        : "text-gray-300",
+                                    ].join(" ")
+                                  }
+                                >
+                                  {child.name || to}
+                                </NavLink>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* Desktop hover/flyout submenu (unchanged) */}
+              <div className="hidden md:block">
+                <SidebarSubmenu
+                  asideRef={asideRef}
+                  userRole={currentUser?.role || "user"}
+                  allRoutes={ALL_ROUTES}
+                />
+              </div>
+            </aside>
+          </>
         )}
 
         {/* MAIN CONTENT */}

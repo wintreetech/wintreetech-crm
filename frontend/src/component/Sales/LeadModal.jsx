@@ -67,7 +67,7 @@ function LeadModal({
   };
 
   return (
-    <dialog open={isOpen} className="modal modal-bottom sm:modal-middle">
+    <dialog open={isOpen} className="modal modal-middle sm:modal-middle">
       <div className="modal-box w-11/12 max-w-3xl">
         <h3 className="font-bold text-xl mb-6 text-center">
           {mode === "edit" ? "Edit" : "Add"} Lead

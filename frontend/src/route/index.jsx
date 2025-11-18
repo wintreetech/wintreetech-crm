@@ -12,6 +12,7 @@ import Login from "../component/Login";
 import ProtectedRoutes from "../component/ProtectedRoutes";
 import NotFound from "../component/NotFound";
 import Unauthorized from "../component/Unauthorized";
+import SupportAnalytics from "../pages/support/SupportAnalytics";
 
 const router = createBrowserRouter([
   {
@@ -76,6 +77,18 @@ const router = createBrowserRouter([
             allowedDepartments={["support"]}
           >
             <SupportDashboard />
+          </ProtectedRoutes>
+        ),
+      },
+      // support analytics child route
+      {
+        path: "support/analytics",
+        element: (
+          <ProtectedRoutes
+            allowedRoles={["user", "admin", "superadmin"]}
+            allowedDepartments={["support"]}
+          >
+            <SupportAnalytics />
           </ProtectedRoutes>
         ),
       },

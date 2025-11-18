@@ -49,7 +49,6 @@ export default async function protect(req, res, next) {
       role: user.role,
       department: user.department,
     };
-
     return next();
   } catch (err) {
     return res.status(401).json({ message: "Invalid or expired token" });

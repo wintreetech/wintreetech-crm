@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Trash, Pen, Check, X } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Trash,
+  Pen,
+  Check,
+  X,
+  Link2,
+  FileSpreadsheet,
+} from "lucide-react";
 import LeadModal from "../component/Sales/LeadModal";
 import LeadWorkflowModal from "../component/Sales/LeadWorkflowModal";
 import toast from "react-hot-toast";
@@ -15,6 +24,8 @@ import {
 import { updateLead } from "../store/thunks/Sales.thunks.js";
 import { selectCurrentUser } from "../store/slices/Auth.slice";
 import InfoTooltip from "../component/InfoTooltip";
+import LeadUrlModal from "../component/Sales/LeadUrlModal.jsx";
+import API_BASE_URL from "../config.js";
 
 function SalesDashboard() {
   const dispatch = useDispatch();
@@ -38,6 +49,7 @@ function SalesDashboard() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
+  const [isUrlModalOpen, setIsUrlModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
@@ -231,6 +243,7 @@ function SalesDashboard() {
 
         {/* Search & Filters */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          {/* 🔍 Search Input */}
           <div className="relative w-full md:w-1/2 flex items-center gap-2">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -248,6 +261,23 @@ function SalesDashboard() {
 
             <InfoTooltip message="You can search leads by company name, email, phone, source, partner, status, sub-status, deal owner, or contact name." />
           </div>
+
+          {/* 📥 Download All Processing URLs */}
+          <div className="flex justify-end w-full md:w-auto">
+            <button
+              onClick={() =>
+                window.open(
+                  `${API_BASE_URL}/processing-urls/download-all`,
+                  "_blank"
+                )
+              }
+              className="btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white border-none"
+              title="Download all processing URLs"
+            >
+              <FileSpreadsheet size={18} />
+              <span className="ml-1">All URLs</span>
+            </button>
+          </div>
         </div>
 
         {/* Leads Table */}
@@ -255,7 +285,7 @@ function SalesDashboard() {
           <table className="min-w-max w-full text-left text-xs sm:text-sm text-black dark:text-white">
             <thead>
               <tr className="text-gray-500 dark:text-gray-300 border-b">
-                <th className="py-2 px-4">Lead Name</th>
+                <th className="py-2 px-4">Merchant</th>
                 <th className="py-2 px-4">Contact</th>
                 <th className="py-2 px-4">Source</th>
                 <th className="py-2 px-4">Partner</th>
@@ -264,6 +294,7 @@ function SalesDashboard() {
                 <th className="py-2 px-4">Lead Workflow</th>
                 <th className="py-2 px-4">Value</th>
                 <th className="py-2 px-4">Created Date</th>
+                {hasPermission && <th className="py-2 px-4">Url's</th>}
                 {hasPermission && <th className="py-2 px-4">Actions</th>}
                 <th className="py-2 px-4">Processing</th>
               </tr>
@@ -354,6 +385,20 @@ function SalesDashboard() {
                         day: "numeric",
                       })}
                     </td>
+                    {hasPermission && (
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => {
+                            setSelectedLead(lead);
+                            setIsUrlModalOpen(true);
+                          }}
+                          className="text-blue-500 hover:text-blue-700 transition-colors cursor-pointer"
+                          title="View Processing URLs"
+                        >
+                          <Link2 size={18} />
+                        </button>
+                      </td>
+                    )}
                     {/* Actions */}
                     {hasPermission && (
                       <td className="py-3 px-4 flex justify-center items-center">
@@ -373,9 +418,9 @@ dark:hover:bg-gray-700 dark:hover:text-white"
                       </td>
                     )}
 
-                    <td className="p-3 text-center relative overflow-visible z-[50]">
+                    <td className="p-3 text-center relative overflow-visible">
                       {canShowToggle && (
-                        <div className="dropdown dropdown-left dropdown-end relative z-[60]">
+                        <div className="dropdown dropdown-left dropdown-end relative">
                           {/* Trigger Button */}
                           <div
                             tabIndex={0}
@@ -465,6 +510,15 @@ dark:hover:bg-gray-700 dark:hover:text-white"
         <LeadWorkflowModal
           isOpen={workflowOpen}
           onClose={() => setWorkflowOpen(false)}
+          lead={selectedLead}
+        />
+      )}
+
+      {/* Processing URL */}
+      {isUrlModalOpen && selectedLead && (
+        <LeadUrlModal
+          isOpen={isUrlModalOpen}
+          onClose={() => setIsUrlModalOpen(false)}
           lead={selectedLead}
         />
       )}
