@@ -1,11 +1,20 @@
 import { CloudUpload, Eye } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UploadModal from "./UploadModal";
 import DocumentViewModal from "./DocumentViewModal";
 import { useDispatch } from "react-redux";
 import { updateLeadStatus } from "../../store/slices/Sales.slice";
+import toast from "react-hot-toast";
 
-function WorkflowCard({ title, description, icon: Icon, lead }) {
+const SECOND_LAST_PHASE = "Signed Contract & Complete";
+
+function WorkflowCard({
+  title,
+  description,
+  icon: Icon,
+  lead,
+  onDocsStatusChange,
+}) {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [documentViewOpen, setDocumentViewOpen] = useState(false);
 
@@ -14,18 +23,29 @@ function WorkflowCard({ title, description, icon: Icon, lead }) {
   const hideIcon = title === "Under Discussion";
 
   const handleFirstUpload = async (phaseTitle) => {
-    if (lead.status !== "Open") {
-      console.warn("Cannot update subStatus because status is not Open");
-      toast.error("Cannot update subStatus because status is not Open");
-      return;
-    }
+    console.log(lead.status, "lead status");
+    // if (lead.status !== "Open") {
+    //   console.warn("Cannot update subStatus because status is not Open");
+    //   return;
+    // }
 
     // Example API call to update lead’s substatus
     try {
+      // If subStatus is already "Signed Contract & Complete" -> never move it
+      if (lead.subStatus === SECOND_LAST_PHASE) {
+        return;
+      }
+
+      // Normal flow BEFORE we reach second-last phase:
+      // - If we’re uploading to second last -> lock to it
+      // - Else -> subStatus = current phase
+      const newSubStatus =
+        phaseTitle === SECOND_LAST_PHASE ? SECOND_LAST_PHASE : phaseTitle;
+
       dispatch(
         updateLeadStatus({
           id: lead._id,
-          status: phaseTitle,
+          status: newSubStatus,
         })
       );
     } catch (err) {

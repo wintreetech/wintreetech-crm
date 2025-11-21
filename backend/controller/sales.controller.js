@@ -22,6 +22,7 @@ const getSalesLead = async (req, res) => {
   try {
     const { _id } = req.params;
     const salesLead = await SalesModel.findById(_id);
+
     if (!salesLead) {
       return res
         .status(404)
@@ -219,7 +220,7 @@ const deleteSalesCustomerLeadData = async (req, res) => {
 
     let s3Key = null;
 
-    // 🧹 Loop through subStatus sections and find + remove document
+    // Loop through subStatus sections and find + remove document
     for (const subStatusData of company.companyData) {
       const docIndex = subStatusData.upload.findIndex(
         (doc) => doc._id.toString() === id
@@ -228,13 +229,13 @@ const deleteSalesCustomerLeadData = async (req, res) => {
       if (docIndex > -1) {
         const fileUrl = subStatusData.upload[docIndex].fileUrl;
 
-        // 🧠 Extract S3 Key correctly (remove the leading / from pathname)
+        // Extract S3 Key correctly (remove the leading / from pathname)
         const url = new URL(fileUrl);
         s3Key = decodeURIComponent(
           url.pathname.startsWith("/") ? url.pathname.slice(1) : url.pathname
         );
 
-        // 🧹 Remove document entry from MongoDB
+        // Remove document entry from MongoDB
         subStatusData.upload.splice(docIndex, 1);
         break;
       }
@@ -242,7 +243,7 @@ const deleteSalesCustomerLeadData = async (req, res) => {
 
     await company.save();
 
-    // 🗑️ Delete from S3 if key found
+    // Delete from S3 if key found
     if (s3Key) {
       try {
         await s3.send(
@@ -278,7 +279,10 @@ const deleteSalesCustomerLeadData = async (req, res) => {
 
 const getCompanyDocuments = async (req, res) => {
   try {
+    // 1. Decode the URL parameter
     const { companyName, subStatus } = req.params;
+
+    const decodedName = decodeURI(companyName).trim();
 
     const company = await SalesDataModel.findOne({
       companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
@@ -290,8 +294,9 @@ const getCompanyDocuments = async (req, res) => {
 
     // If subStatus is provided, filter that specific section
     if (subStatus) {
+      const decodedSubStatus = decodeURIComponent(subStatus).trim();
       const subData = company.companyData?.find(
-        (cd) => cd.subStatus.toLowerCase() === subStatus.toLowerCase()
+        (cd) => cd.subStatus.toLowerCase() === decodedSubStatus.toLowerCase()
       );
 
       if (!subData) {

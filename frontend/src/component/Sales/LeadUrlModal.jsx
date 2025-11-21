@@ -16,7 +16,7 @@ import {
   addProcessingUrls,
   deleteProcessingUrl,
   fetchProcessingUrls,
-} from "../../store/thunks/Sales.thunks";
+} from "../../store/thunks/Sales.thunks.js";
 
 const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   if (!isOpen || !lead) return null;
@@ -73,7 +73,8 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   const handleAdd = async () => {
     const parsed = newUrls
       .split("\n")
-      .map((u) => u.trim()).filter((u) => u.length > 0);
+      .map((u) => u.trim())
+      .filter((u) => u.length > 0);
     if (!parsed.length) return toast.error("Enter valid URLs.");
 
     try {
@@ -132,11 +133,11 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
             <span
               className={`badge ${
                 lead.partner === "Dreamzpay"
-                  ? "badge-primary"
+                  ? "bg-blue-100 text-blue-700"
                   : lead.partner === "Transactworld"
-                  ? "badge-success"
-                  : "badge-neutral"
-              } text-white text-xs px-3 py-2 font-medium`}
+                  ? "bg-orange-100 text-orange-700"
+                  : "bg-gray-100 text-gray-700"
+              } text-xs px-3 py-2 font-medium`}
             >
               {lead.partner || "Unknown Partner"}
             </span>

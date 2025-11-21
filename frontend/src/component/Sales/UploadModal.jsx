@@ -74,7 +74,7 @@ function UploadModal({
   if (!isUploadOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed h-full inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-2xl relative p-6 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between">

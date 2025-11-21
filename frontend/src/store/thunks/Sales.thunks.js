@@ -3,6 +3,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { workflowPhases } from "../../component/Sales/LeadWorkflowModal";
 
 // Helper to key documents cache by company + phase
 export const docKey = ({ companyName, subStatus }) =>
@@ -39,7 +40,7 @@ export const fetchDocuments = createAsyncThunk(
     }
   }
 );
-9;
+
 // Upload a document
 export const uploadDocuments = createAsyncThunk(
   "sales/uploadDocuments",
@@ -48,9 +49,7 @@ export const uploadDocuments = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      console.log("📤 Uploading files:", files);
-
-      // 🧠 Pre-check (optional)
+      // Pre-check (optional)
       let isFirstUpload = false;
       try {
         const checkRes = await api.get(
@@ -82,23 +81,37 @@ export const uploadDocuments = createAsyncThunk(
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // ✅ Get updated list
+      // Fetch ALL data to check for Locks
       const listRes = await api.get(
-        `/sales/${encodeURIComponent(companyName)}/${encodeURIComponent(
-          subStatus
-        )}`
+        `/sales/docs/${encodeURIComponent(companyName)}`
+      );
+      const backendData = listRes.data?.companyData || listRes.data || [];
+
+      // Look for Signed Contract phase in the fetched data
+      const sccPhase = backendData.find(
+        (p) => p.subStatus === "Signed Contract & Complete"
       );
 
-      const docs =
-        listRes.data?.upload ||
-        (listRes.data?.companyData || []).flatMap((d) => d.upload || []);
+      const isSCCLocked = sccPhase?.upload?.length > 0;
+
+      // If locked, keep SCC. If not, set to the phase we just uploaded to.
+      const finalSubStatus = isSCCLocked
+        ? "Signed Contract & Complete"
+        : subStatus;
+
+      await api.put(`/sales/${leadId}`, { subStatus: finalSubStatus });
+
+      // 7️⃣ Return data
+      // We find the specific docs for the view
+      const currentPhaseDocs =
+        backendData.find((d) => d.subStatus === subStatus)?.upload || [];
 
       return {
         key: docKey({ companyName, subStatus }),
-        docs,
+        docs: currentPhaseDocs,
         isFirstUpload,
         leadId,
-        subStatus,
+        subStatus: finalSubStatus,
         message: uploadRes.data?.message || "File(s) uploaded successfully",
       };
     } catch (err) {
@@ -117,18 +130,18 @@ export const downloadDocuments = createAsyncThunk(
   "sales/downloadDocuments",
   async ({ id, fileUrl, fileName }, { rejectWithValue }) => {
     try {
-      // Step 1️⃣ — Get signed URL from backend
+      // Step 1️ — Get signed URL from backend
       const { data } = await api.post("/sales/download", { fileUrl });
       const { downloadUrl } = data;
 
       if (!downloadUrl) throw new Error("No download URL received");
 
-      // Step 2️⃣ — Fetch file as blob
+      // Step 2️ — Fetch file as blob
       const fileResponse = await axios.get(downloadUrl, {
         responseType: "blob",
       });
 
-      // Step 3️⃣ — Trigger browser download
+      // Step 3️ — Trigger browser download
       const blob = new Blob([fileResponse.data]);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -155,21 +168,79 @@ export const downloadDocuments = createAsyncThunk(
 // Delete a document
 export const deleteDocument = createAsyncThunk(
   "sales/deleteDocument",
-  async ({ id, companyName, subStatus, uploadedBy }, { rejectWithValue }) => {
+  async (
+    { id, companyName, subStatus, uploadedBy, leadId },
+    { rejectWithValue }
+  ) => {
     try {
+      // 1️⃣ Delete the document
       const res = await api.delete(`/sales/document/${id}`);
-      if (res.data?.success) {
-        return { id, key: docKey({ companyName, subStatus, uploadedBy }) };
+      if (!res.data?.success) {
+        return rejectWithValue(res.data?.error || "Failed to delete document.");
       }
 
-      return rejectWithValue(res.data?.error || "Failed to delete document.");
+      const listRes = await api.get(
+        `/sales/docs/${encodeURIComponent(companyName)}`
+      );
+
+      const backendData = listRes.data?.companyData || listRes.data || [];
+
+      const allDocuments = workflowPhases.map((phase) => {
+        const found = backendData.find(
+          (p) => p.subStatus.toLowerCase() === phase.title.toLowerCase()
+        );
+
+        return {
+          subStatus: phase.title,
+          upload: found?.upload || [],
+        };
+      });
+
+      // 3️⃣ NEW SUBSTATUS LOGIC (shared)
+      const newSubStatus = determineNewSubStatus(allDocuments);
+
+      // 4️⃣ Update lead
+      await api.put(`/sales/${leadId}`, { subStatus: newSubStatus });
+
+      // 5️⃣ Return payload for reducer
+      return {
+        id,
+        key: docKey({ companyName, subStatus, uploadedBy }),
+        companyName,
+        subStatus: newSubStatus,
+        leadId,
+      };
     } catch (err) {
+      console.error("error while deleting document", err.message, err);
       return rejectWithValue(
         err?.response?.data?.error || "Something went wrong while deleting."
       );
     }
   }
 );
+
+export const determineNewSubStatus = (allDocuments) => {
+  const LOCKED_PHASE = "Signed Contract & Complete";
+  const FIRST_PHASE = "Under Discussion";
+
+  // Helper to get doc count for a specific phase
+  const getCount = (title) =>
+    allDocuments.find((p) => p.subStatus === title)?.upload?.length || 0;
+
+  // 1️⃣ Lock Check: If SCC has documents, status MUST be SCC
+  if (getCount(LOCKED_PHASE) > 0) {
+    return LOCKED_PHASE;
+  }
+
+  // 2️⃣ Find the latest phase that has documents (Iterate backwards)
+  // We assume workflowPhases is imported or available here
+  const lastActivePhase = [...workflowPhases].reverse().find((phase) => {
+    return getCount(phase.title) > 0;
+  });
+
+  // 3️⃣ Return found phase OR default to first phase if everything is empty
+  return lastActivePhase ? lastActivePhase.title : FIRST_PHASE;
+};
 
 // ------- Documents ops end -------
 

@@ -108,6 +108,7 @@ function LeadModal({
                 <option value="">Select Partner</option>
                 <option value="Dreamzpay">Dreamzpay</option>
                 <option value="Transactworld">Transactworld</option>
+                <option value="Acquirer">Acquirer</option>
               </select>
             </div>
 
@@ -137,7 +138,6 @@ function LeadModal({
                 value={formData.legalName}
                 onChange={handleChange}
                 className="input input-bordered w-full"
-                required
               />
             </div>
 
@@ -147,13 +147,12 @@ function LeadModal({
                 Company Website
               </label>
               <input
-                type="url"
+                type="text"
                 name="companyWebsite"
                 value={formData.companyWebsite}
                 onChange={handleChange}
                 placeholder="https://example.com"
                 className="input input-bordered w-full"
-                required
               />
             </div>
 

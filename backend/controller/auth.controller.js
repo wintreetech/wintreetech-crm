@@ -73,15 +73,17 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "7d" }
     );
+
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
 
     // Set httpOnly cookie
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // requires HTTPS in prod
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      maxAge: sevenDaysInMs, // 7 day
       path: "/", // send for all routes
     });
 

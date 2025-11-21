@@ -20,13 +20,13 @@ const SalesSchema = new Schema(
     },
     legalName: {
       type: String,
-      required: [true, "Legal name is required"],
       trim: true,
+      default: "Unkown",
     },
     companyWebsite: {
       type: String,
-      required: [true, "Company website is required"],
       trim: true,
+      default: "unkown",
     },
     username: {
       type: String,
@@ -38,12 +38,8 @@ const SalesSchema = new Schema(
       required: [true, "Company email is required"],
       trim: true,
       lowercase: true,
-      unique: true,
       index: true,
-      match: [
-        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
-        "Please enter a valid email",
-      ],
+      default: "contact@company.com",
     },
     status: {
       type: String,
@@ -70,10 +66,12 @@ const SalesSchema = new Schema(
     dealOwner: {
       type: String,
       trim: true,
+      default: "unkown",
     },
     contactName: {
       type: String,
       trim: true,
+      default: "unkown",
     },
     companyNotes: {
       type: String,

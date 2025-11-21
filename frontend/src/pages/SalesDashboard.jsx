@@ -8,6 +8,8 @@ import {
   X,
   Link2,
   FileSpreadsheet,
+  MoreVertical,
+  CircleDollarSign,
 } from "lucide-react";
 import LeadModal from "../component/Sales/LeadModal";
 import LeadWorkflowModal from "../component/Sales/LeadWorkflowModal";
@@ -26,6 +28,7 @@ import { selectCurrentUser } from "../store/slices/Auth.slice";
 import InfoTooltip from "../component/InfoTooltip";
 import LeadUrlModal from "../component/Sales/LeadUrlModal.jsx";
 import API_BASE_URL from "../config.js";
+import CurrencySettingsModal from "../component/Sales/CurrencySettingsModal.jsx";
 
 function SalesDashboard() {
   const dispatch = useDispatch();
@@ -45,7 +48,7 @@ function SalesDashboard() {
 
   // UI state
   const [currentPage, setCurrentPage] = useState(1);
-  const leadsPerPage = 4;
+  const leadsPerPage = 10;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
@@ -53,6 +56,8 @@ function SalesDashboard() {
   const [selectedLead, setSelectedLead] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
+
+  const [comboOpen, setComboOpen] = useState(false);
 
   // Fetch leads on mount
   useEffect(() => {
@@ -112,6 +117,7 @@ function SalesDashboard() {
     } catch (error) {
       console.error(
         "Error submitting form:",
+        error,
         error.response?.data || error.message
       );
       toast.error("Failed to submit lead.");
@@ -201,7 +207,7 @@ function SalesDashboard() {
         <div className="bg-white rounded-xl p-4 shadow-sm dark:bg-gray-900 dark:text-white">
           <h3 className="text-gray-500 text-sm">In Progress</h3>
           <p className="text-2xl font-bold">
-            {leads?.filter((l) => l.status === "open")?.length}
+            {leads?.filter((l) => l.status === "Open")?.length}
           </p>
           <p className="text-gray-400 text-xs">Active opportunities</p>
         </div>
@@ -275,32 +281,29 @@ function SalesDashboard() {
               title="Download all processing URLs"
             >
               <FileSpreadsheet size={18} />
-              <span className="ml-1">All URLs</span>
+              <span className="ml-1">Download All URLs</span>
             </button>
           </div>
         </div>
 
         {/* Leads Table */}
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 rounded-lg">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 rounded-lg overflow-y-visible">
           <table className="min-w-max w-full text-left text-xs sm:text-sm text-black dark:text-white">
             <thead>
               <tr className="text-gray-500 dark:text-gray-300 border-b">
-                <th className="py-2 px-4">Merchant</th>
-                <th className="py-2 px-4">Contact</th>
-                <th className="py-2 px-4">Source</th>
                 <th className="py-2 px-4">Partner</th>
+                <th className="py-2 px-4">Merchant</th>
                 <th className="py-2 px-4">Status</th>
                 <th className="py-2 px-4">SubStatus</th>
                 <th className="py-2 px-4">Lead Workflow</th>
                 <th className="py-2 px-4">Value</th>
                 <th className="py-2 px-4">Created Date</th>
-                {hasPermission && <th className="py-2 px-4">Url's</th>}
-                {hasPermission && <th className="py-2 px-4">Actions</th>}
                 <th className="py-2 px-4">Processing</th>
+                <th className="py-2 px-4 text-center">More Actions</th>
               </tr>
             </thead>
             <tbody>
-              {currentLeads.map((lead) => {
+              {currentLeads.map((lead, index) => {
                 // For the active and inactive button
                 const canShowToggle =
                   ["Open", "Active", "Inactive"].includes(lead.status) &&
@@ -313,21 +316,23 @@ function SalesDashboard() {
                     key={lead._id}
                     className="border-b hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
-                    <td className="py-3 px-4 font-medium">
+                    <td className="py-3 px-4">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+      ${
+        lead.partner === "Dreamzpay"
+          ? "bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100"
+          : lead.partner === "Transactworld"
+          ? "bg-orange-100 text-orange-700 dark:bg-orange-700 dark:text-orange-100"
+          : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100"
+      }
+    `}
+                      >
+                        {lead.partner || "Unknown Partner"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 font-medium capitalize">
                       {lead.companyName}
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
-                      {lead.companyEmail} <br /> {lead.companyMobileNo}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-1 sm:px-2 py-1 rounded-full text-[10px] sm:text-xs md:text-sm">
-                        {lead.leadSource}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-1  rounded-full text-[10px] sm:text-xs md:text-sm">
-                        {lead.partner}
-                      </span>
                     </td>
                     <td className="py-3 px-4">
                       <span
@@ -372,7 +377,7 @@ function SalesDashboard() {
                           setWorkflowOpen(true);
                         }}
                       >
-                        View Lead Workflow
+                        Phases
                       </button>
                     </td>
                     <td className="py-3 px-4">
@@ -385,47 +390,15 @@ function SalesDashboard() {
                         day: "numeric",
                       })}
                     </td>
-                    {hasPermission && (
-                      <td className="py-3 px-4 text-center">
-                        <button
-                          onClick={() => {
-                            setSelectedLead(lead);
-                            setIsUrlModalOpen(true);
-                          }}
-                          className="text-blue-500 hover:text-blue-700 transition-colors cursor-pointer"
-                          title="View Processing URLs"
-                        >
-                          <Link2 size={18} />
-                        </button>
-                      </td>
-                    )}
-                    {/* Actions */}
-                    {hasPermission && (
-                      <td className="py-3 px-4 flex justify-center items-center">
-                        {/* Edit */}
-                        <button
-                          onClick={() => {
-                            setEditingLead(lead); // prefill from store
-                            setEditOpen(true);
-                          }}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-900 active:scale-95 transition-all duration-150 cursor-pointer dark:bg-gray-800 dark:text-gray-200 
-dark:hover:bg-gray-700 dark:hover:text-white"
-                          title="Edit Lead"
-                          aria-label="Edit Lead"
-                        >
-                          <Pen className="w-4 h-4" />
-                        </button>
-                      </td>
-                    )}
 
-                    <td className="p-3 text-center relative overflow-visible z-[50]">
+                    <td className="p-3 text-center relative overflow-visible">
                       {canShowToggle && (
-                        <div className="dropdown dropdown-left dropdown-end relative z-[60]">
+                        <div className="dropdown dropdown-left dropdown-end">
                           {/* Trigger Button */}
                           <div
                             tabIndex={0}
                             role="button"
-                            className={`btn btn-sm w-28 flex justify-center items-center gap-2 ${
+                            className={`btn btn-sm w-20 flex justify-center items-center gap-2 ${
                               lead.status === "Active"
                                 ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
                                 : "bg-red-500 border-red-500 text-white hover:bg-red-600"
@@ -474,6 +447,72 @@ dark:hover:bg-gray-700 dark:hover:text-white"
                         </div>
                       )}
                     </td>
+
+                    <td className="p-3 text-center relative overflow-visible z-[50]">
+                      <div
+                        className={`dropdown dropdown-left ${
+                          index === 0 ? "dropdown-center" : "dropdown-end"
+                        } relative z-[60]`}
+                      >
+                        {/* Trigger Button (The three dots) - This remains visible to ALL users */}
+                        <div
+                          tabIndex={0}
+                          role="button"
+                          className="btn btn-sm btn-ghost p-1 text-gray-500 hover:text-gray-800 dark:text-gray-100 dark:hover:text-gray-200"
+                          title="More actions"
+                        >
+                          <MoreVertical className="w-5 h-5" />
+                        </div>
+
+                        {/* Dropdown Menu Content */}
+                        <ul
+                          tabIndex={0}
+                          className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40 text-xs z-[9999]"
+                        >
+                          {hasPermission && (
+                            <li>
+                              <button
+                                onClick={() => {
+                                  setEditingLead(lead);
+                                  setEditOpen(true);
+                                }}
+                                className="flex items-center"
+                              >
+                                <Pen className="w-4 h-4 mr-2" />
+                                Edit Lead
+                              </button>
+                            </li>
+                          )}
+                          {/* 2. Add URLs Action - VISIBLE ONLY IF hasPermission is TRUE */}
+                          {hasPermission && (
+                            <li>
+                              <button
+                                onClick={() => {
+                                  setSelectedLead(lead);
+                                  setIsUrlModalOpen(true);
+                                }}
+                                className="flex items-center"
+                              >
+                                <Link2 className="w-4 h-4 mr-2" />
+                                URLs
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setSelectedLead(lead);
+                                  setComboOpen(true);
+                                }}
+                                className="flex items-center"
+                              >
+                                <CircleDollarSign className="w-4 h-4 mr-2" />
+                                Currency
+                              </button>
+                            </li>
+                          )}
+                          {/* The 'Processing' column (toggle button) outside this dropdown already has its own logic. */}
+                        </ul>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -519,6 +558,16 @@ dark:hover:bg-gray-700 dark:hover:text-white"
         <LeadUrlModal
           isOpen={isUrlModalOpen}
           onClose={() => setIsUrlModalOpen(false)}
+          lead={selectedLead}
+        />
+      )}
+
+      {/* Payment */}
+
+      {comboOpen && selectedLead && (
+        <CurrencySettingsModal
+          isOpen={comboOpen}
+          onClose={() => setComboOpen(false)}
           lead={selectedLead}
         />
       )}

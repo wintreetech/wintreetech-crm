@@ -12,6 +12,7 @@ import Login from "../component/Login";
 import ProtectedRoutes from "../component/ProtectedRoutes";
 import NotFound from "../component/NotFound";
 import Unauthorized from "../component/Unauthorized";
+import ComingSoon from "../component/ComingSoon";
 
 const router = createBrowserRouter([
   {
@@ -62,7 +63,7 @@ const router = createBrowserRouter([
             allowedRoles={["user", "admin", "superadmin"]}
             allowedDepartments={["recon"]}
           >
-            <ReconDashboard />
+            <ComingSoon title="recon" />
           </ProtectedRoutes>
         ),
       },
@@ -75,7 +76,7 @@ const router = createBrowserRouter([
             allowedRoles={["user", "admin", "superadmin"]}
             allowedDepartments={["support"]}
           >
-            <SupportDashboard />
+            <ComingSoon title="support" />
           </ProtectedRoutes>
         ),
       },
@@ -88,7 +89,7 @@ const router = createBrowserRouter([
             allowedRoles={["user", "admin", "superadmin"]}
             allowedDepartments={["finance"]}
           >
-            <FinanceDashboard />
+            <ComingSoon title="finance" />
           </ProtectedRoutes>
         ),
       },

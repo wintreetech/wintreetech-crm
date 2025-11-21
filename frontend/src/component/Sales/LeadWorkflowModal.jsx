@@ -6,10 +6,15 @@ import {
   Files,
   Signature,
   Workflow,
+  AlertTriangle,
   X,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { selectSalesDocuments } from "../../store/slices/Sales.slice";
+import { docKey } from "../../store/thunks/Sales.thunks.js";
 
-const workflowPhases = [
+export const workflowPhases = [
   {
     title: "Under Discussion",
     description: "Under Discuss project details and requirements",
@@ -43,6 +48,54 @@ const workflowPhases = [
 ];
 
 function LeadWorkflowModal({ isOpen, onClose, lead }) {
+  const dispatch = useDispatch();
+  const documents = useSelector(selectSalesDocuments);
+
+  const [dismissedLeadWarning, setDismissedLeadWarning] = useState(false);
+
+  const rawLeadKey = `${lead?.companyName || "unknown"}_${
+    lead?.createdAt || ""
+  }`;
+  const normalizedLeadKey = rawLeadKey
+    .replace(/[^a-z0-9]/gi, "_")
+    .toLowerCase();
+  const warningKey = `wf_lead_warn_${normalizedLeadKey}`;
+
+  // Load per-lead "don't show again" state
+  useEffect(() => {
+    const dismissed = localStorage.getItem(warningKey) === "1";
+    setDismissedLeadWarning(dismissed);
+  }, [warningKey]);
+
+  const hasDocsForPhase = (phaseTitle) => {
+    const key = docKey({
+      companyName: lead.companyName,
+      subStatus: phaseTitle,
+    });
+    const bucket = documents[key];
+    return !!(bucket && Array.isArray(bucket.items) && bucket.items.length > 0);
+  };
+
+  // This now uses ALL documents in Redux, including previously uploaded ones
+  const allPhasesHaveDocs = useMemo(
+    () =>
+      workflowPhases
+        .filter(
+          (phase) =>
+            phase.title !== "Under Discussion" && phase.title !== "Annexture"
+        )
+        .every((phase) => hasDocsForPhase(phase.title)),
+    [documents, lead.companyName]
+  );
+
+  const shouldShowLeadWarning =
+    lead.status === "Active" && !allPhasesHaveDocs && !dismissedLeadWarning;
+
+  const handleDismissLeadWarning = () => {
+    localStorage.setItem(warningKey, "1");
+    setDismissedLeadWarning(true);
+  };
+
   return (
     <dialog open={isOpen} className="modal ">
       <div className="modal-box w-11/12 max-w-2xl">
@@ -53,9 +106,30 @@ function LeadWorkflowModal({ isOpen, onClose, lead }) {
           Manage the document workflow for your projects.
         </p>
 
+        {/* SINGLE per-lead warning */}
+        {shouldShowLeadWarning && (
+          <div className="p-3 rounded-lg bg-yellow-200 mb-4 flex items-center gap-2">
+            <AlertTriangle className="text-yellow-500" />
+            <span className="text-sm">
+              Lead is <b>Active</b>, but some phases have missing documents.
+            </span>
+            <button
+              className="px-2 py-1 rounded-lg bg-amber-300 hover:bg-yellow-400 text-yellow-800 cursor-pointer ml-auto text-sm"
+              onClick={handleDismissLeadWarning}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <div className="space-y-3">
           {workflowPhases.map((phase, index) => (
-            <WorkflowCard key={index} {...phase} lead={lead} />
+            <WorkflowCard
+              key={index}
+              {...phase}
+              lead={lead}
+              hasDocs={hasDocsForPhase(phase.title)}
+            />
           ))}
         </div>
 

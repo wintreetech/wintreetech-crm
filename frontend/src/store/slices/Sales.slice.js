@@ -10,6 +10,7 @@ import {
   deleteProcessingUrl,
   fetchProcessingUrls,
 } from "../thunks/Sales.thunks.js";
+import { workflowPhases } from "../../component/Sales/LeadWorkflowModal.jsx";
 
 // empty bucket for the document data fallback
 export const EMPTY_BUCKET = Object.freeze({
@@ -229,16 +230,14 @@ const salesSlice = createSlice({
         s.documents[key].error = null;
       })
       .addCase(uploadDocuments.fulfilled, (s, a) => {
-        const { key, docs, leadId, subStatus } = a.payload;
-        s.documents[key] = { items: docs, loading: false, error: null };
+        s.documents[a.payload.key] = {
+          items: a.payload.docs,
+          loading: false,
+          error: null,
+        };
 
-        // Upsert the lead so the UI shows the updated status/subStatus immediately
-        if (leadId && subStatus) {
-          const idx = s.list.findIndex((l) => l._id === leadId);
-          if (idx >= 0) {
-            s.list[idx] = { ...s.list[idx], subStatus };
-          }
-        }
+        const lead = s.list.find((l) => l._id === a.payload.leadId);
+        if (lead) lead.subStatus = a.payload.subStatus;
       })
       .addCase(uploadDocuments.rejected, (s, a) => {
         const { companyName, subStatus } = a.meta.arg || {};
@@ -288,11 +287,20 @@ const salesSlice = createSlice({
         state.error = null;
       })
       .addCase(deleteDocument.fulfilled, (state, action) => {
-        const { id, key } = action.payload;
-        if (!id) return;
+        state.loading = false;
+        state.error = null;
+
+        const { id, key, companyName, subStatus, leadId } = action.payload;
+        // Remove document from state
         const bucket = state.documents[key];
-        if (bucket?.items?.length) {
-          bucket.items = bucket.items.filter((d) => d._id !== id);
+        if (bucket) {
+          bucket.items = bucket.items.filter((doc) => doc._id !== id);
+        }
+
+        // Update lead's subStatus in state
+        const leadIndex = state.list.findIndex((l) => l._id === leadId);
+        if (leadIndex !== -1 && subStatus) {
+          state.list[leadIndex].subStatus = subStatus;
         }
       })
       .addCase(deleteDocument.rejected, (state, action) => {
@@ -364,3 +372,4 @@ export const selectDocumentsBucket = (state, { companyName, subStatus }) => {
   const bucket = sales?.documents?.[key];
   return bucket || EMPTY_BUCKET;
 };
+export const selectSalesDocuments = (state) => state.sales.documents;

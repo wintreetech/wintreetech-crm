@@ -3,12 +3,18 @@ import { Download, Trash, X, FileText, Folders, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { selectDocumentsBucket } from "../../store/slices/Sales.slice";
+import {
+  selectDocumentsBucket,
+  updateLeadStatus,
+} from "../../store/slices/Sales.slice";
 import {
   fetchDocuments,
   deleteDocument,
   downloadDocuments,
+  docKey,
 } from "../../store/thunks/Sales.thunks.js";
+import { selectCurrentUser } from "../../store/slices/Auth.slice.js";
+
 function DocumentViewModal({
   lead,
   title,
@@ -17,34 +23,57 @@ function DocumentViewModal({
 }) {
   const dispatch = useDispatch();
 
+  const currentUser = useSelector(selectCurrentUser);
+
+  const hasPermission =
+    currentUser?.role === "admin" || currentUser?.role === "superadmin";
+
   const bucket = useSelector((state) =>
     selectDocumentsBucket(state, {
       companyName: lead?.companyName ?? "",
       subStatus: title ?? "",
     })
   );
+
+  // Separately check if the REAL bucket object exists in state.sales.documents
+  const hasBucket = useSelector((state) => {
+    const companyName = lead?.companyName ?? "";
+    const subStatus = title ?? "";
+    if (!companyName || !subStatus) return false;
+
+    const key = docKey({ companyName, subStatus });
+    return !!state.sales.documents?.[key]; // true = full object is present
+  });
+
   const [downloadingId, setDownloadingId] = useState(null);
 
   const { items: documents = [], loading = false, error = null } = bucket || {};
 
-  // Load docs when modal opens (and inputs are ready)
+  // Fetch ONLY if the bucket object does NOT exist yet in the slice
   useEffect(() => {
-    if (isViewDocumentOpen && lead?.companyName && title) {
-      dispatch(
-        fetchDocuments({ companyName: lead.companyName, subStatus: title })
-      )
-        .unwrap()
-        .catch((err) => err && toast.error(err));
-    }
-  }, [dispatch, isViewDocumentOpen, lead?.companyName, title]);
+    if (!isViewDocumentOpen || !lead?.companyName || !title) return;
 
-  const handleDeleteDocument = async (id) => {
+    if (hasBucket) return; // object already exists -> no fetch
+
+    dispatch(
+      fetchDocuments({ companyName: lead.companyName, subStatus: title })
+    )
+      .unwrap()
+      .catch((err) => err && toast.error(err));
+  }, [dispatch, isViewDocumentOpen, lead?.companyName, title, hasBucket]);
+
+  const handleDeleteDocument = async (documentId) => {
     const ok = window.confirm("Are you sure you want to delete this document?");
     if (!ok) return;
 
     try {
       await dispatch(
-        deleteDocument({ id, companyName: lead?.companyName, subStatus: title })
+        deleteDocument({
+          id: documentId,
+          companyName: lead?.companyName,
+          subStatus: title,
+          leadId: lead?._id,
+        })
       ).unwrap();
       toast.success("Document deleted successfully!");
     } catch (err) {
@@ -67,7 +96,7 @@ function DocumentViewModal({
   if (!isViewDocumentOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="fixed h-full inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-3xl flex flex-col relative overflow-hidden">
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -82,9 +111,6 @@ function DocumentViewModal({
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Phase: {title}
               </p>
-              {/* {error ? (
-                <p className="text-xs text-red-500 mt-1">{error}</p>
-              ) : null} */}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -152,13 +178,14 @@ function DocumentViewModal({
                         <Download className="w-5 h-5 text-gray-700 dark:text-gray-200" />
                       )}
                     </a>
-
-                    <button
-                      onClick={() => handleDeleteDocument(doc._id)}
-                      className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-800 transition-colors"
-                    >
-                      <Trash className="w-5 h-5 text-red-500 dark:text-red-400" />
-                    </button>
+                    {hasPermission && (
+                      <button
+                        onClick={() => handleDeleteDocument(doc._id)}
+                        className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-800 transition-colors cursor-pointer"
+                      >
+                        <Trash className="w-5 h-5 text-red-500 dark:text-red-400" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
