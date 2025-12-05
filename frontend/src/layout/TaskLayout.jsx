@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  BarChart,
-  Calculator,
-  ClipboardList,
-  DollarSign,
-  Headphones,
-  LayoutDashboard,
   Users,
   X,
+  Undo2,
+  BookCheck,
+  UserPen,
+  MonitorCog,
+  ClipboardPlus,
+  ChartPie,
+  Bell,
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
@@ -22,7 +23,7 @@ import {
 } from "../store/slices/Auth.slice.js";
 import { fetchUsers } from "../store/slices/Users.slice.js";
 
-function MainLayout() {
+function TaskLayout() {
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
@@ -31,11 +32,11 @@ function MainLayout() {
 
   // ✅ desktop collapse (persistent)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem("mainSidebarCollapsed");
+    const saved = localStorage.getItem("taskSidebarCollapsed");
     return saved === "true";
   });
 
-  const [showLabels, setShowLabels] = useState(!sidebarCollapsed); // ✅ delayed labels
+  const [showLabels, setShowLabels] = useState(!sidebarCollapsed); // ✅ delayed text
   const expandTimerRef = useRef(null);
 
   const [avatarOpen, setAvatarOpen] = useState(false);
@@ -43,7 +44,9 @@ function MainLayout() {
   const currentUser = useSelector(selectCurrentUser);
 
   const showSidebar =
-    currentUser.role === "superadmin" || currentUser.role === "admin";
+    currentUser.role === "superadmin" ||
+    currentUser.role === "admin" ||
+    currentUser.role === "user";
 
   const toggleSection = (value) => {
     navigate(`/${value}`);
@@ -66,15 +69,25 @@ function MainLayout() {
   const formatTitle = (path, user) => {
     if (path === "/") return "Home Dashboard";
 
-    const name = path.replace("/", "").toLowerCase();
+    const segments = path
+      .split("/")
+      .filter(Boolean)
+      .map((s) => s.toLowerCase());
 
-    if (name === "dashboard" && user?.role === "superadmin") {
+    if (segments.includes("workspaces")) {
+      return "Workspaces Dashboard";
+    }
+
+    const last = segments[segments.length - 1];
+
+    if (last === "dashboard" && user?.role === "superadmin") {
       return "Management Dashboard";
     }
 
-    return name.charAt(0).toUpperCase() + name.slice(1) + " Dashboard";
+    return last.charAt(0).toUpperCase() + last.slice(1) + " Dashboard";
   };
 
+  // Fetch all users on mount
   useEffect(() => {
     dispatch(fetchUsers())
       .unwrap()
@@ -87,51 +100,28 @@ function MainLayout() {
 
   const sidebarItems = [
     {
-      name: "Dashboard",
-      icon: <LayoutDashboard size={18} />,
-      path: "dashboard",
-      roles: ["superadmin"],
-      department: "management",
-    },
-    {
-      name: "Users",
-      icon: <Users size={18} />,
-      path: "users",
-      roles: ["superadmin", "admin"],
-    },
-    {
-      name: "Sales",
-      icon: <BarChart size={18} />,
-      path: "sales",
-      roles: ["superadmin", "admin", "user"],
-      department: "sales",
-    },
-    {
-      name: "Support",
-      icon: <Headphones size={18} />,
-      path: "support",
-      roles: ["superadmin", "admin", "user"],
-      department: "support",
-    },
-    {
-      name: "Recon",
-      icon: <Calculator size={18} />,
-      path: "recon",
-      roles: ["superadmin", "admin", "user"],
-      department: "recon",
-    },
-    {
-      name: "Finance",
-      icon: <DollarSign size={18} />,
-      path: "finance",
-      roles: ["superadmin", "admin", "user"],
-      department: "finance",
-    },
-    {
-      name: "Tasks",
-      icon: <ClipboardList size={18} />,
+      name: "Analytics",
+      icon: <ChartPie size={18} />,
       path: "tasks/analytics",
+      roles: ["superadmin"],
+    },
+    {
+      name: "My Tasks",
+      icon: <UserPen size={18} />,
+      path: "tasks/mytasks",
       roles: ["superadmin", "admin", "user"],
+    },
+    {
+      name: "Workspaces",
+      icon: <MonitorCog size={18} />,
+      path: "tasks/workspaces",
+      roles: ["superadmin", "admin", "user"],
+    },
+    {
+      name: "Team Members",
+      icon: <Users size={18} />,
+      path: "tasks/members",
+      roles: ["superadmin", "admin"],
     },
   ];
 
@@ -151,7 +141,7 @@ function MainLayout() {
     if (!sidebarCollapsed) {
       expandTimerRef.current = setTimeout(() => {
         setShowLabels(true);
-      }, 100);
+      }, 100); // matches transition duration
     } else {
       setShowLabels(false);
     }
@@ -165,7 +155,7 @@ function MainLayout() {
   const toggleCollapse = () => {
     setSidebarCollapsed((v) => {
       const next = !v;
-      localStorage.setItem("mainSidebarCollapsed", String(next));
+      localStorage.setItem("taskSidebarCollapsed", String(next));
       return next;
     });
   };
@@ -174,6 +164,7 @@ function MainLayout() {
     <div className="h-screen flex flex-col">
       {/* TOP HEADER */}
       <header className="flex justify-between items-center bg-gray-900 text-white px-4 py-2 shadow-md">
+        {/* Left: Page Info */}
         <div>
           <h1 className="text-xl font-semibold leading-tight">{pageTitle}</h1>
           <p className="text-gray-400 text-xs">
@@ -187,6 +178,12 @@ function MainLayout() {
         {/* Right: Avatar Dropdown */}
         <div className="relative">
           <div className="flex items-center space-x-4">
+            <button
+              onClick={() => navigate("/tasks/notifications")}
+              className="hover:bg-gray-50/20 p-2 rounded-lg cursor-pointer"
+            >
+              <Bell />
+            </button>
             <div className="flex flex-col justify-end items-end">
               <p className="text-lg font-semibold text-white capitalize">
                 hi, {currentUser?.username.split(" ")[0]}
@@ -203,16 +200,6 @@ function MainLayout() {
 
           {avatarOpen && (
             <ul className="absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-xl p-2 z-50 text-sm border border-gray-200">
-              {currentUser?.role === "user" && (
-                <li>
-                  <button
-                    onClick={() => navigate("tasks/mytasks")}
-                    className="w-full text-left text-gray-500 hover:bg-gray-100 px-3 py-2 rounded-md font-medium transition"
-                  >
-                    Tasks
-                  </button>
-                </li>
-              )}
               <li>
                 <button
                   onClick={handleLogoutClick}
@@ -228,6 +215,7 @@ function MainLayout() {
 
       {/* LAYOUT */}
       <div className="flex flex-1 overflow-hidden">
+        {/* SIDEBAR */}
         {showSidebar && (
           <aside
             className={`
@@ -270,6 +258,7 @@ function MainLayout() {
                     {/* ✅ icon always visible */}
                     <span className="shrink-0">{item.icon}</span>
 
+                    {/* ✅ labels appear only after expand */}
                     <span
                       className={`
                         ml-2 transition-opacity duration-200 whitespace-nowrap
@@ -284,31 +273,72 @@ function MainLayout() {
               ))}
             </ul>
 
-            {/* ✅ bottom collapse toggle */}
-            <button
-              onClick={toggleCollapse}
-              className={`
-                mt-auto flex items-center w-full px-3 py-2 rounded-lg transition hover:bg-gray-800 gap-2
-                ${sidebarCollapsed ? "justify-center" : ""}
-              `}
-              title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-              {sidebarCollapsed ? (
-                <ChevronRight size={18} className="shrink-0" />
-              ) : (
-                <ChevronLeft size={18} className="shrink-0" />
-              )}
+            <div className="mt-auto flex flex-col gap-3">
+              <ul className="space-y-2">
+                <li>
+                  <NavLink
+                    to={
+                      currentUser?.role === "superadmin" ||
+                      currentUser?.role === "admin"
+                        ? "/dashboard"
+                        : `/${
+                            ["sales", "finance", "recon", "support"].includes(
+                              currentUser?.department?.toLowerCase()
+                            )
+                              ? currentUser.department.toLowerCase()
+                              : ""
+                          }`
+                    }
+                    className={({ isActive }) =>
+                      [
+                        "flex items-center w-full px-3 py-2 rounded-lg transition gap-2",
+                        "hover:bg-gray-800 focus:outline-none",
+                        isActive ? "bg-gray-800 text-white" : "text-gray-300",
+                        sidebarCollapsed ? "justify-center" : "",
+                      ].join(" ")
+                    }
+                  >
+                    <Undo2 size={18} className="shrink-0" />
 
-              <span
+                    <span
+                      className={`
+                        ml-2 transition-opacity duration-200 whitespace-nowrap
+                        ${showLabels ? "opacity-100" : "opacity-0"}
+                        ${sidebarCollapsed ? "hidden" : "block"}
+                      `}
+                    >
+                      Back to CRM
+                    </span>
+                  </NavLink>
+                </li>
+              </ul>
+
+              {/* ✅ bottom collapse toggle */}
+              <button
+                onClick={toggleCollapse}
                 className={`
-                  ml-2 transition-opacity duration-200 text-gray-300 whitespace-nowrap
-                  ${showLabels ? "opacity-100" : "opacity-0"}
-                  ${sidebarCollapsed ? "hidden" : "block"}
+                  flex items-center w-full px-3 py-2 rounded-lg transition hover:bg-gray-800 gap-2
+                  ${sidebarCollapsed ? "justify-center" : ""}
                 `}
+                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
               >
-                Collapse Menu
-              </span>
-            </button>
+                {sidebarCollapsed ? (
+                  <ChevronRight size={18} className="shrink-0" />
+                ) : (
+                  <ChevronLeft size={18} className="shrink-0" />
+                )}
+
+                <span
+                  className={`
+                    ml-2 transition-opacity duration-200 text-gray-300 whitespace-nowrap
+                    ${showLabels ? "opacity-100" : "opacity-0"}
+                    ${sidebarCollapsed ? "hidden" : "block"}
+                  `}
+                >
+                  Collapse Menu
+                </span>
+              </button>
+            </div>
           </aside>
         )}
 
@@ -321,4 +351,4 @@ function MainLayout() {
   );
 }
 
-export default MainLayout;
+export default TaskLayout;

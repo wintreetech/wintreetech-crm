@@ -261,7 +261,7 @@ function SalesDashboard() {
                   setCurrentPage(1);
                 }}
                 placeholder="Search leads by name or email or partner..."
-                className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -289,8 +289,8 @@ function SalesDashboard() {
         {/* Leads Table */}
         <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 rounded-lg overflow-y-visible">
           <table className="min-w-max w-full text-left text-xs sm:text-sm text-black dark:text-white">
-            <thead>
-              <tr className="text-gray-500 dark:text-gray-300 border-b">
+            <thead className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
+              <tr>
                 <th className="py-2 px-4">Partner</th>
                 <th className="py-2 px-4">Merchant</th>
                 <th className="py-2 px-4">Status</th>
@@ -314,7 +314,7 @@ function SalesDashboard() {
                 return (
                   <tr
                     key={lead._id}
-                    className="border-b hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="bg-white border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900"
                   >
                     <td className="py-3 px-4">
                       <span

@@ -13,6 +13,13 @@ import ProtectedRoutes from "../component/ProtectedRoutes";
 import NotFound from "../component/NotFound";
 import Unauthorized from "../component/Unauthorized";
 import ComingSoon from "../component/ComingSoon";
+import TaskLayout from "../layout/TaskLayout";
+import MyTasks from "../pages/Tasks/MyTasks";
+import Workspaces from "../pages/Tasks/Workspaces";
+import TeamMembers from "../pages/Tasks/TeamMembers";
+import Notifications from "../pages/Notifications";
+import WorkspaceDetails from "../component/Tasks/Workspaces/WorkspaceDetails";
+import Analytics from "../pages/Tasks/Analytics";
 
 const router = createBrowserRouter([
   {
@@ -102,6 +109,51 @@ const router = createBrowserRouter([
             <Users />
           </ProtectedRoutes>
         ),
+      },
+    ],
+  },
+
+  // ✅ TASK MANAGER
+  {
+    path: "tasks",
+    element: (
+      <ProtectedRoutes
+        allowedRoles={["superadmin", "admin", "user"]}
+        allowedDepartments={[
+          "sales",
+          "finance",
+          "recon",
+          "support",
+          "management",
+        ]}
+      >
+        <TaskLayout />
+      </ProtectedRoutes>
+    ),
+    children: [
+      {
+        path: "analytics",
+        element: <Analytics />,
+      },
+      {
+        path: "mytasks",
+        element: <MyTasks />,
+      },
+      {
+        path: "workspaces",
+        element: <Workspaces />,
+      },
+      {
+        path: "workspaces/:id",
+        element: <WorkspaceDetails />,
+      },
+      {
+        path: "members",
+        element: <TeamMembers />,
+      },
+      {
+        path: "notifications",
+        element: <Notifications />,
       },
     ],
   },
