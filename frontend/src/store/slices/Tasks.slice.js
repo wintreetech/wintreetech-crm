@@ -17,7 +17,12 @@ export const fetchMyTasks = createAsyncThunk(
 
       return new Promise((resolve) => {
         setTimeout(
-          () => resolve(initialColumns.map(({ title, ...rest }) => rest)),
+          () =>
+            resolve({
+              user: { id: "1", username: "demo" },
+              columns: initialColumns.map(({ title, ...rest }) => rest),
+              // columns: [],
+            }),
           500
         );
       });
@@ -44,13 +49,197 @@ export const saveMyTasksColumns = createAsyncThunk(
   }
 );
 
+// Creates a new
+export const createMyTasksSpace = createAsyncThunk(
+  "tasks/createMyTasksSpace",
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+
+      const user = state?.tasks?.user ||
+        state?.auth?.user || { id: "1", username: "demo" };
+
+      return new Promise((resolve) => {
+        setTimeout(
+          () =>
+            resolve({
+              user,
+              columns: [],
+            }),
+          200
+        );
+      });
+    } catch (err) {
+      return rejectWithValue(err?.message || "Failed to create my tasks space");
+    }
+  }
+);
+
+/**
+ * ✅ NEW THUNK: deleteTask
+ * - works for BOTH mytasks + workspace tasks
+ * - returns updated columns
+ */
+
+export const deleteTask = createAsyncThunk(
+  "tasks/deleteTask",
+  async (
+    { scope = "mytasks", workspaceSlug = null, columnId, taskId },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      const state = getState();
+
+      // WORKSPACE delete
+      if (scope === "workspace") {
+        const ws = state.workspaces.list.find((w) => w.slug === workspaceSlug);
+
+        if (!ws) return rejectWithValue("Workspace not found");
+
+        const columns = Array.isArray(ws.columns) ? ws.columns : [];
+
+        const updatedColumns = columns.map((col) => {
+          const colKey = String(col?.id || col?.title)
+            .toLocaleLowerCase()
+            .replace(/\s+/g, "-");
+
+          const targetKey = String(columnId).toLowerCase().replace(/\s+/g, "-");
+
+          if (colKey !== targetKey) return col;
+
+          return {
+            ...col,
+            tasks: Array.isArray(col.tasks)
+              ? col.tasks.filter((t) => String(t.id) !== String(taskId))
+              : [],
+          };
+        });
+
+        return {
+          scope: "workspace",
+          workspaceSlug,
+          columns: updatedColumns,
+        };
+      }
+
+      // MYTASKS delete
+
+      const columns = Array.isArray(state.tasks.columns)
+        ? state.tasks.columns
+        : [];
+
+      const updatedColumns = columns.map((col) => {
+        const colKey = String(col?.id || col?.title)
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+
+        const targetKey = String(columnId).toLowerCase().replace(/\s+/g, "-");
+
+        if (colKey !== targetKey) return col;
+
+        return {
+          ...col,
+          tasks: Array.isArray(col.tasks)
+            ? col.tasks.filter((t) => String(t.id) !== String(taskId))
+            : [],
+        };
+      });
+
+      return {
+        scope: "mytasks",
+        columns: updatedColumns,
+      };
+    } catch (err) {
+      return rejectWithValue(err?.message || "Delete failed");
+    }
+  }
+);
+
+/**
+ * ✅ NEW THUNK: updateTask
+ * - works for BOTH mytasks + workspace tasks
+ * - updates a task by id (optionally moving between columns)
+ * - returns updated columns
+ */
+
+export const updateTask = createAsyncThunk(
+  "tasks/updateTask",
+  async (
+    { scope = "mytasks", workspaceSlug = null, columnId, taskId, updates },
+    { getState, rejectWithValue }
+  ) => {
+    try {
+      const state = getState();
+
+      // WORKSPACE update
+      if (scope === "workspace") {
+        const ws = state.workspaces.list.find((w) => w.slug === workspaceSlug);
+        if (!ws) return rejectWithValue("Workspace not found");
+
+        const columns = Array.isArray(ws.columns) ? ws.columns : [];
+
+        const updatedColumns = columns.map((col) => {
+          const colKey = String(col?.id || col?.title)
+            .toLowerCase()
+            .replace(/\s+/g, "-");
+
+          const targetKey = String(columnId).toLowerCase().replace(/\s+/g, "-");
+          if (colKey !== targetKey) return col;
+
+          return {
+            ...col,
+            tasks: Array.isArray(col.tasks)
+              ? col.tasks.map((t) =>
+                  String(t.id) === String(taskId) ? { ...t, ...updates } : t
+                )
+              : [],
+          };
+        });
+
+        return {
+          scope: "workspace",
+          workspaceSlug,
+          columns: updatedColumns,
+        };
+      }
+
+      // MYTASKS update
+      const columns = Array.isArray(state.tasks.columns)
+        ? state.tasks.columns
+        : [];
+
+      const updatedColumns = columns.map((col) => {
+        const colKey = String(col?.id || col?.title)
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+
+        const targetKey = String(columnId).toLowerCase().replace(/\s+/g, "-");
+        if (colKey !== targetKey) return col;
+
+        return {
+          ...col,
+          tasks: Array.isArray(col.tasks)
+            ? col.tasks.map((t) =>
+                String(t.id) === String(taskId) ? { ...t, ...updates } : t
+              )
+            : [],
+        };
+      });
+
+      return {
+        scope: "mytasks",
+        columns: updatedColumns,
+      };
+    } catch (err) {
+      return rejectWithValue(err?.message || "Update failed");
+    }
+  }
+);
+
 const taskSlice = createSlice({
   name: "tasks",
   initialState: {
-    // columns: initialColumns.map(({ title, ...rest }) => ({
-    //   ...rest,
-    //   tasks: rest.tasks || [],
-    // })),
+    user: { id: null, username: null },
     columns: [],
     loading: false,
     error: null,
@@ -115,7 +304,8 @@ const taskSlice = createSlice({
       })
       .addCase(fetchMyTasks.fulfilled, (state, action) => {
         state.loading = false;
-        state.columns = action.payload || [];
+        state.user = action.payload?.user || state.user;
+        state.columns = action.payload?.columns || [];
       })
       .addCase(fetchMyTasks.rejected, (state, action) => {
         state.loading = false;
@@ -133,6 +323,21 @@ const taskSlice = createSlice({
       .addCase(saveMyTasksColumns.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to save";
+      })
+      .addCase(createMyTasksSpace.fulfilled, (state, action) => {
+        state.user = action.payload?.user || state.user;
+        state.columns = action.payload?.columns || [];
+      })
+      // ✅ NEW: handle deleteTask for mytasks
+      .addCase(deleteTask.fulfilled, (state, action) => {
+        if (action.payload.scope !== "mytasks") return;
+        state.columns = action.payload.columns || state.columns;
+      })
+
+      // ✅ NEW: handle updateTask for mytasks and workspace
+      .addCase(updateTask.fulfilled, (state, action) => {
+        if (action.payload.scope !== "mytasks") return;
+        state.columns = action.payload.columns || state.columns;
       });
   },
 });
@@ -144,7 +349,7 @@ export default taskSlice.reducer;
 
 // ✅ Selectors
 export const selectMyTasksColumns = (state) => {
-  return state?.tasks?.columns ?? [];
+  return state?.tasks ?? {};
 };
 export const selectTasksLoading = (state) => state.tasks.loading;
 export const selectTasksError = (state) => state.tasks.error;

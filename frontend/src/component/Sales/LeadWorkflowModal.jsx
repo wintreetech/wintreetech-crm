@@ -97,8 +97,17 @@ function LeadWorkflowModal({ isOpen, onClose, lead }) {
   };
 
   return (
-    <dialog open={isOpen} className="modal ">
-      <div className="modal-box w-11/12 max-w-2xl">
+    <dialog open={isOpen} className="modal modal-bottom sm:modal-middle">
+      {/* ✅ Mobile full-screen, Desktop unchanged */}
+      <div
+        className="
+          modal-box
+          w-screen h-screen max-w-none
+          sm:w-11/12 sm:max-w-2xl sm:h-auto sm:max-h-none
+          overflow-y-auto
+          rounded-lg
+        "
+      >
         <h1 className="text-2xl font-bold mb-2">
           Workflow Phases for {lead.companyName}
         </h1>

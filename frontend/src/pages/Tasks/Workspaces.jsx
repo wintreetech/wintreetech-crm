@@ -103,7 +103,9 @@ const Workspaces = () => {
         year: "numeric",
       }),
 
-      createdBy: currentUser?.username || "Unknown",
+      createdBy: currentUser
+        ? { id: currentUser.id, username: currentUser.username }
+        : { id: null, username: "Unknown" },
       members: [],
       columns: makeEmptyColumns(),
     };

@@ -30,6 +30,7 @@ const serializeAttachments = (atts = []) =>
   );
 
 const WorkspaceDetails = () => {
+  const [taskToEdit, setTaskToEdit] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -44,6 +45,13 @@ const WorkspaceDetails = () => {
 
   // ✅ debounce timer ref
   const saveTimerRef = useRef(null);
+
+  // ✅ NEW: open edit modal from board
+  const openEditTaskModal = (task, columnId) => {
+    setTaskToEdit({ ...task, columnId });
+    setAssignWorkspace(workspace);
+    setAssignOpen(true);
+  };
 
   useEffect(() => {
     if (id) dispatch(setActiveWorkspace(id));
@@ -74,12 +82,14 @@ const WorkspaceDetails = () => {
 
   const openAssignModal = () => {
     setAssignWorkspace(workspace);
+    setTaskToEdit(null);
     setAssignOpen(true);
   };
 
   const closeAssignModal = () => {
     setAssignOpen(false);
     setAssignWorkspace(null);
+    setTaskToEdit(null);
   };
 
   const handleColumnsChange = (newCols) => {
@@ -105,33 +115,33 @@ const WorkspaceDetails = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 dark:bg-gray-800 min-h-screen">
+    <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800 min-h-screen">
       {/* Header */}
-      <div className="mb-6 flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
+      <div className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
           <button
             onClick={handleBack}
-            className="btn btn-ghost btn-sm btn-circle"
+            className="btn btn-ghost btn-sm btn-circle shrink-0"
             title="Back"
             aria-label="Go back"
           >
             <ArrowLeft size={18} />
           </button>
 
-          <div>
-            <h1 className="text-lg md:text-2xl font-semibold text-gray-800 dark:text-white capitalize">
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-2xl font-semibold text-gray-800 dark:text-white capitalize break-words">
               {workspace.title}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-gray-500 dark:text-gray-400 mt-1 break-words">
               {workspace.description}
             </p>
           </div>
         </div>
 
-        {hasPermission && (
+        {hasPermission && workspace.members.length !== 0 && (
           <button
             onClick={openAssignModal}
-            className="btn btn-primary btn-sm md:btn-md gap-2"
+            className="btn btn-primary btn-sm md:btn-md gap-2 w-full md:w-auto"
           >
             <Plus size={16} />
             Assign Task
@@ -141,15 +151,57 @@ const WorkspaceDetails = () => {
 
       {/* ✅ Board always stays mounted */}
       <KanbanBoard
+        scope="workspace"
         initialColumns={workspace.columns || []}
         onColumnsChange={handleColumnsChange}
+        onEditTask={openEditTaskModal}
       />
 
       <AssignTaskModal
         open={assignOpen}
         onClose={closeAssignModal}
         members={workspace.members || []}
+        initialData={taskToEdit}
         onAssign={(data) => {
+          // ✅ EDIT flow
+          if (data?.isEdit && taskToEdit?.id) {
+            const updatedColumns = (workspace.columns || []).map((col) => {
+              const colKey = String(col?.id || col?.title || "")
+                .toLowerCase()
+                .replace(/\s+/g, "-");
+
+              const targetKey = String(taskToEdit.columnId || "")
+                .toLowerCase()
+                .replace(/\s+/g, "-");
+
+              if (colKey !== targetKey) return col;
+
+              return {
+                ...col,
+                tasks: (col.tasks || []).map((t) =>
+                  String(t.id) === String(taskToEdit.id)
+                    ? {
+                        ...t,
+                        title: data.taskName,
+                        description: data.description || "",
+                        assignees: data.assignees,
+                        dueDate: data.dueDate,
+                        priority: data.priority,
+                        attachments: serializeAttachments(
+                          data.attachments || []
+                        ),
+                      }
+                    : t
+                ),
+              };
+            });
+
+            handleColumnsChange(updatedColumns);
+            closeAssignModal();
+            return;
+          }
+
+          // ✅ ADD flow (unchanged)
           const newTask = {
             id: crypto.randomUUID(),
             title: data.taskName,

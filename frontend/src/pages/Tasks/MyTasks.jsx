@@ -12,20 +12,27 @@ import {
   saveMyTasksColumns,
   selectMyTasksColumns,
   selectTasksLoading,
+  updateTask, // ✅ NEW: thunk you will add in Tasks.slice.js
 } from "../../store/slices/Tasks.slice";
 
 const MyTasks = () => {
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // ✅ read columns from redux
-  const columns = useSelector(selectMyTasksColumns) || [];
-  const loading = useSelector(selectTasksLoading); // we still fetch once, but we won’t show loading text.
+  // ✅ NEW: edit state
+  const [editingTask, setEditingTask] = useState(null);
+  const [editingColumnId, setEditingColumnId] = useState(null);
 
-  // ✅ debounce timer ref
+  // ✅ safe selector usage (supports both array OR {columns: []})
+  const myTasksState = useSelector(selectMyTasksColumns);
+  const columns = Array.isArray(myTasksState)
+    ? myTasksState
+    : myTasksState?.columns || [];
+
+  const loading = useSelector(selectTasksLoading);
+
   const saveTimerRef = useRef(null);
 
-  // ✅ fetch once on mount
   useEffect(() => {
     dispatch(fetchMyTasks());
   }, [dispatch]);
@@ -43,18 +50,57 @@ const MyTasks = () => {
     setIsModalOpen(false);
   };
 
+  // ✅ NEW: update existing task
+  const handleUpdateTask = (updatedTaskData) => {
+    if (!editingTask || !editingColumnId) return;
+
+    dispatch(
+      updateTask({
+        scope: "mytasks",
+        columnId: editingColumnId,
+        taskId: editingTask.id,
+        updates: updatedTaskData,
+      })
+    );
+
+    // close + reset edit state
+    setIsModalOpen(false);
+    setEditingTask(null);
+    setEditingColumnId(null);
+  };
+
   const handleColumnsChange = (newCols) => {
-    // ✅ 1. update UI immediately
     dispatch(setMyTasksColumns(newCols));
 
-    // ✅ 2. debounce backend save + console.log
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
 
     saveTimerRef.current = setTimeout(() => {
-      // console.log("✅ Final MyTasks Columns Saved:", newCols);
-
       dispatch(saveMyTasksColumns(newCols));
-    }, 700); // wait 700ms after last interaction
+    }, 700);
+  };
+
+  const handleCreateMyTasksSpace = () => {
+    const newCols = [
+      { id: "todo", tasks: [] },
+      { id: "inprogress", tasks: [] },
+      { id: "completed", tasks: [] },
+    ];
+    dispatch(setMyTasksColumns(newCols));
+    dispatch(saveMyTasksColumns(newCols));
+  };
+
+  // ✅ NEW: open edit modal from KanbanBoard
+  const openEditModal = (task, columnId) => {
+    setEditingTask(task);
+    setEditingColumnId(columnId);
+    setIsModalOpen(true);
+  };
+
+  // ✅ NEW: close modal & reset edit mode
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingTask(null);
+    setEditingColumnId(null);
   };
 
   return (
@@ -65,23 +111,42 @@ const MyTasks = () => {
             My Tasks
           </h1>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="btn btn-primary flex min-w-[84px] items-center justify-center gap-2 h-10 px-4 text-sm font-bold tracking-[0.015em] capitalize"
-          >
-            <Plus size={20} />
-            <span className="truncate">Add New Task</span>
-          </button>
+          {columns.length > 0 && (
+            <button
+              onClick={() => {
+                setEditingTask(null);
+                setEditingColumnId(null);
+                setIsModalOpen(true);
+              }}
+              className="btn btn-primary flex min-w-[84px] items-center justify-center gap-2 h-10 px-4 text-sm font-bold tracking-[0.015em] capitalize"
+            >
+              <Plus size={20} />
+              <span className="truncate">Add New Task</span>
+            </button>
+          )}
         </div>
 
-        {/* ✅ Always render board. No loading text flash. */}
-        <KanbanBoard
-          initialColumns={columns}
-          onColumnsChange={handleColumnsChange}
-        />
+        {columns.length === 0 && !loading && (
+          <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+            <button
+              onClick={handleCreateMyTasksSpace}
+              className="btn btn-primary flex min-w-[84px] items-center justify-center gap-2 h-10 px-4 text-sm font-bold tracking-[0.015em] capitalize"
+            >
+              <Plus size={20} />
+              <span className="truncate">Create My Tasks Space</span>
+            </button>
+          </div>
+        )}
 
-        {/* ✅ If you want a tiny subtle loader only on FIRST fetch, keep this.
-            It won't unmount the board and no text shown. */}
+        {columns.length > 0 && (
+          <KanbanBoard
+            initialColumns={columns}
+            onColumnsChange={handleColumnsChange}
+            onEditTask={openEditModal} // ✅ NEW
+            scope="mytasks"
+          />
+        )}
+
         {loading && columns.length === 0 && (
           <div className="p-2 h-screen flex justify-center items-center">
             <span className="loading loading-spinner loading-lg" />
@@ -91,8 +156,10 @@ const MyTasks = () => {
 
       <AddTaskModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleAddTask}
+        onClose={closeModal}
+        onSubmit={editingTask ? handleUpdateTask : handleAddTask} // ✅ NEW
+        initialTask={editingTask} // ✅ NEW
+        submitLabel={editingTask ? "Update Task" : "Create Task"} // ✅ NEW
       />
     </>
   );

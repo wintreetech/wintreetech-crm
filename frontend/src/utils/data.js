@@ -120,7 +120,7 @@ export const workspaces = [
     title: "Q4 Marketing Campaign",
     slug: `${slugify("Q4 Marketing Campaign")}-1`,
     createdOn: "Aug 15, 2023",
-    createdBy: "Eleanor Vance",
+    createdBy: { id: "u-101", username: "Eleanor Vance" },
     description:
       "Workspace for coordinating all marketing efforts for the fourth quarter.",
 
@@ -187,7 +187,7 @@ export const workspaces = [
     title: 'Product Launch "Project Phoenix"',
     slug: `${slugify('Product Launch "Project Phoenix"')}-2`,
     createdOn: "Jul 22, 2023",
-    createdBy: "Oliver Grant",
+    createdBy: { id: "u-205", username: "Oliver Grant" },
     description:
       "A strategic product launch initiative aimed at delivering an innovative, high-impact solution.",
 
@@ -247,7 +247,7 @@ export const workspaces = [
     title: "Website Redesign 2024",
     slug: `${slugify("Website Redesign 2024")}-3`,
     createdOn: "Jun 01, 2023",
-    createdBy: "Lana Byrd",
+    createdBy: { id: "u-301", username: "Lana Byrd" },
     description: "",
 
     // ✅ members as objects (3 from avatars + 2 extra)
@@ -299,7 +299,7 @@ export const workspaces = [
     title: "Mobile App Development",
     slug: `${slugify("Mobile App Development")}-4`,
     createdOn: "Feb 10, 2023",
-    createdBy: "Thomas Lean",
+    createdBy: { id: "u-401", username: "Thomas Lean" },
     description: "",
 
     // ✅ members as objects (3 from avatars + 3 extra)

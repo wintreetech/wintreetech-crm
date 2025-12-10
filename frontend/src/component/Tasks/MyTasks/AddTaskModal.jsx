@@ -1,6 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
-const AddTaskModal = ({ isOpen, onClose, onSubmit, members = [] }) => {
+const AddTaskModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  members = [],
+  initialTask = null, // ✅ NEW (optional)
+  submitLabel = "Create Task", // ✅ NEW (optional)
+}) => {
   if (!isOpen) return null;
 
   const statusOptions = useMemo(
@@ -27,18 +34,36 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, members = [] }) => {
   // ✅ ADDED: today's date for min + validation
   const todayISO = new Date().toISOString().split("T")[0];
 
+  // ✅ NEW: controlled form state so edit prefill works
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState(todayISO);
+
+  // ✅ NEW: prefill when modal opens / initialTask changes
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (initialTask) {
+      setTitle(initialTask.title || "");
+      setDescription(initialTask.description || "");
+      setDueDate(initialTask.dueDate || todayISO);
+      setPriority(initialTask.priority || "urgent");
+    } else {
+      // add mode reset
+      setTitle("");
+      setDescription("");
+      setDueDate(todayISO);
+      setPriority("urgent");
+    }
+  }, [isOpen, initialTask, todayISO]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!onSubmit) return;
 
     const status = "todo";
 
-    const formData = new FormData(e.currentTarget);
-
-    const title = formData.get("title")?.toString().trim();
-    const dueDate = formData.get("dueDate");
-
-    if (!title || !dueDate) {
+    if (!title.trim() || !dueDate) {
       console.error("There are some fields missing");
       return;
     }
@@ -50,16 +75,20 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, members = [] }) => {
     }
 
     onSubmit({
-      title,
-      description: formData.get("description")?.toString().trim(),
+      title: title.trim(),
+      description: description.trim(),
       status,
       dueDate,
       priority,
-      tags: ["New"],
-      isCompleted: false,
+      tags: initialTask?.tags || ["New"],
+      isCompleted: initialTask?.isCompleted || false,
+      assignees: initialTask?.assignees || [],
     });
 
-    e.currentTarget.reset();
+    // reset
+    setTitle("");
+    setDescription("");
+    setDueDate(todayISO);
     setPriority("urgent");
     onClose?.();
   };
@@ -93,6 +122,8 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, members = [] }) => {
               required
               placeholder="e.g., Finalize Q4 budget report"
               className="input input-bordered w-full"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
@@ -109,6 +140,8 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, members = [] }) => {
               rows={5}
               placeholder="Provide a brief description of the task..."
               className="textarea textarea-bordered w-full"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
@@ -127,6 +160,8 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, members = [] }) => {
                 required
                 min={todayISO} // ✅ ADDED: blocks past dates in picker
                 className="input input-bordered w-full"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
           </div>
@@ -159,7 +194,7 @@ const AddTaskModal = ({ isOpen, onClose, onSubmit, members = [] }) => {
             </button>
 
             <button type="submit" className="btn btn-primary gap-2">
-              Create Task
+              {submitLabel}
             </button>
           </div>
         </form>

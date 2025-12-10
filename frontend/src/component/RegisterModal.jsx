@@ -78,21 +78,31 @@ const RegisterModal = ({
 
   return (
     <dialog open={isOpen} className="modal modal-bottom sm:modal-middle">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8 relative dark:bg-gray-900">
+      <div
+        className="
+          w-full max-w-2xl bg-white rounded-2xl shadow-2xl relative dark:bg-gray-900
+          p-4 sm:p-6 md:p-8
+          max-h-[90vh] overflow-y-auto
+        "
+      >
         {/* Close button */}
         <button
           onClick={onClose}
           type="button"
-          className="cursor-pointer absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl font-bold"
+          className="
+            cursor-pointer absolute top-3 right-3
+            text-gray-400 hover:text-gray-600
+            text-2xl font-bold
+          "
         >
           <X />
         </button>
 
-        <h2 className="text-3xl font-bold text-center text-gray-800 mb-8 dark:text-white">
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6 sm:mb-8 dark:text-white">
           {mode === "edit" ? "Edit User" : "Create an Account"}
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
           {/* Full Name */}
           <div>
             <label
@@ -132,7 +142,7 @@ const RegisterModal = ({
           </div>
 
           {/* Role + Department */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {/* Role field for admin/superadmin */}
             {hasPermission && (
               <div>
@@ -198,7 +208,7 @@ const RegisterModal = ({
 
           {/* Password + Confirm Password fields only for create*/}
           {mode === "create" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
               <div>
                 <label
                   className="block text-gray-700 mb-2 dark:text-gray-500"
@@ -219,7 +229,7 @@ const RegisterModal = ({
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 focus:outline-none text-sm"
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>

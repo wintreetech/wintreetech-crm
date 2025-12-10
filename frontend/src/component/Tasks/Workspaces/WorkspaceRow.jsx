@@ -1,7 +1,13 @@
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../store/slices/Auth.slice";
+import { Trash } from "lucide-react";
 
-const WorkspaceRow = ({ workspace, onRowClick, onAssignClick }) => {
+const WorkspaceRow = ({
+  workspace,
+  onRowClick,
+  onAssignClick,
+  onDeleteClick,
+}) => {
   const { title, createdBy, createdOn, members = [], columns = [] } = workspace;
 
   const currentUser = useSelector(selectCurrentUser);
@@ -24,12 +30,25 @@ const WorkspaceRow = ({ workspace, onRowClick, onAssignClick }) => {
   // calculate "In Progress" tasks length
   const inProgressColumn = Array.isArray(columns)
     ? columns.find((col) => {
-        const key = (col?.id).toString().toLowerCase().replace(/\s+/g, "-");
+        const key = col?.id.toString().toLowerCase().replace(/\s+/g, "-");
         return key === "inprogress";
       })
     : null;
 
   const inProgressCount = inProgressColumn?.tasks?.length ?? 0;
+
+  // ✅ show delete only if current user matches createdBy (id + username)
+  const canDelete =
+    currentUser?.id &&
+    createdBy?.id &&
+    String(currentUser.id) === String(createdBy.id) &&
+    currentUser?.username &&
+    createdBy?.username &&
+    String(currentUser.username).toLowerCase() ===
+      String(createdBy.username).toLowerCase();
+
+  const showAssign = hasPermission && members.length !== 0;
+  const showActionsCell = showAssign || canDelete;
 
   return (
     <tr
@@ -39,7 +58,7 @@ const WorkspaceRow = ({ workspace, onRowClick, onAssignClick }) => {
       <td className="px-6 py-4 font-bold text-base text-text-primary-light dark:text-text-primary-dark capitalize">
         {title}
         <p className="text-sm text-gray-700 dark:text-gray-400 mt-0.5 font-normal">
-          Created by {createdBy}
+          Created by {createdBy.username}
         </p>
       </td>
 
@@ -71,17 +90,35 @@ const WorkspaceRow = ({ workspace, onRowClick, onAssignClick }) => {
         {createdOn}
       </td>
 
-      {hasPermission && members.length !== 0 && (
+      {showActionsCell && (
         <td className="px-6 py-4">
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAssignClick(workspace);
-            }}
-          >
-            Assign
-          </button>
+          <div className="flex items-center gap-2">
+            {showAssign && (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAssignClick(workspace);
+                }}
+              >
+                Assign
+              </button>
+            )}
+
+            {canDelete && (
+              <button
+                className="btn btn-sm bg-red-100 text-red-600 hover:bg-red-200 border-none"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteClick?.(workspace);
+                }}
+                title="Delete Workspace"
+                aria-label="Delete Workspace"
+              >
+                <Trash className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </td>
       )}
     </tr>

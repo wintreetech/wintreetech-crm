@@ -1,7 +1,9 @@
 import { Draggable } from "@hello-pangea/dnd";
-import { Clock, CheckCircle, Trash, Expand } from "lucide-react";
+import { Clock, CheckCircle, Trash, Expand, Pen } from "lucide-react";
 import { getAvatarUrl, getStatusIcon } from "../../../utils/data";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../store/slices/Auth.slice";
 
 const StatusIcon = ({ dueDate, size, className }) => {
   const iconName = getStatusIcon(dueDate);
@@ -12,8 +14,21 @@ const StatusIcon = ({ dueDate, size, className }) => {
   return <Clock size={size} className={className} />;
 };
 
-const TaskCard = ({ task, index, onExpand }) => {
+const TaskCard = ({
+  task,
+  index,
+  onExpand,
+  onDelete,
+  onEdit,
+  columnId,
+  showEdit = false,
+}) => {
   const [showDetails, setShowDetails] = useState(false);
+
+  const currentUser = useSelector(selectCurrentUser);
+
+  const hasPermission =
+    currentUser?.role === "admin" || currentUser?.role === "superadmin";
 
   const {
     title,
@@ -80,7 +95,7 @@ const TaskCard = ({ task, index, onExpand }) => {
               </span>
             )}
 
-            <div>
+            <div className="ml-2">
               <button
                 title="Expand"
                 onClick={(e) => {
@@ -92,10 +107,28 @@ const TaskCard = ({ task, index, onExpand }) => {
                 <Expand size={20} />
               </button>
 
-              {isCompleted && (
+              {showEdit && (
+                <button
+                  title="Edit"
+                  className="text-gray-400 hover:bg-gray-200 hover:text-gray-500 p-1 rounded-md transition-opacity cursor-pointer opacity-0 group-hover:opacity-100 dark:hover:bg-gray-500 dark:hover:text-gray-200"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit?.(columnId, task);
+                  }}
+                >
+                  <Pen size={20} />
+                </button>
+              )}
+
+              {(dueLabel === "Overdue" || isCompleted) && (
                 <button
                   title="Delete"
                   className="text-red-400 hover:bg-red-200 hover:text-red-500 p-1 rounded-md transition-opacity cursor-pointer opacity-0 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete?.(columnId, task.id);
+                    console.log(columnId, task.id);
+                  }}
                 >
                   <Trash size={20} />
                 </button>

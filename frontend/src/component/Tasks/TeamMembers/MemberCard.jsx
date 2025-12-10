@@ -23,9 +23,9 @@ const MemberCard = ({
   return (
     <div
       className={`
-        group relative flex flex-col gap-3 rounded-xl border
+        group relative flex flex-col gap-2 sm:gap-3 rounded-lg sm:rounded-xl border
         border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900
-        p-4 text-center shadow-sm transition-all hover:shadow-lg w-full
+        p-3 sm:p-4 text-center shadow-sm transition-all hover:shadow-lg w-full
         ${selectable ? "cursor-pointer" : ""}
         ${checked ? "ring-2 ring-primary/60" : ""}
       `}
@@ -48,9 +48,9 @@ const MemberCard = ({
       )}
 
       {/* Avatar */}
-      <div className="mx-auto mt-2">
+      <div className="mx-auto mt-1 sm:mt-2">
         <div
-          className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-lg sm:text-2xl font-semibold text-gray-700 dark:text-gray-100"
+          className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-base sm:text-2xl font-semibold text-gray-700 dark:text-gray-100"
           aria-label={`${name}'s initials`}
         >
           {initials}
@@ -59,7 +59,7 @@ const MemberCard = ({
 
       {/* Text info */}
       <div className="flex flex-col">
-        <p className="text-gray-900 dark:text-gray-100 text-base font-medium leading-normal break-words">
+        <p className="text-gray-900 dark:text-gray-100 text-sm sm:text-base font-medium leading-normal break-words">
           {name}
         </p>
 

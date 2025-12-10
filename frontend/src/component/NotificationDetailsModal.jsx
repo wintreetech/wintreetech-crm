@@ -30,30 +30,30 @@ const NotificationDetailsModal = ({ open, onClose, notification }) => {
 
         <div className="p-8">
           <div className="flex flex-col gap-6">
-            {/* Header */}
-            <div className="flex flex-col gap-2">
-              <h2 className="text-gray-900 dark:text-white text-2xl font-bold leading-tight">
-                {title}
-              </h2>
+            {/* Date + Time */}
+            <div className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
+              <CalendarDays size={16} />
+              <p className="text-sm font-medium">{date}</p>
 
-              {/* Date + Time */}
-              <div className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
-                <CalendarDays size={16} />
-                <p className="text-sm font-medium">{date}</p>
+              <span className="text-gray-300 dark:text-gray-600">·</span>
 
-                <span className="text-gray-300 dark:text-gray-600">·</span>
-
-                <Clock size={16} />
-                <p className="text-sm font-medium">{time}</p>
-              </div>
+              <Clock size={16} />
+              <p className="text-sm font-medium">{time}</p>
             </div>
 
             <div className="border-t border-gray-200 dark:border-gray-700" />
 
-            {/* Message */}
-            <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
-              {message}
-            </p>
+            {/* Header */}
+            <div className="flex flex-col gap-2">
+              <h2 className="text-gray-900 dark:text-white text-xl sm:text-2xl font-bold leading-tight">
+                {title}
+              </h2>
+
+              {/* Message */}
+              <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
+                {message}
+              </p>
+            </div>
           </div>
         </div>
       </div>

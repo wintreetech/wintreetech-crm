@@ -13,14 +13,10 @@ import {
   Bell,
   ChevronRight,
   ChevronLeft,
+  TextAlignJustify,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  logout,
-  logoutUser,
-  selectAuthLoading,
-  selectCurrentUser,
-} from "../store/slices/Auth.slice.js";
+import { logoutUser, selectCurrentUser } from "../store/slices/Auth.slice.js";
 import { fetchUsers } from "../store/slices/Users.slice.js";
 
 function TaskLayout() {
@@ -141,7 +137,7 @@ function TaskLayout() {
     if (!sidebarCollapsed) {
       expandTimerRef.current = setTimeout(() => {
         setShowLabels(true);
-      }, 100); // matches transition duration
+      }, 100);
     } else {
       setShowLabels(false);
     }
@@ -163,11 +159,25 @@ function TaskLayout() {
   return (
     <div className="h-screen flex flex-col">
       {/* TOP HEADER */}
-      <header className="flex justify-between items-center bg-gray-900 text-white px-4 py-2 shadow-md">
+      <header className="flex flex-wrap md:flex-nowrap justify-between items-center bg-gray-900 text-white px-3 md:px-4 py-2 shadow-md gap-2">
+        {/* ✅ Mobile menu open button */}
+        {showSidebar && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-50/20"
+            aria-label="Open sidebar menu"
+            title="Menu"
+          >
+            <TextAlignJustify />
+          </button>
+        )}
+
         {/* Left: Page Info */}
-        <div>
-          <h1 className="text-xl font-semibold leading-tight">{pageTitle}</h1>
-          <p className="text-gray-400 text-xs">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-base md:text-xl font-semibold leading-tight truncate">
+            {pageTitle}
+          </h1>
+          <p className="text-gray-400 text-xs truncate">
             (
             {currentUser.department.charAt(0).toUpperCase() +
               currentUser.department.slice(1)}
@@ -176,23 +186,27 @@ function TaskLayout() {
         </div>
 
         {/* Right: Avatar Dropdown */}
-        <div className="relative">
-          <div className="flex items-center space-x-4">
+        <div className="relative shrink-0">
+          <div className="flex items-center space-x-2 md:space-x-4">
             <button
               onClick={() => navigate("/tasks/notifications")}
               className="hover:bg-gray-50/20 p-2 rounded-lg cursor-pointer"
             >
               <Bell />
             </button>
-            <div className="flex flex-col justify-end items-end">
-              <p className="text-lg font-semibold text-white capitalize">
+
+            <div className="hidden sm:flex flex-col justify-end items-end">
+              <p className="text-sm md:text-lg font-semibold text-white capitalize">
                 hi, {currentUser?.username.split(" ")[0]}
               </p>
-              <p className="text-sm text-gray-300">{currentUser?.role}</p>
+              <p className="text-xs md:text-sm text-gray-300">
+                {currentUser?.role}
+              </p>
             </div>
+
             <button
               onClick={() => setAvatarOpen(!avatarOpen)}
-              className="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center text-[18px] font-semibold shadow-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+              className="bg-white text-black w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-[16px] md:text-[18px] font-semibold shadow-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
             >
               {currentUser?.username.charAt(0).toUpperCase()}
             </button>
@@ -214,12 +228,20 @@ function TaskLayout() {
       </header>
 
       {/* LAYOUT */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* ✅ MOBILE BACKDROP */}
+        {showSidebar && sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* SIDEBAR */}
         {showSidebar && (
           <aside
             className={`
-              fixed md:static top-0 left-0 h-full bg-gray-900 text-white p-4 
+              fixed md:static top-0 left-0 h-full bg-gray-900 text-white p-4
               transition-all duration-300 ease-in-out z-40 flex flex-col justify-between
               ${sidebarCollapsed ? "w-20" : "w-64"}
               ${
@@ -227,6 +249,7 @@ function TaskLayout() {
                   ? "translate-x-0"
                   : "-translate-x-full md:translate-x-0"
               }
+              overflow-y-auto md:overflow-visible
             `}
           >
             {/* Close button for mobile */}
@@ -251,14 +274,12 @@ function TaskLayout() {
                         sidebarCollapsed ? "justify-center" : "",
                       ].join(" ")
                     }
+                    title={item.name}
                     aria-current={({ isActive }) =>
                       isActive ? "page" : undefined
                     }
                   >
-                    {/* ✅ icon always visible */}
                     <span className="shrink-0">{item.icon}</span>
-
-                    {/* ✅ labels appear only after expand */}
                     <span
                       className={`
                         ml-2 transition-opacity duration-200 whitespace-nowrap
@@ -273,13 +294,12 @@ function TaskLayout() {
               ))}
             </ul>
 
-            <div className="mt-auto flex flex-col gap-3">
+            <div className="mt-auto flex flex-col gap-3 pt-4">
               <ul className="space-y-2">
                 <li>
                   <NavLink
                     to={
-                      currentUser?.role === "superadmin" ||
-                      currentUser?.role === "admin"
+                      currentUser?.role === "superadmin"
                         ? "/dashboard"
                         : `/${
                             ["sales", "finance", "recon", "support"].includes(
@@ -299,7 +319,6 @@ function TaskLayout() {
                     }
                   >
                     <Undo2 size={18} className="shrink-0" />
-
                     <span
                       className={`
                         ml-2 transition-opacity duration-200 whitespace-nowrap
@@ -313,11 +332,11 @@ function TaskLayout() {
                 </li>
               </ul>
 
-              {/* ✅ bottom collapse toggle */}
+              {/* ✅ bottom collapse toggle (desktop only) */}
               <button
                 onClick={toggleCollapse}
                 className={`
-                  flex items-center w-full px-3 py-2 rounded-lg transition hover:bg-gray-800 gap-2
+                  hidden md:flex items-center w-full px-3 py-2 rounded-lg transition hover:bg-gray-800 gap-2
                   ${sidebarCollapsed ? "justify-center" : ""}
                 `}
                 title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}

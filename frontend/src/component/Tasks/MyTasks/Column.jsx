@@ -1,7 +1,14 @@
 import { Droppable } from "@hello-pangea/dnd";
 import TaskCard from "./TaskCard";
 
-const Column = ({ column, title, onTaskExpand }) => {
+const Column = ({
+  column,
+  title,
+  onTaskExpand,
+  onDeleteTask,
+  onEditTask,
+  showEdit,
+}) => {
   return (
     <div className="bg-gray-100 rounded-xl p-2 flex flex-col gap-2 h-full dark:bg-gray-900 overflow-hidden">
       <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700/50">
@@ -30,7 +37,11 @@ const Column = ({ column, title, onTaskExpand }) => {
                 key={task.id}
                 task={task}
                 index={index}
+                columnId={column.id}
                 onExpand={() => onTaskExpand(task, column.id)}
+                onDelete={onDeleteTask}
+                onEdit={onEditTask}
+                showEdit={showEdit}
               />
             ))}
             {provided.placeholder}

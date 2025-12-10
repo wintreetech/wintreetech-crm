@@ -521,23 +521,33 @@ function SalesDashboard() {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mt-4 space-y-2 sm:space-y-0">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 border rounded-lg disabled:opacity-50"
+            className="
+      w-full sm:w-auto
+      px-4 py-2 border rounded-lg disabled:opacity-50
+      text-sm sm:text-base
+    "
           >
             Previous
           </button>
-          <span className="text-sm">
+
+          <span className="text-sm sm:text-base text-center w-full sm:w-auto">
             Page {currentPage} of {totalPages}
           </span>
+
           <button
             onClick={() =>
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded-lg disabled:opacity-50"
+            className="
+      w-full sm:w-auto
+      px-4 py-2 border rounded-lg disabled:opacity-50
+      text-sm sm:text-base
+    "
           >
             Next
           </button>

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { workspaces as initialWorkspaces } from "../../utils/data";
+import { deleteTask } from "./Tasks.slice";
 
 // ✅ fetch list (mock)
 export const fetchWorkspaces = createAsyncThunk(
@@ -43,6 +44,7 @@ const WorkspacesSlice = createSlice({
       state.list.unshift(action.payload);
     },
 
+    // ✅ EXISTING: Add-only behavior (kept as-is)
     addMembersToWorkspace: (state, action) => {
       const { workspaceId, membersToAdd } = action.payload;
 
@@ -59,6 +61,26 @@ const WorkspacesSlice = createSlice({
           ws.members.push(m);
           existingKeys.add(key);
         }
+      });
+    },
+
+    // ✅ NEW: Update members (replace workspace members with selected list)
+    updateMembersInWorkspace: (state, action) => {
+      const { workspaceId, membersToAdd } = action.payload;
+
+      const ws = state.list.find((w) => String(w.id) === String(workspaceId));
+      if (!ws) return;
+
+      // ensure array
+      const nextMembers = Array.isArray(membersToAdd) ? membersToAdd : [];
+
+      // de-dup by _id/email while preserving order
+      const seen = new Set();
+      ws.members = nextMembers.filter((m) => {
+        const key = m?._id || m?.email;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
     },
 
@@ -104,6 +126,15 @@ const WorkspacesSlice = createSlice({
         const { workspaceSlug, columns } = action.payload;
         const ws = state.list.find((w) => w.slug === workspaceSlug);
         if (ws) ws.columns = columns;
+      })
+
+      // ✅ NEW: handle deleteTask for workspace
+      .addCase(deleteTask.fulfilled, (state, action) => {
+        if (action.payload.scope !== "workspace") return;
+
+        const { workspaceSlug, columns } = action.payload;
+        const ws = state.list.find((w) => w.slug === workspaceSlug);
+        if (ws) ws.columns = columns || ws.columns;
       });
   },
 });
@@ -113,7 +144,8 @@ export const {
   setWorkspaceColumns,
   addWorkspace,
   addMembersToWorkspace,
-  addTaskToWorkspaceTodo, // ✅ export
+  updateMembersInWorkspace, // ✅ export new updater
+  addTaskToWorkspaceTodo,
 } = WorkspacesSlice.actions;
 
 export default WorkspacesSlice.reducer;

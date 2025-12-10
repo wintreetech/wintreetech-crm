@@ -72,7 +72,7 @@ const Analytics = () => {
             {/* Charts row */}
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
               {/* Completion trend */}
-              <div className="lg:col-span-3 flex flex-col gap-4 rounded-xl border border-gray-200/50 dark:border-gray-800/50 bg-white dark:bg-background-dark p-6 shadow-sm">
+              <div className="lg:col-span-3 min-w-0 flex flex-col gap-4 rounded-xl border border-gray-200/50 dark:border-gray-800/50 bg-white dark:bg-background-dark p-6 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <p className="text-[#0d1b19] dark:text-white text-lg font-semibold">
@@ -93,7 +93,7 @@ const Analytics = () => {
                   </div>
                 </div>
 
-                <div className="h-[250px] w-full pt-4">
+                <div className="h-[250px] w-full pt-4 overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={completionData}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
@@ -113,7 +113,7 @@ const Analytics = () => {
               </div>
 
               {/* Status overview donut */}
-              <div className="lg:col-span-2 flex flex-col gap-4 rounded-xl border border-gray-200/50 dark:border-gray-800/50 bg-white dark:bg-background-dark p-6 shadow-sm">
+              <div className="lg:col-span-2 min-w-0 flex flex-col gap-4 rounded-xl border border-gray-200/50 dark:border-gray-800/50 bg-white dark:bg-background-dark p-6 shadow-sm">
                 <div>
                   <p className="text-[#0d1b19] dark:text-white text-lg font-semibold">
                     Task Status Overview
@@ -123,7 +123,7 @@ const Analytics = () => {
                   </p>
                 </div>
 
-                <div className="w-full flex justify-center items-center flex-1 my-4">
+                <div className="w-full flex justify-center items-center flex-1 my-4 overflow-hidden">
                   <div className="relative w-40 h-40">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -168,39 +168,6 @@ const Analytics = () => {
                     </div>
                   ))}
                 </div>
-              </div>
-            </div>
-
-            {/* Team Performance table */}
-            <div className="rounded-xl border border-gray-200/50 dark:border-gray-800/50 bg-white dark:bg-background-dark overflow-hidden shadow-sm">
-              <div className="p-6 border-b border-gray-200/50 dark:border-gray-800/50">
-                <h3 className="text-lg font-semibold text-[#0d1b19] dark:text-white">
-                  Team Performance
-                </h3>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                  <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800/60 dark:text-gray-400">
-                    <tr>
-                      <th className="px-6 py-4 font-semibold">Team Member</th>
-                      <th className="px-6 py-4 text-center font-semibold">
-                        Completed
-                      </th>
-                      <th className="px-6 py-4 text-center font-semibold">
-                        In Progress
-                      </th>
-                      <th className="px-6 py-4 text-center font-semibold">
-                        Pending
-                      </th>
-                      <th className="px-6 py-4 text-center font-semibold">
-                        Completion Rate
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody>{/* your rows */}</tbody>
-                </table>
               </div>
             </div>
           </div>

@@ -94,8 +94,6 @@ function User() {
 
   //Delete an existing user
   const handleDelete = async (user) => {
-    // optional: prevent deleting yourself
-
     if (currentUser?.id === user._id) {
       toast.error("You cannot delete your own account.");
       return;
@@ -122,16 +120,17 @@ function User() {
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen dark:bg-gray-800 dark:text-gray-100">
       {/* Header Section */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <h1 className="text-lg md:text-2xl font-semibold text-gray-800 dark:text-white">
           Users Management
         </h1>
         <button
           onClick={() => setRegisterModalOpen(true)}
-          className="btn-primary btn"
+          className="btn-primary btn w-full sm:w-auto justify-center"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Add User</span>
+          <span className="sm:hidden">Add</span>
         </button>
       </div>
 
@@ -174,14 +173,15 @@ function User() {
                    focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
-        <p className="font-bold">
+
+        <p className="font-bold text-sm sm:text-base text-gray-700 dark:text-gray-200 md:text-right">
           {allUsers.length} {allUsers.length === 1 ? "User" : "Users"}
         </p>
       </div>
 
       {/* Users Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-        <table className="w-full text-left text-sm">
+        <table className="min-w-[900px] w-full text-left text-sm">
           <thead className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
             <tr>
               <th className="py-2 px-4">Full Name</th>
@@ -206,11 +206,15 @@ function User() {
                   key={user._id}
                   className="bg-white border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900"
                 >
-                  <td className="py-3 px-4 capitalize">{user.username}</td>
-                  <td className="py-3 px-4">{user.email}</td>
-                  <td className="py-3 px-4 capitalize">
+                  <td className="py-3 px-4 capitalize whitespace-nowrap">
+                    {user.username}
+                  </td>
+                  <td className="py-3 px-4 break-all max-w-[260px]">
+                    {user.email}
+                  </td>
+                  <td className="py-3 px-4 capitalize whitespace-nowrap">
                     <span
-                      className={`px-2 capitalize rounded-xl ${
+                      className={`px-2 capitalize rounded-xl inline-block ${
                         {
                           admin:
                             "bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:text-indigo-100",
@@ -223,9 +227,9 @@ function User() {
                       {user.role}
                     </span>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-3 px-4 whitespace-nowrap">
                     <span
-                      className={`px-2 capitalize rounded-xl ${
+                      className={`px-2 capitalize rounded-xl inline-block ${
                         {
                           finance:
                             "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-100",
@@ -243,7 +247,7 @@ function User() {
                       {user.department || "-"}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-gray-500 dark:text-gray-400">
+                  <td className="py-3 px-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {new Date(user.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
@@ -256,9 +260,9 @@ function User() {
                   </td>
 
                   {/* Actions */}
-                  <td className="py-3 px-4 flex justify-start">
+                  <td className="py-3 px-4">
                     {hasPermission && (
-                      <>
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => {
                             setEditingUser(user);
@@ -275,20 +279,21 @@ function User() {
                         >
                           <Pen className="w-4 h-4" />
                         </button>
+
                         {currentUser.id !== user._id && (
                           <button
                             onClick={() => handleDelete(user)}
                             className="inline-flex items-center justify-center w-8 h-8 rounded-md 
                                    bg-red-100 text-red-400 hover:bg-red-200 hover:text-red-600 
                                    dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800 dark:hover:text-red-100 
-                                   active:scale-95 transition-all duration-150 ml-1 cursor-pointer"
+                                   active:scale-95 transition-all duration-150 cursor-pointer"
                             title="Delete User"
                             aria-label="Delete User"
                           >
                             <Trash className="w-4 h-4" />
                           </button>
                         )}
-                      </>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -312,11 +317,11 @@ function User() {
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="px-4 py-2 border rounded-lg disabled:opacity-50"
+          className="px-4 py-2 border rounded-lg disabled:opacity-50 w-full sm:w-auto"
         >
           Previous
         </button>
-        <span className="text-sm">
+        <span className="text-sm order-first sm:order-none">
           Page {currentPage} of {totalPages}
         </span>
         <button
@@ -324,7 +329,7 @@ function User() {
             setCurrentPage((prev) => Math.min(prev + 1, totalPages))
           }
           disabled={currentPage === totalPages}
-          className="px-4 py-2 border rounded-lg disabled:opacity-50"
+          className="px-4 py-2 border rounded-lg disabled:opacity-50 w-full sm:w-auto"
         >
           Next
         </button>

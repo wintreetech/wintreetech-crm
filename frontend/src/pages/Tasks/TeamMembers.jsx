@@ -1,5 +1,5 @@
 // src/pages/TeamMembers.jsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Plus, Search } from "lucide-react";
 import DepartmentMembers from "../../component/Tasks/TeamMembers/DepartmentMembers";
 import { useSelector, useDispatch } from "react-redux";
@@ -10,6 +10,7 @@ import { selectCurrentUser } from "../../store/slices/Auth.slice";
 import {
   selectWorkspaces,
   addMembersToWorkspace,
+  updateMembersInWorkspace, // ✅ NEW IMPORT
 } from "../../store/slices/Workspaces.slice";
 
 const TeamMembers = () => {
@@ -33,8 +34,29 @@ const TeamMembers = () => {
   const handleWorkspaceSelect = (e) => {
     const id = e.target.value;
     setSelectedWorkspaceId(id);
-    setSelectedMemberIds([]); // reset selections when workspace changes
+    // selections will be auto-set in effect below
   };
+
+  // ✅ NEW: when workspace changes, auto-check existing members
+  useEffect(() => {
+    if (!selectedWorkspaceId) {
+      setSelectedMemberIds([]);
+      return;
+    }
+
+    const ws = workspaces.find(
+      (w) => String(w.id) === String(selectedWorkspaceId)
+    );
+
+    const existingIds = Array.isArray(ws?.members)
+      ? ws.members
+          .map((m) => m?._id)
+          .filter(Boolean)
+          .map(String)
+      : [];
+
+    setSelectedMemberIds(existingIds);
+  }, [selectedWorkspaceId, workspaces]);
 
   const toggleMemberSelect = (userId) => {
     setSelectedMemberIds((prev) =>
@@ -46,7 +68,7 @@ const TeamMembers = () => {
 
   const clearSelections = () => setSelectedMemberIds([]);
 
-  // ✅ on click add members to workspace
+  // ✅ on click add/update members to workspace
   const handleAddToWorkspace = async () => {
     if (!selectedWorkspaceId || selectedMemberIds.length === 0) return;
 
@@ -65,27 +87,58 @@ const TeamMembers = () => {
         department: u.department || u.team || "",
       }));
 
-    dispatch(
-      addMembersToWorkspace({
-        workspaceId: selectedWorkspaceId,
-        membersToAdd,
-      })
-    );
+    const hasExistingMembers =
+      Array.isArray(workspace?.members) && workspace.members.length > 0;
 
-    console.log(
-      "Adding members:",
-      selectedMemberIds,
-      "to workspace:",
-      workspace
-    );
+    // ✅ NEW: if workspace already has members -> replace/update list
+    if (hasExistingMembers) {
+      dispatch(
+        updateMembersInWorkspace({
+          workspaceId: selectedWorkspaceId,
+          membersToAdd,
+        })
+      );
+      console.log(
+        "Updating members:",
+        selectedMemberIds,
+        "in workspace:",
+        workspace
+      );
+    } else {
+      dispatch(
+        addMembersToWorkspace({
+          workspaceId: selectedWorkspaceId,
+          membersToAdd,
+        })
+      );
+      console.log(
+        "Adding members:",
+        selectedMemberIds,
+        "to workspace:",
+        workspace
+      );
+    }
 
+    // ✅ NEW: reset dropdown + selections after add/update
     clearSelections();
+    setSelectedWorkspaceId("");
   };
 
   const canAdd = selectedWorkspaceId && selectedMemberIds.length > 0;
 
+  // ✅ NEW: label changes if selected workspace already has members
+  const actionLabel = useMemo(() => {
+    if (!selectedWorkspaceId) return "Add to workspace";
+    const ws = workspaces.find(
+      (w) => String(w.id) === String(selectedWorkspaceId)
+    );
+    return Array.isArray(ws?.members) && ws.members.length > 0
+      ? "Update members"
+      : "Add to workspace";
+  }, [selectedWorkspaceId, workspaces]);
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-800 p-4 sm:p-6">
       <div className="relative flex min-h-screen w-full flex-col">
         <div className="flex flex-1">
           {/* Main Content */}
@@ -93,15 +146,15 @@ const TeamMembers = () => {
             <div className="mx-auto max-w-7xl">
               {/* Page Heading & Toolbar */}
               <header className="mb-8">
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <h1 className="text-lg md:text-2xl font-semibold text-gray-800 dark:text-white">
                     Team Members
                   </h1>
 
                   {/* ✅ Workspace dropdown + action */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
                     <select
-                      className="select select-bordered select-sm min-w-64 bg-white dark:bg-gray-900 truncate"
+                      className="select select-bordered select-sm w-full sm:min-w-64 sm:w-auto bg-white dark:bg-gray-900 truncate"
                       value={selectedWorkspaceId}
                       onChange={handleWorkspaceSelect}
                     >
@@ -122,7 +175,7 @@ const TeamMembers = () => {
                     <button
                       onClick={handleAddToWorkspace}
                       disabled={!canAdd}
-                      className={`btn btn-primary btn-sm flex items-center gap-2
+                      className={`btn btn-primary btn-sm flex items-center justify-center gap-2 w-full sm:w-auto
                         ${!canAdd ? "btn-disabled opacity-60" : ""}`}
                       title={
                         !selectedWorkspaceId
@@ -132,7 +185,7 @@ const TeamMembers = () => {
                           : "Add selected members"
                       }
                     >
-                      Add to workspace
+                      {actionLabel}
                       {selectedMemberIds.length > 0 && (
                         <span className="bg-indigo-900 px-2 py-1 rounded-full ml-1">
                           {selectedMemberIds.length}
@@ -144,7 +197,7 @@ const TeamMembers = () => {
                     {selectedMemberIds.length > 0 && (
                       <button
                         onClick={clearSelections}
-                        className="btn btn-ghost btn-sm"
+                        className="btn btn-ghost btn-sm w-full sm:w-auto"
                       >
                         Clear
                       </button>

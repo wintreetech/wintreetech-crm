@@ -128,9 +128,17 @@ export default function CurrencySettingsModal({ isOpen, onClose, lead }) {
   if (!isOpen) return null;
 
   return (
-    <dialog open className="modal modal-open">
-      <div className="modal-box max-w-4xl rounded-lg p-6 bg-base-100 shadow-xl overflow-visible">
-        <div className="flex justify-between items-center mb-4">
+    <dialog open className="modal modal-bottom sm:modal-middle modal-open">
+      {/* ✅ Mobile full-screen, desktop unchanged */}
+      <div
+        className="
+          modal-box bg-base-100 shadow-xl overflow-visible
+          w-screen h-screen max-w-none rounded-2xl p-4
+          sm:max-w-4xl sm:rounded-lg sm:p-6 sm:h-auto
+          overflow-y-auto
+        "
+      >
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
           <h2 className="text-lg font-semibold">Payment Settings</h2>
           <button
             className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
@@ -161,7 +169,7 @@ export default function CurrencySettingsModal({ isOpen, onClose, lead }) {
           />
         </div>
 
-        <div className="flex justify-end gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 mb-4">
           <button
             className="btn btn-sm bg-transparent border-red-500 text-red-500 hover:bg-red-500 hover:text-white  disabled:!border-gray-300 disabled:!text-gray-400"
             onClick={handleDelete}

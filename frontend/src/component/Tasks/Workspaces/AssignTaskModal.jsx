@@ -1,7 +1,15 @@
 import { ChevronDown, Paperclip, X } from "lucide-react";
 import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 
-const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
+const AssignTaskModal = ({
+  open,
+  onClose,
+  members = [],
+  onAssign,
+  initialData = null,
+}) => {
+  const isEdit = !!initialData;
+
   const [priority, setPriority] = useState("urgent");
 
   const [assignOpen, setAssignOpen] = useState(false);
@@ -13,6 +21,11 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
   const [showAttachments, setShowAttachments] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+
+  // ✅ controlled inputs for prefilling on edit
+  const [taskName, setTaskName] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -84,6 +97,48 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
     }
   };
 
+  // ✅ PREFILL WHEN EDITING
+  useEffect(() => {
+    if (!open) return;
+
+    if (initialData) {
+      setTaskName(initialData.title || initialData.taskName || "");
+      setDescription(initialData.description || "");
+      setDueDate(initialData.dueDate || "");
+
+      setPriority(initialData.priority || "urgent");
+
+      // assignees can be strings or objects — normalize to display names
+      const initialAssignees = (
+        initialData.assignees ||
+        initialData.assignedTo ||
+        []
+      )
+        .map((a) => (typeof a === "string" ? a : a?.username || a?.name || ""))
+        .filter(Boolean);
+
+      setSelectedMembers(initialAssignees);
+
+      // attachments may be serialized objects or Files
+      setAttachments(initialData.attachments || []);
+      setShowAttachments((initialData.attachments || []).length > 0);
+    } else {
+      // reset to add mode defaults
+      setTaskName("");
+      setDescription("");
+      setDueDate("");
+      setPriority("urgent");
+      setSelectedMembers([]);
+      setAttachments([]);
+      setShowAttachments(false);
+    }
+
+    setAssignSearch("");
+    setAssignOpen(false);
+    setIsDragging(false);
+    setAssignError("");
+  }, [open, initialData]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!onAssign) return;
@@ -93,20 +148,20 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
       return;
     }
 
-    const formData = new FormData(e.currentTarget);
-
-    const dueDate = formData.get("dueDate");
-    if (dueDate < todayStr) return;
+    if (!dueDate || dueDate < todayStr) return;
 
     onAssign({
-      taskName: formData.get("taskName")?.toString().trim(),
-      description: formData.get("description")?.toString().trim(),
-      assignees: selectedMembers, // ✅ array
-      dueDate: formData.get("dueDate"),
-      priority: formData.get("priority"),
+      taskId: initialData?.id || null, // ✅ send id when editing
+      taskName: taskName.trim(),
+      description: description.trim(),
+      assignees: selectedMembers,
+      dueDate,
+      priority,
       attachments,
+      isEdit, // ✅ optional flag for parent
     });
 
+    // reset after add (not after edit unless you want to)
     e.currentTarget.reset();
     setAssignSearch("");
     setSelectedMembers([]);
@@ -150,7 +205,9 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold">Assign a New Task</h3>
+          <h3 className="text-lg font-bold">
+            {isEdit ? "Edit Task" : "Assign a New Task"}
+          </h3>
 
           <button
             type="button"
@@ -205,16 +262,18 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
                 <div className="mt-3 space-y-2">
                   {attachments.map((file, i) => (
                     <div
-                      key={`${file.name}-${i}`}
+                      key={`${file.name || file?.url || "file"}-${i}`}
                       className="flex items-center justify-between p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-base-100"
                     >
                       <div className="flex flex-col">
                         <span className="text-sm font-medium truncate max-w-[260px]">
-                          {file.name}
+                          {file.name || file.filename || "Attachment"}
                         </span>
-                        <span className="text-xs text-gray-500">
-                          {(file.size / 1024).toFixed(1)} KB
-                        </span>
+                        {file.size && (
+                          <span className="text-xs text-gray-500">
+                            {(file.size / 1024).toFixed(1)} KB
+                          </span>
+                        )}
                       </div>
 
                       <button
@@ -243,6 +302,8 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
               required
               placeholder="Enter a descriptive task name..."
               className="input input-bordered w-full"
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
             />
           </div>
 
@@ -256,6 +317,8 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
               rows="5"
               placeholder="Add a short description..."
               className="textarea textarea-bordered w-full min-h-[100px]"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
@@ -371,6 +434,8 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
                 required
                 min={todayStr}
                 className="input input-bordered w-full"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
           </div>
@@ -404,7 +469,7 @@ const AssignTaskModal = ({ open, onClose, members = [], onAssign }) => {
               Cancel
             </button>
             <button type="submit" className="btn btn-primary">
-              Assign
+              {isEdit ? "Update" : "Assign"}
             </button>
           </div>
         </form>

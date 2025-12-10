@@ -122,12 +122,22 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   if (!isOpen || !lead) return null;
 
   return (
-    <dialog open={isOpen} className="modal">
-      <div className="modal-box w-11/12 max-w-3xl bg-base-100 dark:bg-gray-900 rounded-2xl shadow-lg relative p-6">
+    <dialog open={isOpen} className="modal modal-bottom sm:modal-middle">
+      {/* ✅ Mobile full-screen, desktop unchanged */}
+      <div
+        className="
+          modal-box bg-base-100 dark:bg-gray-900 shadow-lg relative
+          w-screen h-screen max-w-none rounded-2xl p-4
+          sm:w-11/12 sm:max-w-3xl sm:h-auto sm:p-6
+          overflow-y-auto
+        "
+      >
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-3">
-            <span>Processing URLs — {lead.companyName}</span>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+            <span className="break-words">
+              Processing URLs — {lead.companyName}
+            </span>
 
             {/* 🏷 Partner badge */}
             <span
@@ -137,12 +147,13 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
                   : lead.partner === "Transactworld"
                   ? "bg-orange-100 text-orange-700"
                   : "bg-gray-100 text-gray-700"
-              } text-xs px-3 py-2 font-medium`}
+              } text-xs px-3 py-2 font-medium w-fit`}
             >
               {lead.partner || "Unknown Partner"}
             </span>
           </h3>
-          <div className="flex items-center gap-2">
+
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
             {/* ✅ Download buttons */}
             <button
               onClick={() => handleDownload("trusted")}
@@ -173,7 +184,6 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
         </div>
 
         {/* Tabs */}
-        {/* Tabs — DaisyUI radio style */}
         <div className="tabs-box tabs mb-4">
           {/* Trusted tab */}
           <input
@@ -242,7 +252,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
         </div>
 
         {/* List */}
-        <div className="max-h-[45vh] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+        <div className="max-h-[55vh] sm:max-h-[45vh] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
           {loading ? (
             <p className="p-4 text-center text-gray-500">Loading...</p>
           ) : current.length > 0 ? (
@@ -257,7 +267,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
                     {url}
                   </span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <button
                     onClick={() => navigator.clipboard.writeText(url)}
                     className="btn btn-xs btn-ghost hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -282,24 +292,27 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 
         {/* Pagination */}
         {filtered.length > itemsPerPage && (
-          <div className="flex justify-between items-center mt-4 text-sm">
-            <button
-              onClick={() => setPage((p) => Math.max(p - 1, 1))}
-              disabled={page === 1}
-              className="btn btn-sm btn-outline rounded-lg"
-            >
-              Prev
-            </button>
-            <span className="text-gray-600 dark:text-gray-400">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mt-4 text-sm">
+            <span className="text-gray-600 dark:text-gray-400 order-1 sm:order-none text-center sm:text-left">
               Page {page} of {totalPages}
             </span>
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-              disabled={page === totalPages}
-              className="btn btn-sm btn-outline rounded-lg"
-            >
-              Next
-            </button>
+
+            <div className="flex justify-between sm:justify-end gap-2 order-2 sm:order-none">
+              <button
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                disabled={page === 1}
+                className="btn btn-sm btn-outline rounded-lg w-1/2 sm:w-auto"
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                disabled={page === totalPages}
+                className="btn btn-sm btn-outline rounded-lg w-1/2 sm:w-auto"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

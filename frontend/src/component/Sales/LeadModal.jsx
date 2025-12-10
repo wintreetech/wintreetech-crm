@@ -55,11 +55,10 @@ function LeadModal({
             status: formData.status || "Open",
             subStatus: formData.subStatus || "Under Discussion",
           }
-        : { ...formData }; // don't overwrite status/subStatus in edit unless user changed
+        : { ...formData };
 
     await onSubmit(payload);
 
-    // Close & reset locally
     onClose();
     setFormData(initialFormData);
 
@@ -68,7 +67,14 @@ function LeadModal({
 
   return (
     <dialog open={isOpen} className="modal modal-bottom sm:modal-middle">
-      <div className="modal-box w-11/12 max-w-3xl">
+      {/* ✅ Desktop stays EXACTLY same, only mobile becomes full-screen */}
+      <div
+        className="
+          modal-box w-11/12 max-w-3xl
+          max-sm:w-screen max-sm:h-screen max-sm:max-w-none
+          max-sm:rounded-2xl max-sm:m-0
+        "
+      >
         <h3 className="font-bold text-xl mb-6 text-center">
           {mode === "edit" ? "Edit" : "Add"} Lead
         </h3>

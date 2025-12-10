@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import Column from "./Column";
 import TaskDetailsModal from "./TaskDetailsModal";
+import { useDispatch, useSelector } from "react-redux";
+import { selectActiveWorkspace } from "../../../store/slices/Workspaces.slice";
+import { deleteTask } from "../../../store/slices/Tasks.slice";
+import { selectCurrentUser } from "../../../store/slices/Auth.slice";
 
 // UI-only titles (NOT stored in DB)
 const COLUMN_CONFIG = {
@@ -23,8 +27,22 @@ const serializeAttachments = (atts = []) =>
       : a
   );
 
-const KanbanBoard = ({ initialColumns = [], onColumnsChange }) => {
+const KanbanBoard = ({
+  scope = "mytasks",
+  initialColumns = [],
+  onColumnsChange,
+  onEditTask,
+}) => {
   const [columns, setColumns] = useState([]);
+  const dispatch = useDispatch();
+  const workspace = useSelector(selectActiveWorkspace);
+
+  const currentUser = useSelector(selectCurrentUser);
+  const hasPermission =
+    currentUser?.role === "admin" || currentUser?.role === "superadmin";
+
+  // ✅ edit visibility based on scope
+  const showEdit = scope === "mytasks" ? true : hasPermission;
 
   // ---------------------------
   // ✅ UI CALCULATIONS (ONLY HERE)
@@ -189,9 +207,28 @@ const KanbanBoard = ({ initialColumns = [], onColumnsChange }) => {
     setModalOpen(true);
   };
 
+  // ✅ edit click handled here (for now opens same modal)
+  const handleEditTask = (columnId, task) => {
+    onEditTask?.(task, columnId);
+  };
+
   const handleClose = () => {
     setModalOpen(false);
     setActiveTask(null);
+  };
+
+  const handleDeleteTask = (columnId, taskId) => {
+    const ok = window.confirm("Are you sure you want to delete this task?");
+    if (!ok) return;
+
+    dispatch(
+      deleteTask({
+        scope,
+        workspaceSlug: scope === "workspace" ? workspace?.slug : null,
+        columnId,
+        taskId,
+      })
+    );
   };
 
   return (
@@ -204,6 +241,9 @@ const KanbanBoard = ({ initialColumns = [], onColumnsChange }) => {
               column={column}
               title={COLUMN_CONFIG[column.id]} // UI title only
               onTaskExpand={handleOpenTask}
+              onDeleteTask={handleDeleteTask}
+              onEditTask={handleEditTask}
+              showEdit={showEdit}
             />
           ))}
         </div>
