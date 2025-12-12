@@ -27,7 +27,7 @@ import { updateLead } from "../store/thunks/Sales.thunks.js";
 import { selectCurrentUser } from "../store/slices/Auth.slice";
 import InfoTooltip from "../component/InfoTooltip";
 import LeadUrlModal from "../component/Sales/LeadUrlModal.jsx";
-import API_BASE_URL from "../config.js";
+import { CRM_API_BASE } from "../config.js";
 import CurrencySettingsModal from "../component/Sales/CurrencySettingsModal.jsx";
 
 function SalesDashboard() {
@@ -273,7 +273,7 @@ function SalesDashboard() {
             <button
               onClick={() =>
                 window.open(
-                  `${API_BASE_URL}/processing-urls/download-all`,
+                  `${CRM_API_BASE}/processing-urls/download-all`,
                   "_blank"
                 )
               }

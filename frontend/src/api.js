@@ -1,9 +1,12 @@
 import axios from "axios";
-import API_BASE_URL from "./config";
+import { CRM_API_BASE, TASKS_API_BASE } from "./config.js";
 
-const api = axios.create({
-	baseURL: API_BASE_URL,
-	withCredentials: true, // important
+export const api = axios.create({
+  baseURL: CRM_API_BASE,
+  withCredentials: true, // important
 });
 
-export default api;
+export const tasksApi = axios.create({
+  baseURL: TASKS_API_BASE,
+  withCredentials: true, // important
+});

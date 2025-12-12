@@ -1,6 +1,6 @@
 // All the thunks for all the sales tasks
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import api from "../../api";
+import { api } from "../../api.js";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { workflowPhases } from "../../component/Sales/LeadWorkflowModal";

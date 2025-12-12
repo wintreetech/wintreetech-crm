@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
-import api from "../api";
+import { api } from "../api";
 import { useDispatch, useSelector } from "react-redux";
 import {
   loginUser,

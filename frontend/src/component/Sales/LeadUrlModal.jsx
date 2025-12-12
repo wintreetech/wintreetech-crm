@@ -9,8 +9,9 @@ import {
   Copy,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import api from "../../api";
-import API_BASE_URL from "../../config";
+import { api } from "../../api.js";
+// import CRM_API_BASE from "../../config";
+import { CRM_API_BASE } from "../../config.js";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addProcessingUrls,
@@ -114,7 +115,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   // Download Excel by type
   const handleDownload = (type) => {
     window.open(
-      `${API_BASE_URL}/processing-urls/download/${lead._id}?type=${type}`,
+      `${CRM_API_BASE}/processing-urls/download/${lead._id}?type=${type}`,
       "_blank"
     );
   };

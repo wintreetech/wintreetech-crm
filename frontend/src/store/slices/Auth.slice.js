@@ -1,6 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import api from "../../api";
+// import { api } from "../../api.js";
 import { decryptData, encryptData } from "../../utils/cryptoUtils";
+
+import { api } from "../../api.js";
 
 //Thunks
 export const loginUser = createAsyncThunk(
