@@ -20,6 +20,32 @@ export const saveWorkspaceColumns = createAsyncThunk(
   }
 );
 
+/**
+ * ✅ NEW THUNK: deleteWorkspace
+ * - removes workspace from redux list
+ * - returns deleted workspaceId
+ */
+export const deleteWorkspace = createAsyncThunk(
+  "workspaces/deleteWorkspace",
+  async ({ workspaceId }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const ws = state.workspaces.list.find(
+        (w) => String(w.id) === String(workspaceId)
+      );
+
+      if (!ws) return rejectWithValue("Workspace not found");
+
+      // (optional) server call later
+      // await api.delete(`/workspaces/${workspaceId}`);
+
+      return { workspaceId };
+    } catch (err) {
+      return rejectWithValue(err?.message || "Delete workspace failed");
+    }
+  }
+);
+
 const WorkspacesSlice = createSlice({
   name: "workspaces",
   initialState: {
@@ -71,10 +97,8 @@ const WorkspacesSlice = createSlice({
       const ws = state.list.find((w) => String(w.id) === String(workspaceId));
       if (!ws) return;
 
-      // ensure array
       const nextMembers = Array.isArray(membersToAdd) ? membersToAdd : [];
 
-      // de-dup by _id/email while preserving order
       const seen = new Set();
       ws.members = nextMembers.filter((m) => {
         const key = m?._id || m?.email;
@@ -92,7 +116,6 @@ const WorkspacesSlice = createSlice({
 
       if (!Array.isArray(ws.columns)) ws.columns = [];
 
-      // find todo column (supports id/title/name/slug)
       const todoCol =
         ws.columns.find((c) => {
           const key = (c?.id || c?.title || c?.name || c?.slug || "")
@@ -105,7 +128,7 @@ const WorkspacesSlice = createSlice({
       if (!todoCol) return;
       if (!Array.isArray(todoCol.tasks)) todoCol.tasks = [];
 
-      todoCol.tasks.unshift(task); // add on top
+      todoCol.tasks.unshift(task);
     },
   },
   extraReducers: (builder) => {
@@ -135,6 +158,21 @@ const WorkspacesSlice = createSlice({
         const { workspaceSlug, columns } = action.payload;
         const ws = state.list.find((w) => w.slug === workspaceSlug);
         if (ws) ws.columns = columns || ws.columns;
+      })
+
+      // ✅ NEW: handle deleteWorkspace
+      .addCase(deleteWorkspace.fulfilled, (state, action) => {
+        const { workspaceId } = action.payload;
+
+        state.list = state.list.filter(
+          (w) => String(w.id) !== String(workspaceId)
+        );
+
+        // if active one deleted, reset
+        const activeWs = state.list.find(
+          (w) => w.slug === state.activeWorkspaceSlug
+        );
+        if (!activeWs) state.activeWorkspaceSlug = null;
       });
   },
 });
@@ -144,7 +182,7 @@ export const {
   setWorkspaceColumns,
   addWorkspace,
   addMembersToWorkspace,
-  updateMembersInWorkspace, // ✅ export new updater
+  updateMembersInWorkspace,
   addTaskToWorkspaceTodo,
 } = WorkspacesSlice.actions;
 

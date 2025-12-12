@@ -1,6 +1,7 @@
 import { useSelector } from "react-redux";
 import { selectCurrentUser } from "../../../store/slices/Auth.slice";
 import { Trash } from "lucide-react";
+import { deleteWorkspace } from "../../../store/slices/Workspaces.slice";
 
 const WorkspaceRow = ({
   workspace,

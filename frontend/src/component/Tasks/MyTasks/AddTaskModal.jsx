@@ -6,7 +6,7 @@ const AddTaskModal = ({
   onSubmit,
   members = [],
   initialTask = null, // ✅ NEW (optional)
-  submitLabel = "Create Task", // ✅ NEW (optional)
+  submitLabel = "Add Task", // ✅ NEW (optional)
 }) => {
   if (!isOpen) return null;
 
@@ -102,7 +102,7 @@ const AddTaskModal = ({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-base-300">
           <h2 className="text-xl font-bold flex items-center gap-2">
-            Add New Task
+            {submitLabel === "Update Task" ? "Update Task" : "Add New Task"}
           </h2>
         </div>
 

@@ -159,7 +159,7 @@ const MyTasks = () => {
         onClose={closeModal}
         onSubmit={editingTask ? handleUpdateTask : handleAddTask} // ✅ NEW
         initialTask={editingTask} // ✅ NEW
-        submitLabel={editingTask ? "Update Task" : "Create Task"} // ✅ NEW
+        submitLabel={editingTask ? "Update Task" : "Add Task"} // ✅ NEW
       />
     </>
   );
