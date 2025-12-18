@@ -10,5 +10,5 @@ app.use("/tasks", expressProxy("http://localhost:3902"));
 const { port, app: apigatewayData } = keys;
 
 app.listen(port, () => {
-	console.log(`${apigatewayData.name} App is connected to ${port}`);
+  console.log(`${apigatewayData.name} App is connected to ${port}`);
 });

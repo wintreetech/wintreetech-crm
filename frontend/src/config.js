@@ -1,9 +1,14 @@
 const env = import.meta.env.VITE_ENV;
 
-const API_BASE_URL =
+const CRM_BASE =
   env === "production"
     ? import.meta.env.VITE_PROD_URL
     : import.meta.env.VITE_LOCAL_URL;
 
-export const CRM_API_BASE = API_BASE_URL + "crm" + "/api/v1";
-export const TASKS_API_BASE = API_BASE_URL + "tasks" + "/api/v1";
+const TASKS_BASE =
+  env === "production"
+    ? import.meta.env.VITE_TASKS_PROD_URL
+    : import.meta.env.VITE_TASKS_URL;
+
+export const CRM_API_BASE = CRM_BASE + "crm" + "/api/v1";
+export const TASKS_API_BASE = TASKS_BASE + "tasks" + "/api/v1";

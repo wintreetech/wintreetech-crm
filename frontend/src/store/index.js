@@ -5,6 +5,7 @@ import usersReducer from "./slices/Users.slice.js";
 import salesReducer from "./slices/Sales.slice.js";
 import taskReducer from "./slices/Tasks.slice.js";
 import workspaceReducer from "./slices/Workspaces.slice.js";
+import { myTasksRealtimeListener } from "./middleware/mytasksRealtime.middleware.js";
 
 //Store
 export const store = configureStore({
@@ -15,6 +16,20 @@ export const store = configureStore({
     tasks: taskReducer,
     workspaces: workspaceReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      immutableCheck: {
+        ignoredPaths: ["tasks.columns"], // skip deep checking this heavy path
+        warnAfter: 128,
+      },
+      serializableCheck: {
+        ignoredPaths: ["tasks.columns"],
+        ignoredActions: [
+          "tasks/setMyTasksColumns",
+          "tasks/fetchMyTasks/fulfilled",
+        ],
+      },
+    }).prepend(myTasksRealtimeListener.middleware),
 });
 
 export default store;
