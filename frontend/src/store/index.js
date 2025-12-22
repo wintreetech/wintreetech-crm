@@ -6,6 +6,7 @@ import salesReducer from "./slices/Sales.slice.js";
 import taskReducer from "./slices/Tasks.slice.js";
 import workspaceReducer from "./slices/Workspaces.slice.js";
 import { myTasksRealtimeListener } from "./middleware/mytasksRealtime.middleware.js";
+import { workspacesRealtimeListener } from "./middleware/workspacesRealtime.middleware.js";
 
 //Store
 export const store = configureStore({
@@ -29,7 +30,9 @@ export const store = configureStore({
           "tasks/fetchMyTasks/fulfilled",
         ],
       },
-    }).prepend(myTasksRealtimeListener.middleware),
+    })
+      .prepend(myTasksRealtimeListener.middleware)
+      .prepend(workspacesRealtimeListener.middleware),
 });
 
 export default store;

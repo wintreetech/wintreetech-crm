@@ -1,24 +1,25 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Plus, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import toast from "react-hot-toast";
 
+// Components
 import WorkspaceRow from "../../component/Tasks/Workspaces/WorkspaceRow";
 import AssignTaskModal from "../../component/Tasks/Workspaces/AssignTaskModal";
 import AddWorkspaceModal from "../../component/Tasks/Workspaces/AddWorkspaceModal";
 
-import { useSelector, useDispatch } from "react-redux";
+// State
 import { selectCurrentUser } from "../../store/slices/Auth.slice";
-
-// ✅ NEW imports from slice
 import {
-  addWorkspace,
   setActiveWorkspace,
   selectWorkspaces,
-  selectActiveWorkspace,
   addTaskToWorkspaceTodo,
+  createWorkspace,
+  fetchWorkspaces,
 } from "../../store/slices/Workspaces.slice";
 
-// ✅ simple slugify helper (same logic as before)
+// Helpers
 const slugify = (text) =>
   text
     .toLowerCase()
@@ -26,14 +27,12 @@ const slugify = (text) =>
     .replace(/[^\w\s-]/g, "")
     .replace(/\s+/g, "-");
 
-// ✅ empty columns in your required format
 const makeEmptyColumns = () => [
   { id: "todo", tasks: [] },
   { id: "inprogress", tasks: [] },
   { id: "completed", tasks: [] },
 ];
 
-// ✅ NEW: serialize File objects before sending to redux
 const serializeAttachments = (atts = []) =>
   (atts || []).map((a) =>
     a instanceof File
@@ -50,21 +49,18 @@ const Workspaces = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // Local State
   const [searchTerm, setSearchTerm] = useState("");
   const [addOpen, setAddOpen] = useState(false);
-
-  // Assign modal state
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignWorkspace, setAssignWorkspace] = useState(null);
 
+  // Redux State
   const currentUser = useSelector(selectCurrentUser);
-  const workspace = useSelector(selectActiveWorkspace);
+  const workspaces = useSelector(selectWorkspaces);
 
   const hasPermission =
     currentUser?.role === "admin" || currentUser?.role === "superadmin";
-
-  // ✅ CHANGED: list from redux
-  const workspaces = useSelector(selectWorkspaces);
 
   const defaultMembers = [
     { name: "Alisa Hester", role: "Marketing Lead", avatar: "..." },
@@ -73,6 +69,13 @@ const Workspaces = () => {
     { name: "Amara Vance", role: "SEO Specialist", avatar: "..." },
   ];
 
+  useEffect(() => {
+    if (currentUser?.id) {
+      dispatch(fetchWorkspaces(currentUser.id));
+    }
+  }, [dispatch, currentUser?.id]);
+
+  // Modal Handlers
   const openAssignModal = (ws) => {
     setAssignWorkspace(ws);
     setAssignOpen(true);
@@ -83,59 +86,64 @@ const Workspaces = () => {
     setAssignWorkspace(null);
   };
 
-  // ✅ CHANGED: set slug in redux, then navigate
   const handleRowClick = (ws) => {
     dispatch(setActiveWorkspace(ws.slug));
     navigate(`/tasks/workspaces/${ws.slug}`);
   };
 
-  // ✅ CHANGED: add into redux list (not local array)
-  const handleAddWorkspace = ({ title, description }) => {
+  const handleAddWorkspace = async ({ title, description }) => {
     const newWorkspace = {
-      id: crypto.randomUUID(),
       title,
       description: description || "",
       slug: `${slugify(title)}-${Date.now()}`,
-
       createdOn: new Date().toLocaleDateString("en-US", {
         month: "short",
         day: "2-digit",
         year: "numeric",
       }),
-
       createdBy: currentUser
         ? { id: currentUser.id, username: currentUser.username }
         : { id: null, username: "Unknown" },
-      members: [],
+      members: currentUser
+        ? [
+            {
+              id: String(currentUser.id || currentUser._id),
+              username: currentUser.username,
+              email: currentUser.email,
+              role: currentUser.role,
+              department: currentUser.department || "",
+            },
+          ]
+        : [],
       columns: makeEmptyColumns(),
     };
 
-    dispatch(addWorkspace(newWorkspace));
-
-    console.log("✅ Workspace Added:", newWorkspace);
-
-    setAddOpen(false);
+    try {
+      await dispatch(createWorkspace(newWorkspace)).unwrap();
+      toast.success("Workspace created successfully!");
+      setAddOpen(false);
+    } catch (error) {
+      toast.error(error || "Failed to create workspace");
+    }
   };
 
-  // ✅ NEW: role-based visibility
-  const visibleWorkspaces =
-    currentUser?.role === "superadmin"
-      ? workspaces
-      : workspaces.filter((ws) =>
-          (ws.members || []).some((m) => {
-            // match by _id OR email OR username (covers your dummy + real cases)
-            return (
-              (currentUser?.id && m._id === currentUser.id) ||
-              (currentUser?.email &&
-                m.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
-              (currentUser?.username &&
-                m.username?.toLowerCase() ===
-                  currentUser.username.toLowerCase())
-            );
-          })
-        );
+  // Visibility Logic: Filter by role and membership
+  const visibleWorkspaces = useMemo(() => {
+    if (currentUser?.role === "superadmin") return workspaces;
 
-  // ✅ search should apply AFTER role filtering
+    return workspaces.filter((ws) =>
+      (ws.members || []).some(
+        (m) =>
+          (currentUser?.id &&
+            (m.id === currentUser.id || m._id === currentUser.id)) ||
+          (currentUser?.email &&
+            m.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
+          (currentUser?.username &&
+            m.username?.toLowerCase() === currentUser.username.toLowerCase())
+      )
+    );
+  }, [workspaces, currentUser]);
+
   const filteredWorkspaces = visibleWorkspaces.filter((ws) =>
     ws.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -161,6 +169,7 @@ const Workspaces = () => {
               )}
             </header>
 
+            {/* Search Bar */}
             <div className="mb-4">
               <label className="flex flex-col min-w-40 w-full max-w-md">
                 <div className="flex w-full flex-1 items-stretch rounded-lg h-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-primary">
@@ -177,6 +186,7 @@ const Workspaces = () => {
               </label>
             </div>
 
+            {/* Workspaces Table */}
             <div className="w-full min-w-0 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
               <table className="min-w-max w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
@@ -190,14 +200,34 @@ const Workspaces = () => {
                 </thead>
 
                 <tbody className="divide-y divide-border-light dark:divide-border-dark border-t border-border-light dark:border-border-dark">
-                  {filteredWorkspaces.map((ws) => (
-                    <WorkspaceRow
-                      key={ws.id}
-                      workspace={ws}
-                      onRowClick={handleRowClick}
-                      onAssignClick={openAssignModal}
-                    />
-                  ))}
+                  {filteredWorkspaces.length > 0 ? (
+                    filteredWorkspaces.map((ws) => (
+                      <WorkspaceRow
+                        key={ws.id || ws._id}
+                        workspace={ws}
+                        onRowClick={handleRowClick}
+                        onAssignClick={openAssignModal}
+                      />
+                    ))
+                  ) : (
+                    <tr className="bg-white dark:bg-gray-900">
+                      <td
+                        colSpan={hasPermission ? 5 : 4}
+                        className="px-6 py-12 text-center text-gray-500"
+                      >
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-base font-medium">
+                            No workspaces found
+                          </span>
+                          <p className="text-sm opacity-70">
+                            {searchTerm
+                              ? "Try adjusting your search"
+                              : "Create a workspace to get started"}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -205,7 +235,6 @@ const Workspaces = () => {
         </main>
       </div>
 
-      {/* Assign modal */}
       <AssignTaskModal
         open={assignOpen}
         onClose={closeAssignModal}
@@ -219,7 +248,7 @@ const Workspaces = () => {
             id: crypto.randomUUID(),
             title: data.taskName,
             description: data.description || "",
-            assignees: data.assignees, // ✅ selected members
+            assignees: data.assignees,
             dueDate: data.dueDate,
             priority: data.priority,
             attachments: serializeAttachments(data.attachments || []),
@@ -229,24 +258,16 @@ const Workspaces = () => {
             status: "todo",
           };
 
-          // console.log(
-          //   "Assign Task Data from workspace:",
-          //   assignWorkspace?.title,
-          //   newTask
-          // );
-
           dispatch(
             addTaskToWorkspaceTodo({
               workspaceSlug: assignWorkspace.slug,
               task: newTask,
             })
           );
-
           closeAssignModal();
         }}
       />
 
-      {/* Add workspace modal */}
       <AddWorkspaceModal
         open={addOpen}
         onClose={() => setAddOpen(false)}

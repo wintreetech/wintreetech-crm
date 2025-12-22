@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import { registrMyTasksSocket } from "./mytasks.socket.js";
 import { EVENTS } from "./events.js";
+import { registrWorkspaceSocket } from "./workspace.socket.js";
 
 let io;
 
@@ -25,7 +26,20 @@ export const initSocket = (httpServer) => {
       if (userId) socket.leave(`mytasks:${userId}`);
     });
 
+    // WORKSPACE ROOM JOINING
+    socket.on(EVENTS.WORKSPACE.JOIN, ({ workspaceId }) => {
+      if (workspaceId) {
+        socket.join(`workspace:${workspaceId}`);
+        console.log(`User joined workspace: ${workspaceId}`);
+      }
+    });
+
+    socket.on(EVENTS.WORKSPACE.LEAVE, ({ workspaceId }) => {
+      if (workspaceId) socket.leave(`workspace:${workspaceId}`);
+    });
+
     registrMyTasksSocket(socket);
+    registrWorkspaceSocket(socket);
   });
 
   return io;

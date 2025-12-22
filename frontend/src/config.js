@@ -12,3 +12,4 @@ const TASKS_BASE =
 
 export const CRM_API_BASE = CRM_BASE + "crm" + "/api/v1";
 export const TASKS_API_BASE = TASKS_BASE + "tasks" + "/api/v1";
+export const WORKSPACE_API_BASE = TASKS_BASE + "workspaces" + "/api/v1";

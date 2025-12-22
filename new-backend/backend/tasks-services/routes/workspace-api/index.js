@@ -1,7 +1,16 @@
-import express from "express";
-const router = express.Router();
+import { Router } from "express";
+import {
+  addWorkspaceMember,
+  createWorkspace,
+  getAllWorkspaces,
+  getWorkspaceBySlug,
+} from "../../controllers/workspace.controller.js";
 
-// you said workspace will be later; keep placeholder
-// router.get("/", ...)
+const router = Router();
+
+router.post("/create", createWorkspace);
+router.get("/all", getAllWorkspaces);
+router.get("/:slug", getWorkspaceBySlug);
+router.post("/:slug/members", addWorkspaceMember);
 
 export default router;

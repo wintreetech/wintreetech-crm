@@ -1,22 +1,30 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
+// Components
 import KanbanBoard from "../MyTasks/KanbanBoard";
 import AssignTaskModal from "../../Tasks/Workspaces/AssignTaskModal";
-import { selectCurrentUser } from "../../../store/slices/Auth.slice";
 
+// State & Sockets
+import { selectCurrentUser } from "../../../store/slices/Auth.slice";
 import {
   setActiveWorkspace,
   setWorkspaceColumns,
-  saveWorkspaceColumns,
   selectActiveWorkspace,
   selectWorkspaceLoading,
   addTaskToWorkspaceTodo,
+  fetchWorkspaces,
+  selectWorkspaces,
 } from "../../../store/slices/Workspaces.slice";
+import {
+  joinWorkspaceRoom,
+  leaveWorkspaceRoom,
+  registerWorkspaceSocket,
+} from "../../../socket/workspace.socket";
 
-// ✅ NEW: serialize File objects before sending to redux
+// Helpers
 const serializeAttachments = (atts = []) =>
   (atts || []).map((a) =>
     a instanceof File
@@ -30,65 +38,60 @@ const serializeAttachments = (atts = []) =>
   );
 
 const WorkspaceDetails = () => {
-  const [taskToEdit, setTaskToEdit] = useState(null);
-  const { id } = useParams();
+  const { id: slug } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  // Redux Selectors
   const currentUser = useSelector(selectCurrentUser);
+  const workspaces = useSelector(selectWorkspaces);
+  const workspace = useSelector(selectActiveWorkspace);
+  const loading = useSelector(selectWorkspaceLoading);
+
+  // Local State
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
 
   const hasPermission =
     currentUser?.role === "admin" || currentUser?.role === "superadmin";
 
-  const workspace = useSelector(selectActiveWorkspace);
-  const loading = useSelector(selectWorkspaceLoading);
-
-  // ✅ debounce timer ref
-  const saveTimerRef = useRef(null);
-
-  // ✅ NEW: open edit modal from board
-  const openEditTaskModal = (task, columnId) => {
-    setTaskToEdit({ ...task, columnId });
-    setAssignWorkspace(workspace);
-    setAssignOpen(true);
-  };
-
+  // Load workspace data
   useEffect(() => {
-    if (id) dispatch(setActiveWorkspace(id));
-  }, [id, dispatch]);
+    if (workspaces.length === 0 && !loading) {
+      dispatch(fetchWorkspaces());
+    }
+    if (slug) dispatch(setActiveWorkspace(slug));
+  }, [slug, workspaces.length, dispatch, loading]);
 
-  const [assignOpen, setAssignOpen] = useState(false);
-  const [assignWorkspace, setAssignWorkspace] = useState(null);
+  // Socket Lifecycle management
+  useEffect(() => {
+    if (workspace?.id && workspace?.slug) {
+      joinWorkspaceRoom(workspace.id);
+      registerWorkspaceSocket(workspace.slug);
+    }
 
-  if (loading) {
-    return (
-      <div className="p-6 bg-gray-50 dark:bg-gray-800 min-h-screen flex justify-center items-center">
-        <span className="loading loading-spinner loading-lg" />
-      </div>
-    );
-  }
+    return () => {
+      if (workspace?.id) leaveWorkspaceRoom(workspace.id);
+    };
+  }, [workspace?.id, workspace?.slug]);
 
-  if (!workspace)
-    return (
-      <div className="p-6 bg-gray-50 h-screen flex justify-center items-center text-2xl">
-        Workspace not found
-      </div>
-    );
-
+  // Handlers
   const handleBack = () => {
-    if (window.history.length > 1) navigate(-1);
-    else navigate("/tasks/workspaces");
+    window.history.length > 1 ? navigate(-1) : navigate("/tasks/workspaces");
   };
 
   const openAssignModal = () => {
-    setAssignWorkspace(workspace);
     setTaskToEdit(null);
+    setAssignOpen(true);
+  };
+
+  const openEditTaskModal = (task, columnId) => {
+    setTaskToEdit({ ...task, columnId });
     setAssignOpen(true);
   };
 
   const closeAssignModal = () => {
     setAssignOpen(false);
-    setAssignWorkspace(null);
     setTaskToEdit(null);
   };
 
@@ -99,20 +102,81 @@ const WorkspaceDetails = () => {
         columns: newCols,
       })
     );
+  };
 
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+  const onTaskSubmit = (data) => {
+    if (data?.isEdit && taskToEdit?.id) {
+      // Handle Edit Logic
+      const updatedColumns = (workspace.columns || []).map((col) => {
+        const colKey = String(col?.id || col?.title || "")
+          .toLowerCase()
+          .replace(/\s+/g, "-");
+        const targetKey = String(taskToEdit.columnId || "")
+          .toLowerCase()
+          .replace(/\s+/g, "-");
 
-    saveTimerRef.current = setTimeout(() => {
-      // console.log("✅ Final Workspace Columns Saved:", newCols);
+        if (colKey !== targetKey) return col;
+
+        return {
+          ...col,
+          tasks: (col.tasks || []).map((t) =>
+            String(t.id) === String(taskToEdit.id)
+              ? {
+                  ...t,
+                  title: data.taskName,
+                  description: data.description || "",
+                  assignees: data.assignees,
+                  dueDate: data.dueDate,
+                  priority: data.priority,
+                  attachments: serializeAttachments(data.attachments || []),
+                }
+              : t
+          ),
+        };
+      });
+
+      handleColumnsChange(updatedColumns);
+    } else {
+      // Handle Create Logic
+      const newTask = {
+        id: crypto.randomUUID(),
+        title: data.taskName,
+        description: data.description || "",
+        assignees: data.assignees,
+        dueDate: data.dueDate,
+        priority: data.priority,
+        attachments: serializeAttachments(data.attachments || []),
+        tags: ["New"],
+        createdOn: new Date().toISOString(),
+        isCompleted: false,
+        status: "todo",
+      };
 
       dispatch(
-        saveWorkspaceColumns({
+        addTaskToWorkspaceTodo({
           workspaceSlug: workspace.slug,
-          columns: newCols,
+          task: newTask,
         })
       );
-    }, 700);
+    }
+    closeAssignModal();
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-gray-50 dark:bg-gray-800 min-h-screen flex justify-center items-center">
+        <span className="loading loading-spinner loading-lg" />
+      </div>
+    );
+  }
+
+  if (!workspace) {
+    return (
+      <div className="p-6 bg-gray-50 dark:bg-gray-800 h-screen flex justify-center items-center text-2xl dark:text-white">
+        Workspace not found
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-800 min-h-screen">
@@ -122,7 +186,6 @@ const WorkspaceDetails = () => {
           <button
             onClick={handleBack}
             className="btn btn-ghost btn-sm btn-circle shrink-0"
-            title="Back"
             aria-label="Go back"
           >
             <ArrowLeft size={18} />
@@ -138,7 +201,7 @@ const WorkspaceDetails = () => {
           </div>
         </div>
 
-        {hasPermission && workspace.members.length !== 0 && (
+        {hasPermission && workspace.members?.length > 0 && (
           <button
             onClick={openAssignModal}
             className="btn btn-primary btn-sm md:btn-md gap-2 w-full md:w-auto"
@@ -149,7 +212,6 @@ const WorkspaceDetails = () => {
         )}
       </div>
 
-      {/* ✅ Board always stays mounted */}
       <KanbanBoard
         scope="workspace"
         initialColumns={workspace.columns || []}
@@ -162,71 +224,7 @@ const WorkspaceDetails = () => {
         onClose={closeAssignModal}
         members={workspace.members || []}
         initialData={taskToEdit}
-        onAssign={(data) => {
-          // ✅ EDIT flow
-          if (data?.isEdit && taskToEdit?.id) {
-            const updatedColumns = (workspace.columns || []).map((col) => {
-              const colKey = String(col?.id || col?.title || "")
-                .toLowerCase()
-                .replace(/\s+/g, "-");
-
-              const targetKey = String(taskToEdit.columnId || "")
-                .toLowerCase()
-                .replace(/\s+/g, "-");
-
-              if (colKey !== targetKey) return col;
-
-              return {
-                ...col,
-                tasks: (col.tasks || []).map((t) =>
-                  String(t.id) === String(taskToEdit.id)
-                    ? {
-                        ...t,
-                        title: data.taskName,
-                        description: data.description || "",
-                        assignees: data.assignees,
-                        dueDate: data.dueDate,
-                        priority: data.priority,
-                        attachments: serializeAttachments(
-                          data.attachments || []
-                        ),
-                      }
-                    : t
-                ),
-              };
-            });
-
-            handleColumnsChange(updatedColumns);
-            closeAssignModal();
-            return;
-          }
-
-          // ✅ ADD flow (unchanged)
-          const newTask = {
-            id: crypto.randomUUID(),
-            title: data.taskName,
-            description: data.description || "",
-            assignees: data.assignees, // ✅ selected members
-            dueDate: data.dueDate,
-            priority: data.priority,
-            attachments: serializeAttachments(data.attachments || []), // ✅ SERIALIZED HERE
-            tags: ["New"],
-            createdOn: new Date().toISOString(),
-            isCompleted: false,
-            status: "todo",
-          };
-
-          // console.log("new assigned task is:", newTask);
-
-          dispatch(
-            addTaskToWorkspaceTodo({
-              workspaceSlug: workspace.slug,
-              task: newTask,
-            })
-          );
-
-          closeAssignModal();
-        }}
+        onAssign={onTaskSubmit}
       />
     </div>
   );

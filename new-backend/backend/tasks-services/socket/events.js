@@ -9,4 +9,13 @@ export const EVENTS = {
 
     BOARD_SYNC: "mytasks:board_sync",
   },
+
+  WORKSPACE: {
+    JOIN: "join:workspace",
+    LEAVE: "leave:workspace",
+    SAVE_BOARD: "workspace:save_board",
+    UPDATE_TASK: "workspace:update_task",
+    DELETE_TASK: "workspace:delete_task",
+    BOARD_SYNC: "workspace:board_sync",
+  },
 };

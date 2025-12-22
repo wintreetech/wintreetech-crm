@@ -1,24 +1,19 @@
 import { useMemo, useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 const AddTaskModal = ({
   isOpen,
   onClose,
   onSubmit,
-  members = [],
-  initialTask = null, // ✅ NEW (optional)
-  submitLabel = "Add Task", // ✅ NEW (optional)
+  initialTask = null,
+  submitLabel = "Add Task",
 }) => {
-  if (!isOpen) return null;
+  const todayISO = new Date().toISOString().split("T")[0];
 
-  const statusOptions = useMemo(
-    () => [
-      { value: "todo", label: "Todo" },
-      { value: "pending", label: "Pending" },
-    ],
-    []
-  );
-
-  // ✅ ADDED: priority state + options (nothing removed)
+  // Form State
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState(todayISO);
   const [priority, setPriority] = useState("urgent");
 
   const priorities = useMemo(
@@ -31,169 +26,126 @@ const AddTaskModal = ({
     []
   );
 
-  // ✅ ADDED: today's date for min + validation
-  const todayISO = new Date().toISOString().split("T")[0];
-
-  // ✅ NEW: controlled form state so edit prefill works
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState(todayISO);
-
-  // ✅ NEW: prefill when modal opens / initialTask changes
+  // Sync state with initialTask for editing
   useEffect(() => {
-    if (!isOpen) return;
-
-    if (initialTask) {
-      setTitle(initialTask.title || "");
-      setDescription(initialTask.description || "");
-      setDueDate(initialTask.dueDate || todayISO);
-      setPriority(initialTask.priority || "urgent");
-    } else {
-      // add mode reset
-      setTitle("");
-      setDescription("");
-      setDueDate(todayISO);
-      setPriority("urgent");
+    if (isOpen) {
+      setTitle(initialTask?.title || "");
+      setDescription(initialTask?.description || "");
+      setDueDate(initialTask?.dueDate || todayISO);
+      setPriority(initialTask?.priority || "urgent");
     }
   }, [isOpen, initialTask, todayISO]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!onSubmit) return;
 
-    const status = "todo";
-
-    if (!title.trim() || !dueDate) {
-      console.error("There are some fields missing");
+    if (!title.trim()) {
+      toast.error("Task title is required");
       return;
     }
 
-    // ✅ ADDED: manual validation for past date
     if (dueDate < todayISO) {
-      console.error("Due date cannot be in the past.");
+      toast.error("Due date cannot be in the past");
       return;
     }
 
     onSubmit({
       title: title.trim(),
       description: description.trim(),
-      status,
       dueDate,
       priority,
+      status: initialTask?.status || "todo",
       tags: initialTask?.tags || ["New"],
       isCompleted: initialTask?.isCompleted || false,
       assignees: initialTask?.assignees || [],
     });
 
-    // reset
-    setTitle("");
-    setDescription("");
-    setDueDate(todayISO);
-    setPriority("urgent");
-    onClose?.();
+    onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal modal-open" onClick={onClose}>
       <div
-        className="modal-box w-full max-w-lg p-0"
+        className="modal-box w-full max-w-lg p-0 bg-white dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-base-300">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            {submitLabel === "Update Task" ? "Update Task" : "Add New Task"}
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+            {initialTask ? "Update Task" : "Add New Task"}
           </h2>
         </div>
 
-        {/* Body / Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Title */}
-          <div className="form-control w-full">
-            <label className="label" htmlFor="task-title">
-              <span className="label-text font-medium flex items-center gap-2">
-                Task Title
-              </span>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="form-control">
+            <label className="label font-medium text-gray-700 dark:text-gray-300">
+              Task Title
             </label>
             <input
-              id="task-title"
-              name="title"
               type="text"
               required
-              placeholder="e.g., Finalize Q4 budget report"
+              placeholder="e.g., Finalize Q4 report"
               className="input input-bordered w-full"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
-          {/* Description */}
-          <div className="form-control w-full">
-            <label className="label" htmlFor="task-description">
-              <span className="label-text font-medium flex items-center gap-2">
-                Description
-              </span>
+          <div className="form-control">
+            <label className="label font-medium text-gray-700 dark:text-gray-300">
+              Description
             </label>
             <textarea
-              id="task-description"
-              name="description"
-              rows={5}
-              placeholder="Provide a brief description of the task..."
+              rows={4}
+              placeholder="Describe the task details..."
               className="textarea textarea-bordered w-full"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          {/* Status + Due Date */}
-          <div>
-            <div className="form-control w-full">
-              <label className="label" htmlFor="task-due-date">
-                <span className="label-text font-medium flex items-center gap-2">
-                  Due Date
-                </span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="form-control">
+              <label className="label font-medium text-gray-700 dark:text-gray-300">
+                Due Date
               </label>
               <input
-                id="task-due-date"
-                name="dueDate"
                 type="date"
                 required
-                min={todayISO} // ✅ ADDED: blocks past dates in picker
+                min={todayISO}
                 className="input input-bordered w-full"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
             </div>
+
+            <div className="form-control">
+              <label className="label font-medium text-gray-700 dark:text-gray-300">
+                Priority
+              </label>
+              <select
+                className="select select-bordered w-full"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                {priorities.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* ✅ ADDED: Priority field from your layout */}
-          <div className="form-control w-full">
-            <label className="label" htmlFor="priority">
-              <span className="label-text">Priority</span>
-            </label>
-
-            <select
-              id="priority"
-              name="priority"
-              className="select select-bordered w-full"
-              value={priority}
-              onChange={(e) => setPriority(e.target.value)}
-            >
-              {priorities.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Footer */}
-          <div className="modal-action mt-2 pt-4 border-t border-base-300">
+          {/* Actions */}
+          <div className="modal-action pt-4 border-t border-gray-200 dark:border-gray-700">
             <button type="button" className="btn btn-ghost" onClick={onClose}>
               Cancel
             </button>
-
-            <button type="submit" className="btn btn-primary gap-2">
+            <button type="submit" className="btn btn-primary px-8">
               {submitLabel}
             </button>
           </div>

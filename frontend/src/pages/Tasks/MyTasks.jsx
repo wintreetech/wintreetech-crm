@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus } from "lucide-react";
+import { Plus, SquareKanban } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-hot-toast";
 
@@ -102,9 +102,7 @@ const MyTasks = () => {
     ];
 
     dispatch(setMyTasksColumns(newCols));
-    const action = await dispatch(
-      createMyTasksSpace({ user, columns: newCols })
-    );
+    const action = dispatch(createMyTasksSpace({ user, columns: newCols }));
 
     if (createMyTasksSpace.fulfilled.match(action)) {
       toast.success("Space created successfully");
@@ -140,6 +138,7 @@ const MyTasks = () => {
           </div>
         ) : columns.length === 0 ? (
           <div className="h-[60vh] flex flex-col items-center justify-center gap-4 text-center">
+            <SquareKanban size={60} className="text-gray-800" />
             <p className="text-gray-500 dark:text-gray-400">
               No board found for your tasks.
             </p>
