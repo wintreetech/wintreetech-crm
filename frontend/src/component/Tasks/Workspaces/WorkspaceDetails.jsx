@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Users } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
 // Components
@@ -17,12 +17,14 @@ import {
   addTaskToWorkspaceTodo,
   fetchWorkspaces,
   selectWorkspaces,
+  removeSingleAttachment,
 } from "../../../store/slices/Workspaces.slice";
 import {
   joinWorkspaceRoom,
   leaveWorkspaceRoom,
   registerWorkspaceSocket,
 } from "../../../socket/workspace.socket";
+import { s3Api } from "../../../api";
 
 // Helpers
 const serializeAttachments = (atts = []) =>
@@ -145,7 +147,7 @@ const WorkspaceDetails = () => {
         assignees: data.assignees,
         dueDate: data.dueDate,
         priority: data.priority,
-        attachments: serializeAttachments(data.attachments || []),
+        attachments: [],
         tags: ["New"],
         createdOn: new Date().toISOString(),
         isCompleted: false,
@@ -156,10 +158,23 @@ const WorkspaceDetails = () => {
         addTaskToWorkspaceTodo({
           workspaceSlug: workspace.slug,
           task: newTask,
+          rawFiles: data.attachments,
         })
       );
     }
     closeAssignModal();
+  };
+
+  const handleDeleteAttachment = async (taskId, fileKey) => {
+    try {
+      // Delete from S3 physically
+      await s3Api.post("/delete-file", { key: fileKey });
+
+      // Update local Redux state
+      dispatch(removeSingleAttachment({ taskId, fileKey }));
+    } catch (error) {
+      console.error("Delete Attachment Failed:", error);
+    }
   };
 
   if (loading) {
@@ -201,15 +216,55 @@ const WorkspaceDetails = () => {
           </div>
         </div>
 
-        {hasPermission && workspace.members?.length > 0 && (
-          <button
-            onClick={openAssignModal}
-            className="btn btn-primary btn-sm md:btn-md gap-2 w-full md:w-auto"
-          >
-            <Plus size={16} />
-            Assign Task
-          </button>
-        )}
+        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+          <div className="dropdown dropdown-end">
+            <label
+              tabIndex={0}
+              className="btn btn-outline btn-primary dark:border-primary dark:text-primary dark:hover:bg-primary dark:hover:text-white"
+            >
+              <Users size={19} />
+            </label>
+
+            <div
+              tabIndex={0}
+              className="dropdown-content z-[50] mt-2 card w-64 max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-xl right-0 origin-top-right"
+            >
+              <div className="card-body p-4">
+                <h3 className="font-semibold text-gray-800 dark:text-white mb-2 pb-2 border-b border-gray-100 dark:border-gray-800">
+                  Members ({workspace.members.length})
+                </h3>
+
+                <ul className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
+                  {workspace.members.map((member) => (
+                    <li
+                      key={member.id}
+                      className="text-sm px-3 py-2 rounded-lg capitalize text-gray-700 dark:text-gray-300 transition-colors cursor-default"
+                    >
+                      <div className="flex items-center gap-2">
+                        {member.username}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                {workspace.members.length === 0 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-500 text-center py-2">
+                    No members found
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+          {hasPermission && workspace.members?.length > 0 && (
+            <button
+              onClick={openAssignModal}
+              className="btn btn-primary btn-sm md:btn-md gap-2 w-full sm:w-auto"
+            >
+              <Plus size={16} />
+              Assign Task
+            </button>
+          )}
+        </div>
       </div>
 
       <KanbanBoard

@@ -1,6 +1,8 @@
 // src/components/DepartmentMembers.jsx
 import React, { useMemo } from "react";
 import MemberCard from "./MemberCard";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../../../store/slices/Auth.slice";
 
 const departmentsOrder = [
   "management",
@@ -35,6 +37,8 @@ const DepartmentMembers = ({
   selectedMemberIds = [],
   onToggleMember,
 }) => {
+  const currentUser = useSelector(selectCurrentUser);
+
   const filteredUsers = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     if (!q) return users;
@@ -100,6 +104,7 @@ const DepartmentMembers = ({
                     key={user._id}
                     userId={user._id}
                     name={user.username}
+                    currentUserId={currentUser.id}
                     email={user.email}
                     role={role}
                     roleColor={roleColor}

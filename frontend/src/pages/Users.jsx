@@ -118,7 +118,7 @@ function User() {
   }, [currentPage, totalPages]);
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen dark:bg-gray-800 dark:text-gray-100">
+    <div className="p-4 bg-gray-50 min-h-screen dark:bg-gray-800 dark:text-gray-100">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <h1 className="text-lg md:text-2xl font-semibold text-gray-800 dark:text-white">
@@ -155,184 +155,193 @@ function User() {
         />
       )}
 
-      {/* Search */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-        <div className="relative w-full md:w-1/2">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder="Search users by name or email..."
-            className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg w-full 
+      <div className="bg-white rounded-xl shadow-sm p-4 dark:bg-gray-900">
+        {/* Search */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <div className="relative w-full md:w-1/2">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder="Search users by name or email..."
+              className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg w-full 
                    bg-white dark:bg-gray-900 
                    text-gray-900 dark:text-gray-100 
                    focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+            />
+          </div>
+
+          <p className="font-bold text-sm sm:text-base text-gray-700 dark:text-gray-200 md:text-right">
+            {allUsers.length} {allUsers.length === 1 ? "User" : "Users"}
+          </p>
         </div>
 
-        <p className="font-bold text-sm sm:text-base text-gray-700 dark:text-gray-200 md:text-right">
-          {allUsers.length} {allUsers.length === 1 ? "User" : "Users"}
-        </p>
-      </div>
-
-      {/* Users Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-        <table className="min-w-[900px] w-full text-left text-sm">
-          <thead className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
-            <tr>
-              <th className="py-2 px-4">Full Name</th>
-              <th className="py-2 px-4">Email</th>
-              <th className="py-2 px-4">Role</th>
-              <th className="py-2 px-4">Department</th>
-              <th className="py-2 px-4">Created At</th>
-              {hasPermission && <th className="py-2 px-4">Actions</th>}
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading ? (
+        {/* Users Table */}
+        <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          <table className="min-w-[900px] w-full text-left text-sm">
+            <thead className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
               <tr>
-                <td colSpan={6} className="text-center py-6">
-                  Loading users...
-                </td>
+                <th className="py-2 px-4">Full Name</th>
+                <th className="py-2 px-4">Email</th>
+                <th className="py-2 px-4">Role</th>
+                <th className="py-2 px-4">Department</th>
+                <th className="py-2 px-4">Created At</th>
+                {hasPermission && <th className="py-2 px-4">Actions</th>}
               </tr>
-            ) : currentUsers.length > 0 ? (
-              currentUsers.map((user) => (
-                <tr
-                  key={user._id}
-                  className="bg-white border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900"
-                >
-                  <td className="py-3 px-4 capitalize whitespace-nowrap">
-                    {user.username}
-                  </td>
-                  <td className="py-3 px-4 break-all max-w-[260px]">
-                    {user.email}
-                  </td>
-                  <td className="py-3 px-4 capitalize whitespace-nowrap">
-                    <span
-                      className={`px-2 capitalize rounded-xl inline-block ${
-                        {
-                          admin:
-                            "bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:text-indigo-100",
-                          superadmin:
-                            "bg-yellow-100 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-100",
-                          user: "bg-emerald-100 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-100",
-                        }[user.role?.toLowerCase()] || "bg-gray-400"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 capitalize rounded-xl inline-block ${
-                        {
-                          finance:
-                            "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-100",
-                          sales:
-                            "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-100",
-                          recon:
-                            "bg-purple-100 text-purple-700 dark:bg-purple-800 dark:text-purple-100",
-                          support:
-                            "bg-orange-100 text-orange-700 dark:bg-orange-800 dark:text-orange-100",
-                          management:
-                            "bg-pink-100 text-pink-700 dark:bg-pink-800 dark:text-pink-100",
-                        }[user.department?.toLowerCase()] || "bg-gray-400"
-                      }`}
-                    >
-                      {user.department || "-"}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    {new Date(user.createdAt).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}{" "}
-                    {new Date(user.createdAt).toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </td>
+            </thead>
 
-                  {/* Actions */}
-                  <td className="py-3 px-4">
-                    {hasPermission && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => {
-                            setEditingUser(user);
-                            setEditOpen(true);
-                          }}
-                          className="inline-flex items-center justify-center w-8 h-8 rounded-md 
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-6">
+                    Loading users...
+                  </td>
+                </tr>
+              ) : currentUsers.length > 0 ? (
+                currentUsers.map((user) => (
+                  <tr
+                    key={user._id}
+                    className="bg-white border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900"
+                  >
+                    <td className="py-3 px-4 capitalize whitespace-nowrap">
+                      {user.username}
+                    </td>
+                    <td className="py-3 px-4 break-all max-w-[260px]">
+                      {user.email}
+                    </td>
+                    <td className="py-3 px-4 capitalize whitespace-nowrap">
+                      <span
+                        className={`px-2 capitalize rounded-xl inline-block ${
+                          {
+                            admin:
+                              "bg-indigo-100 text-indigo-700 dark:bg-indigo-800 dark:text-indigo-100",
+                            superadmin:
+                              "bg-yellow-100 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-100",
+                            user: "bg-emerald-100 text-emerald-700 dark:bg-emerald-800 dark:text-emerald-100",
+                          }[user.role?.toLowerCase()] || "bg-gray-400"
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 capitalize rounded-xl inline-block ${
+                          {
+                            finance:
+                              "bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-100",
+                            sales:
+                              "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-100",
+                            recon:
+                              "bg-purple-100 text-purple-700 dark:bg-purple-800 dark:text-purple-100",
+                            support:
+                              "bg-orange-100 text-orange-700 dark:bg-orange-800 dark:text-orange-100",
+                            management:
+                              "bg-pink-100 text-pink-700 dark:bg-pink-800 dark:text-pink-100",
+                          }[user.department?.toLowerCase()] || "bg-gray-400"
+                        }`}
+                      >
+                        {user.department || "-"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      {new Date(user.createdAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}{" "}
+                      {new Date(user.createdAt).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-3 px-4">
+                      {hasPermission && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingUser(user);
+                              setEditOpen(true);
+                            }}
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-md 
                                  bg-gray-100 text-gray-700 
                                  hover:bg-gray-200 hover:text-gray-900 
                                  dark:bg-gray-800 dark:text-gray-200 
                                  dark:hover:bg-gray-700 dark:hover:text-white
                                  active:scale-95 transition-all duration-150 cursor-pointer"
-                          title="Edit User"
-                          aria-label="Edit User"
-                        >
-                          <Pen className="w-4 h-4" />
-                        </button>
+                            title="Edit User"
+                            aria-label="Edit User"
+                          >
+                            <Pen className="w-4 h-4" />
+                          </button>
 
-                        {currentUser.id !== user._id && (
-                          <button
-                            onClick={() => handleDelete(user)}
-                            className="inline-flex items-center justify-center w-8 h-8 rounded-md 
+                          {currentUser.id !== user._id && (
+                            <button
+                              onClick={() => handleDelete(user)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-md 
                                    bg-red-100 text-red-400 hover:bg-red-200 hover:text-red-600 
                                    dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800 dark:hover:text-red-100 
                                    active:scale-95 transition-all duration-150 cursor-pointer"
-                            title="Delete User"
-                            aria-label="Delete User"
-                          >
-                            <Trash className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    )}
+                              title="Delete User"
+                              aria-label="Delete User"
+                            >
+                              <Trash className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="text-center py-6 text-gray-500 dark:text-gray-400"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-base font-medium">
+                        No users found
+                      </span>
+                      <p className="text-sm opacity-70">
+                        {search && "Try adjusting your search"}
+                      </p>
+                    </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={6}
-                  className="text-center py-6 text-gray-500 dark:text-gray-400"
-                >
-                  No users found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Pagination Controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
-        <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-          className="px-4 py-2 border rounded-lg disabled:opacity-50 w-full sm:w-auto"
-        >
-          Previous
-        </button>
-        <span className="text-sm order-first sm:order-none">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 border rounded-lg disabled:opacity-50 w-full sm:w-auto"
-        >
-          Next
-        </button>
+        {/* Pagination Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-4">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 border rounded-lg disabled:opacity-50 w-full sm:w-auto"
+          >
+            Previous
+          </button>
+          <span className="text-sm order-first sm:order-none">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 border rounded-lg disabled:opacity-50 w-full sm:w-auto"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );

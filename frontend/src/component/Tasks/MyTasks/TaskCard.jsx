@@ -127,7 +127,6 @@ const TaskCard = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete?.(columnId, task.id);
-                    console.log(columnId, task.id);
                   }}
                 >
                   <Trash size={20} />

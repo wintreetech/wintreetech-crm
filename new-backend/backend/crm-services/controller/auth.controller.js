@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Auth from "../models/auth.model.js"; // Your Auth model
 import dotenv from "dotenv";
+import { publishUserSync } from "../utils/rabbit.js";
 dotenv.config();
 
 // Register user
@@ -33,6 +34,9 @@ const register = async (req, res) => {
     });
 
     await newUser.save();
+
+    //Trigger sync to Tasks Service
+    publishUserSync(newUser, "CREATE");
 
     return res.status(201).json({
       message: `Registration successful! You can now give credentials to ${username} for log in`,
@@ -81,8 +85,8 @@ const login = async (req, res) => {
     // Set httpOnly cookie
     res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // requires HTTPS in prod
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "prod", // requires HTTPS in prod
+      sameSite: "Lax",
       maxAge: sevenDaysInMs, // 7 day
       path: "/", // send for all routes
     });
@@ -147,6 +151,9 @@ const updateUser = async (req, res) => {
     // Save and return sanitized user
     await user.save();
 
+    // Trigger sync to Tasks Service
+    publishUserSync(user, "UPDATE");
+
     return res.status(200).json({
       message: "User updated successfully",
       data: {
@@ -177,6 +184,10 @@ const deleteUser = async (req, res) => {
     if (!deleted) {
       return res.status(400).json({ message: "User not found" });
     }
+
+    // Trigger sync to Tasks Service
+    // We pass an object with just the _id so the Task service knows what to remove
+    publishUserSync({ _id: id }, "DELETE");
 
     return res.status(200).json({
       message: `User "${deleted.username}" deleted successfully`,

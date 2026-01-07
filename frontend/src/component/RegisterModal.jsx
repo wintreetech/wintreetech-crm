@@ -262,7 +262,7 @@ const RegisterModal = ({
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || error}
             className="btn-primary btn w-full py-3 rounded-xl font-semibold disabled:opacity-50 shadow-lg"
           >
             {loading

@@ -276,14 +276,16 @@ const AssignTaskModal = ({
                         )}
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => removeAttachment(i)}
-                        className="p-2 hover:bg-gray-200 rounded-md cursor-pointer dark:hover:bg-gray-700"
-                        title="Remove"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      {!isEdit && (
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(i)}
+                          className="p-2 hover:bg-gray-200 rounded-md cursor-pointer dark:hover:bg-gray-700"
+                          title="Remove"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -338,7 +340,7 @@ const AssignTaskModal = ({
                     <button
                       type="button"
                       onClick={() => removeSelected(name)}
-                      className="ml-1 hover:text-red-500"
+                      className="ml-1 hover:text-red-500 cursor-pointer"
                       title="Remove"
                     >
                       <X className="w-3 h-3" />
@@ -384,7 +386,7 @@ const AssignTaskModal = ({
               {assignOpen && (
                 <div className="absolute bottom-full mb-1 w-full bg-base-100 border rounded-md shadow-lg z-50 max-h-64 overflow-y-auto p-1">
                   <input
-                    className="input input-bordered input-sm w-full mb-2"
+                    className="input input-ghost input-sm w-full mb-2"
                     placeholder="Search members..."
                     value={assignSearch}
                     onChange={(e) => setAssignSearch(e.target.value)}

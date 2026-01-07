@@ -2,13 +2,18 @@ import { Server } from "socket.io";
 import { registrMyTasksSocket } from "./mytasks.socket.js";
 import { EVENTS } from "./events.js";
 import { registrWorkspaceSocket } from "./workspace.socket.js";
+import { registerNotificationSocket } from "./notification.socket.js";
 
 let io;
+
+const env = process.env.ENV;
+const originUrl =
+  env === "prod" ? process.env.CLIENT_URL_PROD : "http://localhost:5173";
 
 export const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: originUrl,
       credentials: true,
       methods: ["GET", "POST", "PATCH", "DELETE"],
     },
@@ -40,6 +45,7 @@ export const initSocket = (httpServer) => {
 
     registrMyTasksSocket(socket);
     registrWorkspaceSocket(socket);
+    registerNotificationSocket(socket);
   });
 
   return io;

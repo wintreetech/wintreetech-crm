@@ -101,12 +101,15 @@ const MyTasks = () => {
       { id: "completed", tasks: [] },
     ];
 
-    dispatch(setMyTasksColumns(newCols));
-    const action = dispatch(createMyTasksSpace({ user, columns: newCols }));
+    try {
+      dispatch(setMyTasksColumns(newCols));
+      const result = dispatch(
+        createMyTasksSpace({ user, columns: newCols })
+      ).unwrap();
 
-    if (createMyTasksSpace.fulfilled.match(action)) {
       toast.success("Space created successfully");
-    } else {
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to create space");
     }
   };
@@ -134,13 +137,15 @@ const MyTasks = () => {
       <main>
         {loading && columns.length === 0 ? (
           <div className="h-[60vh] flex justify-center items-center">
-            <span className="loading loading-spinner loading-lg text-primary" />
+            <span className="loading loading-spinner loading-lg" />
           </div>
         ) : columns.length === 0 ? (
           <div className="h-[60vh] flex flex-col items-center justify-center gap-4 text-center">
             <SquareKanban size={60} className="text-gray-800" />
             <p className="text-gray-500 dark:text-gray-400">
               No board found for your tasks.
+              <br />
+              You can create your personal board
             </p>
             <button
               onClick={handleCreateSpace}

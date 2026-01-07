@@ -166,7 +166,11 @@ function SalesDashboard() {
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-800 min-h-screen">
       {/* Add Lead Button */}
-      <div className="flex justify-end mb-4">
+      {/* <div className="flex justify-end mb-4"> */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h1 className="text-lg md:text-2xl font-semibold text-gray-800 dark:text-white">
+          Lead Management
+        </h1>
         <button
           onClick={() => setModalOpen(true)}
           className="btn btn-primary flex items-center gap-2"
@@ -174,28 +178,29 @@ function SalesDashboard() {
           <Plus className="w-4 h-4" />
           Add Lead
         </button>
-        {/* Create */}
-        <LeadModal
-          isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onSubmit={handleLeadSubmit}
-        />
-
-        {/* Edit Lead Modal */}
-        {editingLead && (
-          <LeadModal
-            isLoading={loading}
-            isOpen={editOpen}
-            onClose={() => {
-              setEditOpen(false);
-              setEditingLead(null);
-            }}
-            onSubmit={handleLeadUpdate}
-            initialData={editingLead}
-            mode="edit"
-          />
-        )}
       </div>
+
+      {/* Create */}
+      <LeadModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSubmit={handleLeadSubmit}
+      />
+
+      {/* Edit Lead Modal */}
+      {editingLead && (
+        <LeadModal
+          isLoading={loading}
+          isOpen={editOpen}
+          onClose={() => {
+            setEditOpen(false);
+            setEditingLead(null);
+          }}
+          onSubmit={handleLeadUpdate}
+          initialData={editingLead}
+          mode="edit"
+        />
+      )}
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 text-black">
         <div className="bg-white rounded-xl p-4 shadow-sm dark:bg-gray-900 dark:text-white">
@@ -245,14 +250,12 @@ function SalesDashboard() {
       </div>
       {/* Lead Management Section */}
       <div className="bg-white rounded-xl shadow-sm p-4 dark:bg-gray-900">
-        <h2 className="text-lg font-semibold mb-4">Lead Management</h2>
-
         {/* Search & Filters */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
           {/* 🔍 Search Input */}
           <div className="relative w-full md:w-1/2 flex items-center gap-2">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
               <input
                 type="text"
                 value={search}
@@ -261,7 +264,7 @@ function SalesDashboard() {
                   setCurrentPage(1);
                 }}
                 placeholder="Search leads by name or email or partner..."
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary"
+                className="pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -287,7 +290,7 @@ function SalesDashboard() {
         </div>
 
         {/* Leads Table */}
-        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 rounded-lg overflow-y-visible">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 rounded-lg overflow-y-visible border border-gray-200 dark:border-gray-700">
           <table className="min-w-max w-full text-left text-xs sm:text-sm text-black dark:text-white">
             <thead className="bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-300">
               <tr>
@@ -303,22 +306,29 @@ function SalesDashboard() {
               </tr>
             </thead>
             <tbody>
-              {currentLeads.map((lead, index) => {
-                // For the active and inactive button
-                const canShowToggle =
-                  ["Open", "Active", "Inactive"].includes(lead.status) &&
-                  ["Signed Contract & Complete", "Annexture"].includes(
-                    lead.subStatus
-                  );
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-6">
+                    Loading leads...
+                  </td>
+                </tr>
+              ) : currentLeads.length > 0 ? (
+                currentLeads.map((lead, index) => {
+                  // For the active and inactive button
+                  const canShowToggle =
+                    ["Open", "Active", "Inactive"].includes(lead.status) &&
+                    ["Signed Contract & Complete", "Annexture"].includes(
+                      lead.subStatus
+                    );
 
-                return (
-                  <tr
-                    key={lead._id}
-                    className="bg-white border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900"
-                  >
-                    <td className="py-3 px-4">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+                  return (
+                    <tr
+                      key={lead._id}
+                      className="bg-white border-t border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-900"
+                    >
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
       ${
         lead.partner === "Dreamzpay"
           ? "bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100"
@@ -327,16 +337,16 @@ function SalesDashboard() {
           : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100"
       }
     `}
-                      >
-                        {lead.partner || "Unknown Partner"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 font-medium capitalize">
-                      {lead.companyName}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold
+                        >
+                          {lead.partner || "Unknown Partner"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-medium capitalize">
+                        {lead.companyName}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold
       ${
         lead.status === "Open"
           ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
@@ -348,174 +358,194 @@ function SalesDashboard() {
           ? "bg-gray-200 text-gray-700"
           : "bg-gray-100 text-gray-800"
       }`}
-                      >
-                        {lead.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          lead?.status === "Open" ||
+                        >
+                          {lead.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            lead?.status === "Open" ||
+                            lead?.status === "Active" ||
+                            lead?.status === "Inactive"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {lead?.status === "Open" ||
                           lead?.status === "Active" ||
                           lead?.status === "Inactive"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {lead?.status === "Open" ||
-                        lead?.status === "Active" ||
-                        lead?.status === "Inactive"
-                          ? `${lead.subStatus}`
-                          : "NA"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => {
-                          setSelectedLead(lead);
-                          setWorkflowOpen(true);
-                        }}
-                      >
-                        Phases
-                      </button>
-                    </td>
-                    <td className="py-3 px-4">
-                      ${lead.monthlyDealSize.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4">
-                      {new Date(lead.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </td>
+                            ? `${lead.subStatus}`
+                            : "NA"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => {
+                            setSelectedLead(lead);
+                            setWorkflowOpen(true);
+                          }}
+                        >
+                          Phases
+                        </button>
+                      </td>
+                      <td className="py-3 px-4">
+                        ${lead.monthlyDealSize.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        {new Date(lead.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </td>
 
-                    <td className="p-3 text-center relative overflow-visible">
-                      {canShowToggle && (
-                        <div className="dropdown dropdown-left dropdown-end">
-                          {/* Trigger Button */}
+                      <td className="p-3 text-center relative overflow-visible">
+                        {canShowToggle && (
+                          <div className="dropdown dropdown-left dropdown-end">
+                            {/* Trigger Button */}
+                            <div
+                              tabIndex={0}
+                              role="button"
+                              className={`btn btn-sm w-20 flex justify-center items-center gap-2 ${
+                                lead.status === "Active"
+                                  ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
+                                  : "bg-red-500 border-red-500 text-white hover:bg-red-600"
+                              }`}
+                            >
+                              {loadingLeadId === lead._id ? (
+                                <span className="loading loading-spinner loading-xs"></span>
+                              ) : lead.status === "Open" ? (
+                                "Inactive"
+                              ) : (
+                                lead.status || "Inactive"
+                              )}
+                            </div>
+
+                            {/* Dropdown Menu */}
+                            {!loading && (
+                              <ul
+                                tabIndex={0}
+                                className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-28 z-[9999]"
+                                style={{
+                                  marginBottom: "0.25rem", // gives breathing room from header
+                                }}
+                              >
+                                <li>
+                                  <button
+                                    onClick={() =>
+                                      handleLeadStatusChange(lead._id, "Active")
+                                    }
+                                    className="text-green-600 hover:bg-green-100"
+                                  >
+                                    Active
+                                  </button>
+                                </li>
+                                <li>
+                                  <button
+                                    onClick={() =>
+                                      handleLeadStatusChange(
+                                        lead._id,
+                                        "Inactive"
+                                      )
+                                    }
+                                    className="text-red-600 hover:bg-red-100"
+                                  >
+                                    Inactive
+                                  </button>
+                                </li>
+                              </ul>
+                            )}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="p-3 text-center relative overflow-visible z-[50]">
+                        <div
+                          className={`dropdown dropdown-left ${
+                            index === 0 ? "dropdown-center" : "dropdown-end"
+                          } relative z-[60]`}
+                        >
+                          {/* Trigger Button (The three dots) - This remains visible to ALL users */}
                           <div
                             tabIndex={0}
                             role="button"
-                            className={`btn btn-sm w-20 flex justify-center items-center gap-2 ${
-                              lead.status === "Active"
-                                ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
-                                : "bg-red-500 border-red-500 text-white hover:bg-red-600"
-                            }`}
+                            className="btn btn-sm btn-ghost p-1 text-gray-500 hover:text-gray-800 dark:text-gray-100 dark:hover:text-gray-200"
+                            title="More actions"
                           >
-                            {loadingLeadId === lead._id ? (
-                              <span className="loading loading-spinner loading-xs"></span>
-                            ) : lead.status === "Open" ? (
-                              "Inactive"
-                            ) : (
-                              lead.status || "Inactive"
-                            )}
+                            <MoreVertical className="w-5 h-5" />
                           </div>
 
-                          {/* Dropdown Menu */}
-                          {!loading && (
-                            <ul
-                              tabIndex={0}
-                              className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-28 z-[9999]"
-                              style={{
-                                marginBottom: "0.25rem", // gives breathing room from header
-                              }}
-                            >
+                          {/* Dropdown Menu Content */}
+                          <ul
+                            tabIndex={0}
+                            className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40 text-xs z-[9999]"
+                          >
+                            {hasPermission && (
                               <li>
                                 <button
-                                  onClick={() =>
-                                    handleLeadStatusChange(lead._id, "Active")
-                                  }
-                                  className="text-green-600 hover:bg-green-100"
+                                  onClick={() => {
+                                    setEditingLead(lead);
+                                    setEditOpen(true);
+                                  }}
+                                  className="flex items-center"
                                 >
-                                  Active
+                                  <Pen className="w-4 h-4 mr-2" />
+                                  Edit Lead
                                 </button>
                               </li>
+                            )}
+                            {/* 2. Add URLs Action - VISIBLE ONLY IF hasPermission is TRUE */}
+                            {hasPermission && (
                               <li>
                                 <button
-                                  onClick={() =>
-                                    handleLeadStatusChange(lead._id, "Inactive")
-                                  }
-                                  className="text-red-600 hover:bg-red-100"
+                                  onClick={() => {
+                                    setSelectedLead(lead);
+                                    setIsUrlModalOpen(true);
+                                  }}
+                                  className="flex items-center"
                                 >
-                                  Inactive
+                                  <Link2 className="w-4 h-4 mr-2" />
+                                  URLs
+                                </button>
+
+                                <button
+                                  onClick={() => {
+                                    setSelectedLead(lead);
+                                    setComboOpen(true);
+                                  }}
+                                  className="flex items-center"
+                                >
+                                  <CircleDollarSign className="w-4 h-4 mr-2" />
+                                  Currency
                                 </button>
                               </li>
-                            </ul>
-                          )}
+                            )}
+                            {/* The 'Processing' column (toggle button) outside this dropdown already has its own logic. */}
+                          </ul>
                         </div>
-                      )}
-                    </td>
-
-                    <td className="p-3 text-center relative overflow-visible z-[50]">
-                      <div
-                        className={`dropdown dropdown-left ${
-                          index === 0 ? "dropdown-center" : "dropdown-end"
-                        } relative z-[60]`}
-                      >
-                        {/* Trigger Button (The three dots) - This remains visible to ALL users */}
-                        <div
-                          tabIndex={0}
-                          role="button"
-                          className="btn btn-sm btn-ghost p-1 text-gray-500 hover:text-gray-800 dark:text-gray-100 dark:hover:text-gray-200"
-                          title="More actions"
-                        >
-                          <MoreVertical className="w-5 h-5" />
-                        </div>
-
-                        {/* Dropdown Menu Content */}
-                        <ul
-                          tabIndex={0}
-                          className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40 text-xs z-[9999]"
-                        >
-                          {hasPermission && (
-                            <li>
-                              <button
-                                onClick={() => {
-                                  setEditingLead(lead);
-                                  setEditOpen(true);
-                                }}
-                                className="flex items-center"
-                              >
-                                <Pen className="w-4 h-4 mr-2" />
-                                Edit Lead
-                              </button>
-                            </li>
-                          )}
-                          {/* 2. Add URLs Action - VISIBLE ONLY IF hasPermission is TRUE */}
-                          {hasPermission && (
-                            <li>
-                              <button
-                                onClick={() => {
-                                  setSelectedLead(lead);
-                                  setIsUrlModalOpen(true);
-                                }}
-                                className="flex items-center"
-                              >
-                                <Link2 className="w-4 h-4 mr-2" />
-                                URLs
-                              </button>
-
-                              <button
-                                onClick={() => {
-                                  setSelectedLead(lead);
-                                  setComboOpen(true);
-                                }}
-                                className="flex items-center"
-                              >
-                                <CircleDollarSign className="w-4 h-4 mr-2" />
-                                Currency
-                              </button>
-                            </li>
-                          )}
-                          {/* The 'Processing' column (toggle button) outside this dropdown already has its own logic. */}
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className="text-center py-6 text-gray-500 dark:text-gray-400"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-base font-medium">
+                        No leads found
+                      </span>
+                      <p className="text-sm opacity-70">
+                        {search && "Try adjusting your search"}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

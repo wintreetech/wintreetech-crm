@@ -17,6 +17,7 @@ import {
   addTaskToWorkspaceTodo,
   createWorkspace,
   fetchWorkspaces,
+  deleteWorkspace,
 } from "../../store/slices/Workspaces.slice";
 
 // Helpers
@@ -120,10 +121,26 @@ const Workspaces = () => {
 
     try {
       await dispatch(createWorkspace(newWorkspace)).unwrap();
-      toast.success("Workspace created successfully!");
+
+      toast.success("Workspace created successfully");
       setAddOpen(false);
     } catch (error) {
-      toast.error(error || "Failed to create workspace");
+      console.error(error);
+      toast.error("Failed to create workspace");
+    }
+  };
+
+  // Delete an exisiting workspace
+  const handleDelete = async (workspace) => {
+    const { _id, slug } = workspace;
+
+    if (window.confirm("Are you sure you want to delete this workspace?")) {
+      try {
+        await dispatch(deleteWorkspace({ slug, id: _id })).unwrap();
+        toast.success("Workspace removed successfully");
+      } catch (err) {
+        toast.error(err || "Failed to delete workspace");
+      }
     }
   };
 
@@ -199,7 +216,7 @@ const Workspaces = () => {
                   </tr>
                 </thead>
 
-                <tbody className="divide-y divide-border-light dark:divide-border-dark border-t border-border-light dark:border-border-dark">
+                <tbody className="divide-y divide-border-light dark:divide-border-dark border-t border-gray-200 dark:border-border-dark">
                   {filteredWorkspaces.length > 0 ? (
                     filteredWorkspaces.map((ws) => (
                       <WorkspaceRow
@@ -207,6 +224,7 @@ const Workspaces = () => {
                         workspace={ws}
                         onRowClick={handleRowClick}
                         onAssignClick={openAssignModal}
+                        onDeleteClick={handleDelete}
                       />
                     ))
                   ) : (
@@ -251,7 +269,7 @@ const Workspaces = () => {
             assignees: data.assignees,
             dueDate: data.dueDate,
             priority: data.priority,
-            attachments: serializeAttachments(data.attachments || []),
+            attachments: [],
             tags: ["New"],
             createdOn: new Date().toISOString(),
             isCompleted: false,
@@ -262,6 +280,7 @@ const Workspaces = () => {
             addTaskToWorkspaceTodo({
               workspaceSlug: assignWorkspace.slug,
               task: newTask,
+              rawFiles: data.attachments,
             })
           );
           closeAssignModal();

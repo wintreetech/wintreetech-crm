@@ -5,15 +5,39 @@ import {
   CheckCircle2,
   Download,
   FileText,
+  Loader2,
 } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { downloadWorkspaceDocs } from "../../../store/slices/Workspaces.slice";
+import { useState } from "react";
 
 const TaskDetailsModal = ({ open, task, onClose }) => {
   if (!open || !task) return null;
+
+  const dispatch = useDispatch();
+
+  const [downloadingId, setDownloadingId] = useState(null);
 
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const handleDownload = async (file) => {
+    setDownloadingId(file.key);
+    try {
+      await dispatch(
+        downloadWorkspaceDocs({
+          fileUrl: file.url,
+          fileName: file.name,
+        })
+      ).unwrap();
+    } catch (error) {
+      console.error("Download error:", error);
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   return (
@@ -150,13 +174,23 @@ const TaskDetailsModal = ({ open, task, onClose }) => {
                     </div>
 
                     {/* Download button */}
-                    <a
-                      href={file.url}
-                      download
-                      className="text-gray-400 dark:text-gray-500 hover:text-gray-600 hover:bg-gray-200 p-2 rounded-md dark:hover:text-gray-300 dark:hover:bg-gray-800"
+                    <button
+                      onClick={() =>
+                        downloadingId !== file.key && handleDownload(file)
+                      }
+                      disabled={downloadingId === file.key}
+                      className={`p-2 rounded-md transition-colors ${
+                        downloadingId === file.key
+                          ? "bg-primary/10 dark:bg-primary/20 cursor-wait"
+                          : "cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800"
+                      }`}
                     >
-                      <Download className="w-5 h-5" />
-                    </a>
+                      {downloadingId === file.key ? (
+                        <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                      ) : (
+                        <Download className="w-5 h-5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" />
+                      )}
+                    </button>
                   </div>
                 ))}
               </div>

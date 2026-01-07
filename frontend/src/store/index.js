@@ -5,6 +5,7 @@ import usersReducer from "./slices/Users.slice.js";
 import salesReducer from "./slices/Sales.slice.js";
 import taskReducer from "./slices/Tasks.slice.js";
 import workspaceReducer from "./slices/Workspaces.slice.js";
+import notificationReducer from "./slices/Notification.slice.js";
 import { myTasksRealtimeListener } from "./middleware/mytasksRealtime.middleware.js";
 import { workspacesRealtimeListener } from "./middleware/workspacesRealtime.middleware.js";
 
@@ -16,6 +17,7 @@ export const store = configureStore({
     sales: salesReducer,
     tasks: taskReducer,
     workspaces: workspaceReducer,
+    notifications: notificationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -28,7 +30,9 @@ export const store = configureStore({
         ignoredActions: [
           "tasks/setMyTasksColumns",
           "tasks/fetchMyTasks/fulfilled",
+          "workspaces/addTaskToWorkspaceTodo",
         ],
+        ignoredActionPaths: ["payload.rawFiles"],
       },
     })
       .prepend(myTasksRealtimeListener.middleware)

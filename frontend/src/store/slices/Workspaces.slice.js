@@ -56,12 +56,51 @@ export const updateMembersInWorkspace = createAsyncThunk(
 
 export const deleteWorkspace = createAsyncThunk(
   "workspaces/delete",
-  async ({ workspaceId }, { rejectWithValue }) => {
+  async ({ slug, id }, { rejectWithValue }) => {
     try {
-      // Logic for API delete would go here
-      return { workspaceId };
+      const response = await workspaceApi.delete(`/${slug}`, {
+        data: { workspaceId: id },
+      });
+      return response.data;
     } catch (err) {
       return rejectWithValue(err?.message || "Delete workspace failed");
+    }
+  }
+);
+
+export const downloadWorkspaceDocs = createAsyncThunk(
+  "workspaces/download",
+  async ({ fileUrl, fileName }, { rejectWithValue }) => {
+    try {
+      const response = await workspaceApi.post("/download", {
+        fileUrl,
+        fileName,
+      });
+
+      const { downloadUrl } = response.data;
+
+      if (downloadUrl) {
+        // 1. Create a hidden link
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+
+        // 2. Set the download attribute to the actual filename
+        link.setAttribute("download", fileName);
+
+        // 3. Append, Click, and Remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        return { success: true };
+      }
+
+      return rejectWithValue("No download URL returned");
+    } catch (error) {
+      console.error("Download Thunk Error:", error);
+      return rejectWithValue(
+        error?.response?.data?.message || "Failed to get download link"
+      );
     }
   }
 );
@@ -116,6 +155,37 @@ const WorkspacesSlice = createSlice({
         todoCol.tasks.unshift(task);
       }
     },
+
+    updateTaskAttachments: (state, action) => {
+      const { taskId, attachments } = action.payload;
+      const activeWorkspace = state.list.find(
+        (w) => w.slug === state.activeWorkspaceSlug
+      );
+
+      if (activeWorkspace && activeWorkspace.columns) {
+        // Look through every column (Todo, In Progress, etc.)
+        activeWorkspace.columns.forEach((column) => {
+          const foundTask = column.tasks?.find((t) => t.id === taskId);
+          if (foundTask) {
+            // Replace or merge the attachments with the real S3 URLs
+            foundTask.attachments = attachments;
+          }
+        });
+      }
+    },
+
+    removeSingleAttachment: (state, action) => {
+      const { taskId, fileKey } = action.payload;
+      const ws = state.list.find((w) => w.slug === state.activeWorkspaceSlug);
+      ws?.columns?.forEach((col) => {
+        const task = col.tasks?.find((t) => t.id === taskId);
+        if (task) {
+          task.attachments = task.attachments.filter(
+            (file) => file.key !== fileKey
+          );
+        }
+      });
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -155,17 +225,23 @@ const WorkspacesSlice = createSlice({
       })
 
       /* Delete Workspace */
+      .addCase(deleteWorkspace.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(deleteWorkspace.fulfilled, (state, action) => {
-        const { workspaceId } = action.payload;
-        state.list = state.list.filter(
-          (w) => String(w.id) !== String(workspaceId)
-        );
+        state.loading = false;
 
-        // Reset active slug if the active workspace was deleted
-        const activeExists = state.list.some(
-          (w) => w.slug === state.activeWorkspaceSlug
-        );
-        if (!activeExists) state.activeWorkspaceSlug = null;
+        const deletedId = action.payload.id;
+
+        state.list = state.list.filter((ws) => ws.id !== deletedId);
+
+        if (state.activeWorkspaceSlug === action.payload.slug) {
+          state.activeWorkspaceSlug = null;
+        }
+      })
+      .addCase(deleteWorkspace.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
@@ -177,6 +253,8 @@ export const {
   setWorkspaceColumns,
   addWorkspace,
   addTaskToWorkspaceTodo,
+  updateTaskAttachments,
+  removeSingleAttachment,
 } = WorkspacesSlice.actions;
 
 export default WorkspacesSlice.reducer;

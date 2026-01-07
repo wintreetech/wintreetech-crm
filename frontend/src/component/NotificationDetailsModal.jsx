@@ -3,19 +3,35 @@ import { X, CalendarDays, Clock } from "lucide-react";
 const NotificationDetailsModal = ({ open, onClose, notification }) => {
   if (!open) return null;
 
+  // 1. We extract the real data from the notification object.
+  // 2. We handle the date/time formatting inside the component to keep your layout clean.
   const {
     title = "Notification Title",
     message = "Notification details go here...",
-    date = "October 26, 2023",
-    time = "10:15 AM",
+    createdAt,
+    senderName = "System",
   } = notification || {};
+
+  // Convert MongoDB createdAt to your original format: "October 26, 2023" and "10:15 AM"
+  const dateObj = createdAt ? new Date(createdAt) : new Date();
+
+  const displayDate = dateObj.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const displayTime = dateObj.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   const handleClose = () => onClose?.();
 
   return (
     <div className="modal modal-open" onClick={handleClose}>
       <div
-        className="modal-box relative w-full max-w-3xl bg-white dark:bg-gray-900/90 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-800 p-0"
+        className="modal-box relative w-full max-w-3xl bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200/80 dark:border-gray-800 p-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -30,15 +46,15 @@ const NotificationDetailsModal = ({ open, onClose, notification }) => {
 
         <div className="p-8">
           <div className="flex flex-col gap-6">
-            {/* Date + Time */}
+            {/* Date + Time (Using the dynamic variables now) */}
             <div className="flex flex-wrap items-center gap-2 text-gray-500 dark:text-gray-400">
               <CalendarDays size={16} />
-              <p className="text-sm font-medium">{date}</p>
+              <p className="text-sm font-medium">{displayDate}</p>
 
               <span className="text-gray-300 dark:text-gray-600">·</span>
 
               <Clock size={16} />
-              <p className="text-sm font-medium">{time}</p>
+              <p className="text-sm font-medium">{displayTime}</p>
             </div>
 
             <div className="border-t border-gray-200 dark:border-gray-700" />
@@ -49,8 +65,8 @@ const NotificationDetailsModal = ({ open, onClose, notification }) => {
                 {title}
               </h2>
 
-              {/* Message */}
-              <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
+              {/* Message - added whitespace-pre-wrap to handle line breaks correctly */}
+              <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed whitespace-pre-wrap">
                 {message}
               </p>
             </div>

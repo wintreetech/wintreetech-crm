@@ -81,7 +81,7 @@ const login = async (req, res) => {
     // Set httpOnly cookie
     res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // requires HTTPS in prod
+      secure: process.env.NODE_ENV === "prod", // requires HTTPS in prod
       sameSite: "strict",
       maxAge: sevenDaysInMs, // 7 day
       path: "/", // send for all routes

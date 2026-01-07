@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { tasksApi } from "../../api";
+import { s3Api, tasksApi } from "../../api";
 
 /**
  * HELPER: Internal utility to find and update a column by ID/Title
@@ -56,17 +56,40 @@ export const createMyTasksSpace = createAsyncThunk(
 export const deleteTask = createAsyncThunk(
   "tasks/deleteTask",
   async (
-    { scope = "mytasks", workspaceSlug = null, columnId, taskId },
+    {
+      scope = "mytasks",
+      workspaceSlug = null,
+      columnId,
+      taskId,
+      taskTitle,
+      hasAttachments,
+    },
     { getState, rejectWithValue }
   ) => {
     try {
+      // 1. Handle S3 Cleanup immediately using the passed payload
+      if (hasAttachments && taskTitle) {
+        try {
+          const response = await s3Api.delete("/delete-task-folder", {
+            data: {
+              workspaceSlug: workspaceSlug || "personal-tasks",
+              taskName: taskTitle,
+            },
+          });
+
+          // console.log(`Successfully deleted S3 folder for: ${taskTitle}`);
+        } catch (s3Err) {
+          console.error("S3 Cleanup Failed:", s3Err);
+          // We don't reject here because we still want to delete the task from the UI
+        }
+      }
+
+      // 2. Get columns from state for the final Redux update
       const state = getState();
       let columns = [];
-
       if (scope === "workspace") {
         const ws = state.workspaces.list.find((w) => w.slug === workspaceSlug);
-        if (!ws) return rejectWithValue("Workspace not found");
-        columns = ws.columns;
+        columns = ws ? ws.columns : [];
       } else {
         columns = state.tasks.columns;
       }

@@ -12,6 +12,7 @@ import {
   selectWorkspaces,
   updateMembersInWorkspace,
 } from "../../store/slices/Workspaces.slice";
+import toast from "react-hot-toast";
 
 const TeamMembers = () => {
   const dispatch = useDispatch();
@@ -77,16 +78,22 @@ const TeamMembers = () => {
         role: u.role || "user",
         department: u.department || "",
       }));
+    try {
+      await dispatch(
+        updateMembersInWorkspace({
+          workspaceId: selectedWorkspaceId,
+          membersToAdd: membersToAdd,
+        })
+      ).unwrap();
 
-    dispatch(
-      updateMembersInWorkspace({
-        workspaceId: selectedWorkspaceId,
-        membersToAdd: membersToAdd,
-      })
-    );
+      toast.success("Members added successfully");
 
-    setSelectedWorkspaceId("");
-    setSelectedMemberIds([]);
+      setSelectedWorkspaceId("");
+      setSelectedMemberIds([]);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add members");
+    }
   };
 
   return (
@@ -152,7 +159,7 @@ const TeamMembers = () => {
                 <div className="flex items-center rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-primary px-4 h-10">
                   <Search size={18} className="text-gray-500" />
                   <input
-                    className="flex-1 bg-transparent border-none focus:ring-0 text-sm px-2 text-gray-900 dark:text-gray-100"
+                    className="form-input flex-1 bg-transparent border-none focus:outline-0  focus:ring-0 text-sm px-2 text-gray-900 dark:text-gray-100"
                     placeholder="Search by name or email"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}

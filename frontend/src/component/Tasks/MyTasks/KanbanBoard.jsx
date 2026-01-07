@@ -160,6 +160,7 @@ const KanbanBoard = ({
 
     // Update status based on column
     draggedTask.isCompleted = destination.droppableId === "completed";
+    draggedTask.status = destination.droppableId; // Sets it to "todo", "inprogress", or "completed"
 
     // Move task
     sourceCol.tasks.splice(source.index, 1);
@@ -176,29 +177,40 @@ const KanbanBoard = ({
     const ok = window.confirm("Are you sure you want to delete this task?");
     if (!ok) return;
 
-    const newCols = structuredClone(columns);
-    const col = newCols.find((c) => c.id === columnId);
-    if (!col) return;
-
-    col.tasks = (col.tasks || []).filter(
-      (t) => String(t.id) !== String(taskId)
+    // CAPTURE DATA BEFORE DELETION FOR s3
+    const sourceColumn = columns.find((c) => c.id === columnId);
+    const taskToCleanup = sourceColumn?.tasks?.find(
+      (t) => String(t.id) === String(taskId)
     );
 
-    // Update local UI
-    setColumns(newCols);
+    if (!taskToCleanup) {
+      console.error("Could not find task to cleanup in local state");
+      return;
+    }
 
-    // Notify parent to save to DB
-    onColumnsChange?.(toPersistableColumns(newCols));
-
-    // Also fire the specific delete action if needed for backend sync
+    // DISPATCH WITH EXPLICIT DATA
     dispatch(
       deleteTask({
         scope,
         workspaceSlug: scope === "workspace" ? workspace?.slug : null,
         columnId,
         taskId,
+        // Pass the specific info needed for S3 cleanup
+        taskTitle: taskToCleanup.title,
+        hasAttachments: taskToCleanup.attachments?.length > 0,
       })
     );
+
+    // UPDATE LOCAL UI
+    const newCols = structuredClone(columns);
+    const col = newCols.find((c) => c.id === columnId);
+    if (col) {
+      col.tasks = (col.tasks || []).filter(
+        (t) => String(t.id) !== String(taskId)
+      );
+      setColumns(newCols);
+      onColumnsChange?.(toPersistableColumns(newCols));
+    }
   };
 
   // --- MODAL LOGIC ---

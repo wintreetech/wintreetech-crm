@@ -37,6 +37,43 @@ export const getAllWorkspaces = async (req, res) => {
 };
 
 /**
+ * Delete Workspace by slug
+ */
+
+export const deleteWorkspace = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { workspaceId } = req.body; // Getting _id from the body for precision
+
+    if (!workspaceId) {
+      return res
+        .status(400)
+        .json({ message: "Workspace ID (_id) is required for deletion" });
+    }
+
+    // Precision query using both identifiers
+    const deletedWorkspace = await Workspace.findOneAndDelete({
+      _id: workspaceId,
+      slug: slug,
+    });
+
+    if (!deletedWorkspace) {
+      return res.status(404).json({
+        message: "Workspace not found or ID/Slug mismatch",
+      });
+    }
+
+    res.status(200).json({
+      message: "Workspace deleted successfully",
+      id: deletedWorkspace._id,
+      slug: deletedWorkspace.slug,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
  * Add/Update Members in Workspace
  * Implements strict de-duplication to ensure no member is added twice.
  */

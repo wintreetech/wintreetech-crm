@@ -4,6 +4,7 @@ import React from "react";
 const MemberCard = ({
   userId,
   name,
+  currentUserId,
   email,
   role,
   roleColor,
@@ -13,6 +14,8 @@ const MemberCard = ({
   checked = false,
   onToggle,
 }) => {
+  const isCurrentUser = userId === currentUserId;
+
   const roleColorClasses =
     roleColor === "purple"
       ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-200"
@@ -28,8 +31,13 @@ const MemberCard = ({
         p-3 sm:p-4 text-center shadow-sm transition-all hover:shadow-lg w-full
         ${selectable ? "cursor-pointer" : ""}
         ${checked ? "ring-2 ring-primary/60" : ""}
+         ${isCurrentUser ? "opacity-50 pointer-events-none" : ""}
       `}
-      onClick={() => selectable && onToggle?.()}
+      onClick={() => {
+        if (!isCurrentUser && selectable) {
+          onToggle?.();
+        }
+      }}
       role="button"
     >
       {/* ✅ Checkbox (only visible when workspace selected) */}
@@ -42,7 +50,9 @@ const MemberCard = ({
             type="checkbox"
             className="checkbox checkbox-sm checkbox-primary"
             checked={checked}
-            onChange={onToggle}
+            onChange={() => {
+              if (!isCurrentUser) onToggle();
+            }}
           />
         </label>
       )}

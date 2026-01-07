@@ -18,4 +18,11 @@ export const EVENTS = {
     DELETE_TASK: "workspace:delete_task",
     BOARD_SYNC: "workspace:board_sync",
   },
+
+  NOTIFICATION: {
+    JOIN: "join:notifications",
+    RECEIVED: "notification:received",
+    MARK_READ: "notification:mark_read",
+    SYNC_READ: "notification:sync_read",
+  },
 };

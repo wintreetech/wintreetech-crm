@@ -42,7 +42,11 @@ export const leaveWorkspaceRoom = (workspaceId) => {
 /**
  * Sends the current board state to the server to broadcast to other members.
  */
-export const saveWorkspaceBoard = ({ workspaceId, columns }) => {
-  if (!workspaceId || !Array.isArray(columns)) return;
-  socket.emit("workspace:save_board", { workspaceId, columns });
+export const saveWorkspaceBoard = ({ workspaceId, columns, user }) => {
+  if (!workspaceId || !Array.isArray(columns) || !user?.id) return;
+  socket.emit("workspace:save_board", {
+    workspaceId,
+    columns,
+    senderInfo: { id: user.id, name: user.username },
+  });
 };
