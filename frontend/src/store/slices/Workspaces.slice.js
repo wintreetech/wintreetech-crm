@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { workspaceApi } from "../../api";
+import { s3Api, workspaceApi } from "../../api";
 import { deleteTask } from "./Tasks.slice";
 
 // --- Async Thunks ---
@@ -105,6 +105,43 @@ export const downloadWorkspaceDocs = createAsyncThunk(
   }
 );
 
+// THUNK FOR AWS UPLOAD
+export const uploadTaskFilesAction = createAsyncThunk(
+  "workspaces/uploadTaskFiles",
+  async (
+    { workspaceSlug, taskId, rawFiles, existingAttachments = [] },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      rawFiles.forEach((file) => formData.append("files", file));
+      formData.append("path", `workspaces/${workspaceSlug}/tasks/${taskId}`);
+
+      // Send metadata if your middleware/backend uses it for the path
+      formData.append("workspaceSlug", workspaceSlug);
+      formData.append("taskId", taskId);
+
+      // Call your specific endpoint
+      const response = await s3Api.post("/upload-task-files", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (response.data.success) {
+        // Merge the new S3 file metadata with any files already on the task
+
+        return {
+          taskId,
+          attachments: [...existingAttachments, ...response.data.files],
+        };
+      }
+
+      throw new Error("Upload failed");
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || error.message);
+    }
+  }
+);
+
 // --- Slice ---
 
 const WorkspacesSlice = createSlice({
@@ -156,6 +193,28 @@ const WorkspacesSlice = createSlice({
       }
     },
 
+    // New : updates the workspace tasks after the S3 file uploads
+    updateWorkspaceTask: (state, action) => {
+      const { workspaceSlug, taskId, updates } = action.payload;
+      const ws = state.list.find((w) => w.slug === workspaceSlug);
+      if (!ws) return;
+
+      ws.columns.forEach((col) => {
+        const index = col.tasks?.findIndex((t) => (t.id || t._id) === taskId);
+        if (index !== -1 && col.tasks) {
+          // Create a clean version of updates.attachments
+          const cleanAttachments =
+            updates.attachments?.filter((a) => a.url) || [];
+
+          col.tasks[index] = {
+            ...col.tasks[index],
+            ...updates,
+            attachments: cleanAttachments,
+          };
+        }
+      });
+    },
+
     updateTaskAttachments: (state, action) => {
       const { taskId, attachments } = action.payload;
       const activeWorkspace = state.list.find(
@@ -168,7 +227,9 @@ const WorkspacesSlice = createSlice({
           const foundTask = column.tasks?.find((t) => t.id === taskId);
           if (foundTask) {
             // Replace or merge the attachments with the real S3 URLs
-            foundTask.attachments = attachments;
+            foundTask.attachments = attachments.filter(
+              (a) => a.url && typeof a.url === "string"
+            );
           }
         });
       }
@@ -205,6 +266,20 @@ const WorkspacesSlice = createSlice({
       /* Create Workspace */
       .addCase(createWorkspace.fulfilled, (state, action) => {
         state.list.unshift(action.payload);
+      })
+
+      .addCase(uploadTaskFilesAction.fulfilled, (state, action) => {
+        const { taskId, attachments } = action.payload;
+        // Update the attachments in the state once AWS upload is finished
+
+        state.list.forEach((ws) => {
+          ws.columns.forEach((col) => {
+            const task = col.tasks?.find((t) => (t.id || t._id) === taskId);
+            if (task) {
+              task.attachments = attachments;
+            }
+          });
+        });
       })
 
       /* Update Members (Handles both Add and Update) */
@@ -253,6 +328,7 @@ export const {
   setWorkspaceColumns,
   addWorkspace,
   addTaskToWorkspaceTodo,
+  updateWorkspaceTask,
   updateTaskAttachments,
   removeSingleAttachment,
 } = WorkspacesSlice.actions;

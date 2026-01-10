@@ -10,6 +10,7 @@ import {
   setActiveWorkspace,
   addTaskToWorkspaceTodo,
   updateTaskAttachments,
+  updateWorkspaceTask,
 } from "../slices/Workspaces.slice.js";
 import { s3Api } from "../../api.js";
 
@@ -44,7 +45,11 @@ workspacesRealtimeListener.startListening({
 
 // Handle Debounced Sync to Backend via Sockets
 workspacesRealtimeListener.startListening({
-  matcher: isAnyOf(setWorkspaceColumns, addTaskToWorkspaceTodo),
+  matcher: isAnyOf(
+    setWorkspaceColumns,
+    addTaskToWorkspaceTodo,
+    updateWorkspaceTask
+  ),
   effect: async (action, listenerApi) => {
     // CRITICAL: Stop if the update was received from another user (remote)
     if (action.payload?.isRemote) return;
@@ -52,22 +57,25 @@ workspacesRealtimeListener.startListening({
     // Debounce: Cancel previous pending syncs and wait 700ms
     listenerApi.cancelActiveListeners();
 
-    // S3 FILE UPLOAD LOGIC
-    if (addTaskToWorkspaceTodo.match(action)) {
-      const { workspaceSlug, task, rawFiles } = action.payload;
-      const { id: taskId, title: taskName } = task;
+    // S3 FILE UPLOAD LOGIC (For both Add and Edit)
+    const isAdd = addTaskToWorkspaceTodo.match(action);
+    const isUpdate = updateWorkspaceTask.match(action);
 
-      // Note: We need the raw File objects.
-      // Ensure your 'action.payload' includes the raw files
-      // even if the 'task' object inside it has serialized versions.
+    if (isAdd || isUpdate) {
+      const { workspaceSlug, rawFiles } = action.payload;
+      const targetId = isAdd ? action.payload.task.id : action.payload.taskId;
+      const taskName = isAdd
+        ? action.payload.task.title
+        : action.payload.updates?.title;
 
       if (rawFiles && rawFiles.length > 0) {
         try {
           const formData = new FormData();
           formData.append("workspaceSlug", workspaceSlug);
-          formData.append("taskName", taskName);
+          formData.append("taskName", taskName || "task-file");
+
           rawFiles.forEach((file) => {
-            // If your 'file' is wrapped in an object, make sure you pass the actual File/Blob
+            // Ensure we are grabbing the actual File object
             const fileToUpload = file.file || file;
             formData.append("files", fileToUpload);
           });
@@ -77,11 +85,37 @@ workspacesRealtimeListener.startListening({
           });
 
           if (response.data.success) {
-            // Update Redux state with S3 URLs
+            // Get the freshest state to find existing attachments
+            const state = listenerApi.getState();
+            const activeWorkspace = state.workspaces.list.find(
+              (w) => w.slug === workspaceSlug
+            );
+
+            let currentAttachments = [];
+            if (activeWorkspace?.columns) {
+              activeWorkspace.columns.forEach((col) => {
+                const foundTask = col.tasks?.find(
+                  (t) => (t.id || t._id) === targetId
+                );
+                if (foundTask) currentAttachments = foundTask.attachments || [];
+              });
+            }
+
+            // MERGE LOGIC:
+            // 1. Keep existing files that are NOT raw File objects
+            // 2. Add the new S3 response files
+            const finalAttachments = [
+              ...currentAttachments.filter(
+                (a) => a.url && typeof a.url === "string"
+              ),
+              ...response.data.files,
+            ];
+
+            // Update Redux state with clean S3 URLs
             listenerApi.dispatch(
               updateTaskAttachments({
-                taskId,
-                attachments: response.data.files,
+                taskId: targetId,
+                attachments: finalAttachments,
               })
             );
           }
@@ -91,6 +125,7 @@ workspacesRealtimeListener.startListening({
       }
     }
 
+    // Wait for the debounce delay
     await listenerApi.delay(700);
 
     const state = listenerApi.getState();
@@ -103,6 +138,7 @@ workspacesRealtimeListener.startListening({
     const currentUser = state.auth.currentUser;
 
     if (workspace?.id && workspace?.columns) {
+      // Sync the final board (with S3 URLs) to the database/sockets
       saveWorkspaceBoard({
         workspaceId: workspace.id,
         columns: workspace.columns,

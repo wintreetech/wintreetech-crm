@@ -18,6 +18,7 @@ import {
   createWorkspace,
   fetchWorkspaces,
   deleteWorkspace,
+  selectWorkspaceLoading,
 } from "../../store/slices/Workspaces.slice";
 
 // Helpers
@@ -59,6 +60,7 @@ const Workspaces = () => {
   // Redux State
   const currentUser = useSelector(selectCurrentUser);
   const workspaces = useSelector(selectWorkspaces);
+  const loading = useSelector(selectWorkspaceLoading);
 
   const hasPermission =
     currentUser?.role === "admin" || currentUser?.role === "superadmin";
@@ -217,7 +219,13 @@ const Workspaces = () => {
                 </thead>
 
                 <tbody className="divide-y divide-border-light dark:divide-border-dark border-t border-gray-200 dark:border-border-dark">
-                  {filteredWorkspaces.length > 0 ? (
+                  {loading ? (
+                    <tr>
+                      <td colSpan={9} className="text-center py-6">
+                        Loading Workspaces...
+                      </td>
+                    </tr>
+                  ) : filteredWorkspaces.length > 0 ? (
                     filteredWorkspaces.map((ws) => (
                       <WorkspaceRow
                         key={ws.id || ws._id}
@@ -262,6 +270,9 @@ const Workspaces = () => {
             : defaultMembers
         }
         onAssign={(data) => {
+          const workspaceSlug = assignWorkspace.slug;
+
+          // HANDLE NEW TASK MODE ONLY
           const newTask = {
             id: crypto.randomUUID(),
             title: data.taskName,
@@ -269,7 +280,7 @@ const Workspaces = () => {
             assignees: data.assignees,
             dueDate: data.dueDate,
             priority: data.priority,
-            attachments: [],
+            attachments: [], // Start empty; Middleware will fill this via S3
             tags: ["New"],
             createdOn: new Date().toISOString(),
             isCompleted: false,
@@ -278,11 +289,12 @@ const Workspaces = () => {
 
           dispatch(
             addTaskToWorkspaceTodo({
-              workspaceSlug: assignWorkspace.slug,
+              workspaceSlug,
               task: newTask,
-              rawFiles: data.attachments,
+              rawFiles: data.attachments, // Passes files to Middleware for upload
             })
           );
+
           closeAssignModal();
         }}
       />

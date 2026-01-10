@@ -4,6 +4,7 @@ import { DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import s3 from "../utils/s3Client.js";
 import { keys } from "../utils/keys.js";
+import { deleteS3ObjectByUrl } from "../utils/s3Delete.js";
 const { S3_BUCKET_NAME } = keys.aws;
 
 // Create a new sales lead
@@ -99,13 +100,69 @@ const updateSalesLead = async (req, res) => {
 // Delete a sales lead by ID
 const deleteSalesLead = async (req, res) => {
   try {
-    const { _id } = req.params;
-    const deletedLead = await SalesModel.findByIdAndDelete(_id);
-    if (!deletedLead) {
+    const { id } = req.params;
+    const lead = await SalesModel.findById(id);
+    if (!lead) {
       return res
         .status(404)
         .json({ success: false, message: "Sales lead not found" });
     }
+
+    // Find related sales data doc (most common link here is companyName)
+    // If you link by leadId instead, change this query accordingly.
+
+    const salesDataDoc = await SalesDataModel.findOne({
+      companyName: lead.companyName,
+    });
+
+    // Collect all upload URLs
+    const fileUrls = [];
+    if (salesDataDoc?.companyData?.length) {
+      for (const phase of salesDataDoc.companyData) {
+        if (Array.isArray(phase.upload)) {
+          for (const f of phase.upload) {
+            if (f?.fileUrl) fileUrls.push(f.fileUrl);
+          }
+        }
+      }
+    }
+
+    // Delete files from S3 (best-effort; don’t fail whole delete if one file fails)
+    if (fileUrls.length) {
+      // remove duplicates
+      const uniqueUrls = [...new Set(fileUrls)];
+
+      const results = await Promise.allSettled(
+        uniqueUrls.map((url) => deleteS3ObjectByUrl(url))
+      );
+
+      const failed = results
+        .map((r, idx) => ({ r, idx }))
+        .filter(({ r }) => r.status === "rejected")
+        .map(({ idx, r }) => ({
+          fileUrl: uniqueUrls[idx],
+          error: r.reason?.message || String(r.reason),
+        }));
+
+      if (failed.length) {
+        // IMPORTANT: do NOT delete DB if S3 deletion failed
+        return res.status(500).json({
+          success: false,
+          message:
+            "Failed to delete one or more files from S3. Lead not deleted.",
+          failedFiles: failed, // helps you debug exactly which ones failed
+        });
+      }
+    }
+
+    // Delete SalesDataModel doc (if exists)
+    if (salesDataDoc?._id) {
+      await SalesDataModel.deleteOne({ _id: salesDataDoc._id });
+    }
+
+    // Delete the SalesModel lead
+    await SalesModel.deleteOne({ _id: id });
+
     res
       .status(200)
       .json({ success: true, message: "Sales lead deleted successfully" });

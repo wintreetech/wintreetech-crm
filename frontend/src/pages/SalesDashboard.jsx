@@ -163,6 +163,22 @@ function SalesDashboard() {
     }
   };
 
+  const handleLeadDelete = async (leadId) => {
+    if (!leadId) return toast.error("Missing lead id");
+
+    const ok = window.confirm("Are you sure you want to delete this lead?");
+    if (!ok) return;
+
+    try {
+      const { message } = await dispatch(deleteLead(leadId)).unwrap();
+      toast.success(message || "Deleted");
+    } catch (err) {
+      toast.error(
+        typeof err === "string" ? err : err?.message || "Delete failed"
+      );
+    }
+  };
+
   return (
     <div className="p-4 bg-gray-50 dark:bg-gray-800 min-h-screen">
       {/* Add Lead Button */}
@@ -308,7 +324,7 @@ function SalesDashboard() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-6">
+                  <td colSpan={9} className="text-center py-6">
                     Loading leads...
                   </td>
                 </tr>
@@ -519,6 +535,14 @@ function SalesDashboard() {
                                 >
                                   <CircleDollarSign className="w-4 h-4 mr-2" />
                                   Currency
+                                </button>
+
+                                <button
+                                  onClick={() => handleLeadDelete(lead._id)}
+                                  className="flex items-center text-red-500"
+                                >
+                                  <Trash className="w-4 h-4 mr-2" />
+                                  Delete
                                 </button>
                               </li>
                             )}

@@ -52,7 +52,7 @@ export const registrWorkspaceSocket = (socket) => {
                 recipients: assigneeIds,
                 sender: senderInfo,
                 title: "New Task Assigned",
-                message: `${senderInfo.name} assigned "${task.title}" to you`,
+                message: `${senderInfo.name} assigned "${task.title}" to you in ${oldWorkspace.title}`,
                 type: "ASSIGNED",
                 metadata: {
                   workspaceId,
@@ -79,7 +79,7 @@ export const registrWorkspaceSocket = (socket) => {
                 recipients: otherMembers,
                 sender: senderInfo,
                 title: "Task Completed ✅",
-                message: `${senderInfo.name} completed "${task.title}"`,
+                message: `${senderInfo.name} completed "${task.title}" in ${oldWorkspace.title}`,
                 type: "TASK_COMPLETED",
                 metadata: {
                   workspaceId,

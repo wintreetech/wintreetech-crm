@@ -100,7 +100,7 @@ export const deleteLead = createAsyncThunk(
   "sales/deleteLead",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await api.delete(`/sales/${id}`);
+      const res = await api.delete(`/sales/lead/${id}`);
       return { id, message: res.data?.message || "Lead deleted successfully" };
     } catch (err) {
       return rejectWithValue(

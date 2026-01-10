@@ -1,5 +1,7 @@
 import amqp from "amqplib";
 import UserSync from "../models/UserSync.js";
+import Workspace from "../models/workspace.model.js";
+import MyTasksBoard from "../models/task.model.js";
 
 const env = process.env.ENV;
 
@@ -62,8 +64,22 @@ export const startUserSyncConsumer = async () => {
         else if (action === "DELETE") {
           // Note: In your CRM delete controller, ensure you pass { crmUserId: id }
           // inside the userData object in the message
-          await UserSync.deleteOne({ crmUserId: userData.crmUserId });
-          console.log(`[DELETE] Removed user with ID: ${userData.crmUserId}`);
+
+          const userIdToDelete = userData.crmUserId;
+          await UserSync.deleteOne({ crmUserId: userIdToDelete });
+
+          // Remove user from all Workspace members
+          await Workspace.updateMany(
+            {},
+            { $pull: { members: { id: userIdToDelete } } }
+          );
+
+          // Delete the user's personal task board
+          await MyTasksBoard.deleteMany({ "user.id": userIdToDelete });
+
+          console.log(
+            `[DELETE] Removed user with ID: ${userIdToDelete} from UserSync, Workspaces, and Personal Boards.`
+          );
         }
 
         channel.ack(msg);
