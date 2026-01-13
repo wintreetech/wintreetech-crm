@@ -196,6 +196,7 @@ const KanbanBoard = ({
         columnId,
         taskId,
         // Pass the specific info needed for S3 cleanup
+        attachmentKeys: taskToCleanup.attachments?.map((att) => att.key) || [],
         taskTitle: taskToCleanup.title,
         hasAttachments: taskToCleanup.attachments?.length > 0,
       })

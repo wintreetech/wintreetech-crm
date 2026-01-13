@@ -22,6 +22,7 @@ import {
   selectCurrentUser,
 } from "../store/slices/Auth.slice.js";
 import { fetchUsers } from "../store/slices/Users.slice.js";
+import { useSidebarCollapse } from "../hooks/useSidebarCollapse.js";
 
 function MainLayout() {
   const dispatch = useDispatch();
@@ -31,12 +32,14 @@ function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile open/close
 
   // ✅ desktop collapse (persistent)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem("mainSidebarCollapsed");
-    return saved === "true";
-  });
+  // const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+  //   const saved = localStorage.getItem("mainSidebarCollapsed");
+  //   return saved === "true";
+  // });
 
-  const [showLabels, setShowLabels] = useState(!sidebarCollapsed); // ✅ delayed labels
+  const { sidebarCollapsed, toggleSidebar } = useSidebarCollapse();
+
+  const [showLabels, setShowLabels] = useState(!sidebarCollapsed); // delayed labels
   const expandTimerRef = useRef(null);
 
   const [avatarOpen, setAvatarOpen] = useState(false);
@@ -163,15 +166,6 @@ function MainLayout() {
       if (expandTimerRef.current) clearTimeout(expandTimerRef.current);
     };
   }, [sidebarCollapsed]);
-
-  // ✅ persist collapse state
-  const toggleCollapse = () => {
-    setSidebarCollapsed((v) => {
-      const next = !v;
-      localStorage.setItem("mainSidebarCollapsed", String(next));
-      return next;
-    });
-  };
 
   return (
     <div className="h-screen flex flex-col">
@@ -307,7 +301,7 @@ function MainLayout() {
 
             {/* ✅ bottom collapse toggle (desktop only) */}
             <button
-              onClick={toggleCollapse}
+              onClick={toggleSidebar}
               className={`
                 hidden md:flex mt-auto items-center w-full px-3 py-2 rounded-lg transition hover:bg-gray-800 gap-2
                 ${sidebarCollapsed ? "justify-center" : ""}

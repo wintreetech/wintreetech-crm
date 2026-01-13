@@ -7,8 +7,11 @@ const AssignTaskModal = ({
   members = [],
   onAssign,
   initialData = null,
+  isSubmitting,
 }) => {
   const isEdit = !!initialData;
+
+  const isBusy = isSubmitting || false;
 
   const [priority, setPriority] = useState("urgent");
 
@@ -141,7 +144,7 @@ const AssignTaskModal = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!onAssign) return;
+    if (!onAssign || isBusy) return;
 
     if (selectedMembers.length === 0) {
       setAssignError("Please select at least one member.");
@@ -162,15 +165,15 @@ const AssignTaskModal = ({
     });
 
     // reset after add (not after edit unless you want to)
-    e.currentTarget.reset();
-    setAssignSearch("");
-    setSelectedMembers([]);
-    setPriority("urgent");
-    setAssignOpen(false);
-    setShowAttachments(false);
-    setAttachments([]);
-    setIsDragging(false);
-    setAssignError("");
+    // e.currentTarget.reset();
+    // setAssignSearch("");
+    // setSelectedMembers([]);
+    // setPriority("urgent");
+    // setAssignOpen(false);
+    // setShowAttachments(false);
+    // setAttachments([]);
+    // setIsDragging(false);
+    // setAssignError("");
   };
 
   const handleClose = () => {
@@ -467,11 +470,21 @@ const AssignTaskModal = ({
               type="button"
               className="btn btn-ghost"
               onClick={handleClose}
+              disabled={isBusy}
             >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
-              {isEdit ? "Update" : "Assign"}
+            <button type="submit" className="btn btn-primary" disabled={isBusy}>
+              {isBusy ? (
+                <>
+                  <span className="loading loading-spinner"></span>
+                  {isEdit ? "Updating" : "Assigning"}
+                </>
+              ) : isEdit ? (
+                "Update"
+              ) : (
+                "Assign"
+              )}
             </button>
           </div>
         </form>

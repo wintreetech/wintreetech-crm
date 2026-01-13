@@ -150,11 +150,16 @@ const WorkspacesSlice = createSlice({
     list: [],
     activeWorkspaceSlug: null,
     loading: false,
+    isSyncing: false,
     error: null,
   },
   reducers: {
     setActiveWorkspace: (state, action) => {
       state.activeWorkspaceSlug = action.payload;
+    },
+
+    setSyncing: (state, action) => {
+      state.isSyncing = action.payload;
     },
 
     setWorkspaceColumns: (state, action) => {
@@ -268,9 +273,15 @@ const WorkspacesSlice = createSlice({
         state.list.unshift(action.payload);
       })
 
+      .addCase(uploadTaskFilesAction.pending, (state) => {
+        state.loading = true;
+      })
+
       .addCase(uploadTaskFilesAction.fulfilled, (state, action) => {
         const { taskId, attachments } = action.payload;
         // Update the attachments in the state once AWS upload is finished
+
+        console.log("uploadTaskFilesAction", action.payload);
 
         state.list.forEach((ws) => {
           ws.columns.forEach((col) => {
@@ -280,6 +291,10 @@ const WorkspacesSlice = createSlice({
             }
           });
         });
+      })
+
+      .addCase(uploadTaskFilesAction.rejected, (state) => {
+        state.loading = false;
       })
 
       /* Update Members (Handles both Add and Update) */
@@ -331,6 +346,7 @@ export const {
   updateWorkspaceTask,
   updateTaskAttachments,
   removeSingleAttachment,
+  setSyncing,
 } = WorkspacesSlice.actions;
 
 export default WorkspacesSlice.reducer;
@@ -342,3 +358,4 @@ export const selectActiveWorkspace = (state) =>
   state.workspaces.list.find(
     (w) => w.slug === state.workspaces.activeWorkspaceSlug
   );
+export const selectIsSyncing = (state) => state.workspaces.isSyncing;

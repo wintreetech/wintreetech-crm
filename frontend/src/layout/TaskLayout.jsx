@@ -21,6 +21,7 @@ import { fetchUsers } from "../store/slices/Users.slice.js";
 import { socket } from "../socket/index.js";
 import { initNotificationSocket } from "../socket/notification.socket.jsx";
 import { fetchNotifications } from "../store/slices/Notification.slice.js";
+import { useSidebarCollapse } from "../hooks/useSidebarCollapse.js";
 
 function TaskLayout() {
   const dispatch = useDispatch();
@@ -28,10 +29,12 @@ function TaskLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    const saved = localStorage.getItem("taskSidebarCollapsed");
-    return saved === "true";
-  });
+  // const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+  //   const saved = localStorage.getItem("taskSidebarCollapsed");
+  //   return saved === "true";
+  // });
+
+  const { sidebarCollapsed, toggleSidebar } = useSidebarCollapse();
 
   const [showLabels, setShowLabels] = useState(!sidebarCollapsed);
   const expandTimerRef = useRef(null);
@@ -165,14 +168,6 @@ function TaskLayout() {
       if (expandTimerRef.current) clearTimeout(expandTimerRef.current);
     };
   }, [sidebarCollapsed]);
-
-  const toggleCollapse = () => {
-    setSidebarCollapsed((v) => {
-      const next = !v;
-      localStorage.setItem("taskSidebarCollapsed", String(next));
-      return next;
-    });
-  };
 
   return (
     <div className="h-screen flex flex-col">
@@ -330,7 +325,7 @@ function TaskLayout() {
               </NavLink>
 
               <button
-                onClick={toggleCollapse}
+                onClick={toggleSidebar}
                 className={`hidden md:flex items-center w-full px-3 py-2 rounded-lg transition hover:bg-gray-800 gap-2 ${
                   sidebarCollapsed ? "justify-center" : ""
                 }`}

@@ -1,7 +1,10 @@
 import { Router } from "express";
 import taskUpload from "../../middleware/taskUpload.js";
 import { protect } from "../../middleware/protect.js";
-import { deleteS3TaskFolder } from "../../utils/s3Cleanup.js";
+import {
+  deleteS3TaskFiles,
+  deleteS3TaskFolder,
+} from "../../utils/s3Cleanup.js";
 import { keys } from "../../utils/keys.js";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import s3 from "../../utils/s3Client.js";
@@ -32,15 +35,20 @@ router.post("/upload-task-files", taskUpload.array("files", 10), (req, res) => {
 // Endpoint for deleting an entire task folder
 router.delete("/delete-task-folder", async (req, res) => {
   try {
-    const { workspaceSlug, taskName } = req.body;
+    const { workspaceSlug, taskName, keys } = req.body;
 
     if (!workspaceSlug || !taskName) {
       return res
         .status(400)
         .json({ error: "workspaceSlug and taskName are required" });
     }
+    // Use the keys if they exist for precision; otherwise, fall back to folder deletion
+    if (keys && Array.isArray(keys) && keys.length > 0) {
+      await deleteS3TaskFiles(keys);
+    } else {
+      await deleteS3TaskFolder(workspaceSlug, taskName);
+    }
 
-    await deleteS3TaskFolder(workspaceSlug, taskName);
     res
       .status(200)
       .json({ success: true, message: "S3 folder deleted successfully" });

@@ -19,6 +19,7 @@ import {
   fetchWorkspaces,
   selectWorkspaces,
   removeSingleAttachment,
+  selectIsSyncing,
 } from "../../../store/slices/Workspaces.slice";
 import {
   joinWorkspaceRoom,
@@ -50,10 +51,12 @@ const WorkspaceDetails = () => {
   const workspaces = useSelector(selectWorkspaces);
   const workspace = useSelector(selectActiveWorkspace);
   const loading = useSelector(selectWorkspaceLoading);
+  const isSyncing = useSelector(selectIsSyncing);
 
   // Local State
   const [assignOpen, setAssignOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const hasPermission =
     currentUser?.role === "admin" || currentUser?.role === "superadmin";
@@ -107,128 +110,66 @@ const WorkspaceDetails = () => {
     );
   };
 
-  // const onTaskSubmit = (data) => {
-  //   const workspaceSlug = workspace.slug;
-
-  //   if (data?.isEdit && taskToEdit?.id) {
-  //     // Separate new files from existing S3 files
-  //     const newFiles = (data.attachments || []).filter(
-  //       (f) => f instanceof File
-  //     );
-  //     const existingS3Files = (data.attachments || []).filter(
-  //       (f) => !(f instanceof File)
-  //     );
-
-  //     // Handle Edit Logic
-  //     const updatedColumns = (workspace.columns || []).map((col) => {
-  //       const colKey = String(col?.id || col?.title || "")
-  //         .toLowerCase()
-  //         .replace(/\s+/g, "-");
-  //       const targetKey = String(taskToEdit.columnId || "")
-  //         .toLowerCase()
-  //         .replace(/\s+/g, "-");
-
-  //       if (colKey !== targetKey) return col;
-
-  //       return {
-  //         ...col,
-  //         tasks: (col.tasks || []).map((t) =>
-  //           String(t.id) === String(taskToEdit.id)
-  //             ? {
-  //                 ...t,
-  //                 title: data.taskName,
-  //                 description: data.description || "",
-  //                 assignees: data.assignees,
-  //                 dueDate: data.dueDate,
-  //                 priority: data.priority,
-  //                 attachments: serializeAttachments(data.attachments || []),
-  //               }
-  //             : t
-  //         ),
-  //       };
-  //     });
-
-  //     handleColumnsChange(updatedColumns);
-  //   } else {
-  //     // Handle Create Logic
-  //     const newTask = {
-  //       id: crypto.randomUUID(),
-  //       title: data.taskName,
-  //       description: data.description || "",
-  //       assignees: data.assignees,
-  //       dueDate: data.dueDate,
-  //       priority: data.priority,
-  //       attachments: [],
-  //       tags: ["New"],
-  //       createdOn: new Date().toISOString(),
-  //       isCompleted: false,
-  //       status: "todo",
-  //     };
-
-  //     dispatch(
-  //       addTaskToWorkspaceTodo({
-  //         workspaceSlug: workspace.slug,
-  //         task: newTask,
-  //         rawFiles: data.attachments,
-  //       })
-  //     );
-  //   }
-  //   closeAssignModal();
-  // };
-
-  const onTaskSubmit = (data) => {
+  const onTaskSubmit = async (data) => {
     const workspaceSlug = workspace.slug;
 
-    if (data?.isEdit && taskToEdit?.id) {
-      // 1. Separate new files from existing S3 files
-      const newFiles = (data.attachments || []).filter(
-        (f) => f instanceof File
-      );
-      const existingS3Files = (data.attachments || []).filter(
-        (f) => !(f instanceof File)
-      );
+    setIsSubmitting(true);
 
-      // 2. Dispatch centralized action (triggers Middleware upload)
-      dispatch(
-        updateWorkspaceTask({
-          workspaceSlug,
-          taskId: taskToEdit.id,
-          rawFiles: newFiles, // Trigger S3 upload in middleware
-          updates: {
-            title: data.taskName,
-            description: data.description || "",
-            assignees: data.assignees,
-            dueDate: data.dueDate,
-            priority: data.priority,
-            attachments: existingS3Files, // Keep existing URLs
-          },
-        })
-      );
-    } else {
-      // Handle Create Logic (Keep as is, but ensure rawFiles is passed)
-      const newTask = {
-        id: crypto.randomUUID(),
-        title: data.taskName,
-        description: data.description || "",
-        assignees: data.assignees,
-        dueDate: data.dueDate,
-        priority: data.priority,
-        attachments: [],
-        tags: ["New"],
-        createdOn: new Date().toISOString(),
-        isCompleted: false,
-        status: "todo",
-      };
+    try {
+      if (data?.isEdit && taskToEdit?.id) {
+        // 1. Separate new files from existing S3 files
+        const newFiles = (data.attachments || []).filter(
+          (f) => f instanceof File
+        );
+        const existingS3Files = (data.attachments || []).filter(
+          (f) => !(f instanceof File)
+        );
 
-      dispatch(
-        addTaskToWorkspaceTodo({
-          workspaceSlug,
-          task: newTask,
-          rawFiles: data.attachments, // Trigger S3 upload in middleware
-        })
-      );
+        // 2. Dispatch centralized action (triggers Middleware upload)
+        dispatch(
+          updateWorkspaceTask({
+            workspaceSlug,
+            taskId: taskToEdit.id,
+            rawFiles: newFiles, // Trigger S3 upload in middleware
+            updates: {
+              title: data.taskName,
+              description: data.description || "",
+              assignees: data.assignees,
+              dueDate: data.dueDate,
+              priority: data.priority,
+              attachments: existingS3Files, // Keep existing URLs
+            },
+          })
+        );
+      } else {
+        // Handle Create Logic (Keep as is, but ensure rawFiles is passed)
+        const newTask = {
+          id: crypto.randomUUID(),
+          title: data.taskName,
+          description: data.description || "",
+          assignees: data.assignees,
+          dueDate: data.dueDate,
+          priority: data.priority,
+          attachments: [],
+          tags: ["New"],
+          createdOn: new Date().toISOString(),
+          isCompleted: false,
+          status: "todo",
+        };
+
+        dispatch(
+          addTaskToWorkspaceTodo({
+            workspaceSlug,
+            task: newTask,
+            rawFiles: data.attachments, // Trigger S3 upload in middleware
+          })
+        );
+      }
+      // closeAssignModal();
+    } catch (error) {
+      console.error("Submission failed:", error);
+      setIsSubmitting(false);
     }
-    closeAssignModal();
   };
 
   const handleDeleteAttachment = async (taskId, fileKey) => {
@@ -243,7 +184,16 @@ const WorkspaceDetails = () => {
     }
   };
 
-  if (loading) {
+  // Watch for the loading state to finish
+  useEffect(() => {
+    if (isSubmitting && !isSyncing) {
+      setAssignOpen(false);
+      setTaskToEdit(null);
+      setIsSubmitting(false);
+    }
+  }, [isSyncing, loading, isSubmitting]);
+
+  if (loading && !workspace) {
     return (
       <div className="p-6 bg-gray-50 dark:bg-gray-800 min-h-screen flex justify-center items-center">
         <span className="loading loading-spinner loading-lg" />
@@ -346,6 +296,7 @@ const WorkspaceDetails = () => {
         members={workspace.members || []}
         initialData={taskToEdit}
         onAssign={onTaskSubmit}
+        isSubmitting={isSubmitting}
       />
     </div>
   );

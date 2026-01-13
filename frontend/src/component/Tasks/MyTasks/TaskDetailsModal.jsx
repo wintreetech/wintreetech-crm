@@ -111,7 +111,7 @@ const TaskDetailsModal = ({ open, task, onClose }) => {
               Assigned Team
             </h3>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 capitalize">
               {task.assignees?.length ? (
                 task.assignees.map((name, i) => (
                   <div

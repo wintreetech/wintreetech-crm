@@ -1,4 +1,5 @@
 import Workspace from "../models/workspace.model.js";
+import { deleteS3WorkspaceFolder } from "../utils/s3Cleanup.js";
 
 /**
  * Create a new Workspace
@@ -61,6 +62,14 @@ export const deleteWorkspace = async (req, res) => {
       return res.status(404).json({
         message: "Workspace not found or ID/Slug mismatch",
       });
+    }
+
+    // S3 CLEANUP: Delete the entire folder associated with this slug
+    try {
+      await deleteS3WorkspaceFolder(slug);
+      console.log(`S3 cleanup successful for workspace slug: ${slug}`);
+    } catch (s3Error) {
+      console.error("S3 Workspace Folder Cleanup Failed:", s3Error);
     }
 
     res.status(200).json({

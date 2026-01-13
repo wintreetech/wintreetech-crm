@@ -11,6 +11,7 @@ import {
   addTaskToWorkspaceTodo,
   updateTaskAttachments,
   updateWorkspaceTask,
+  setSyncing,
 } from "../slices/Workspaces.slice.js";
 import { s3Api } from "../../api.js";
 
@@ -53,6 +54,8 @@ workspacesRealtimeListener.startListening({
   effect: async (action, listenerApi) => {
     // CRITICAL: Stop if the update was received from another user (remote)
     if (action.payload?.isRemote) return;
+
+    listenerApi.dispatch(setSyncing(true));
 
     // Debounce: Cancel previous pending syncs and wait 700ms
     listenerApi.cancelActiveListeners();
@@ -145,5 +148,7 @@ workspacesRealtimeListener.startListening({
         user: currentUser,
       });
     }
+
+    listenerApi.dispatch(setSyncing(false));
   },
 });

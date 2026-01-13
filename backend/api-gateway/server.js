@@ -38,8 +38,18 @@ app.use(
 // VERY IMPORTANT: respond to preflight before proxying
 app.options(/.*/, cors());
 
-app.use("/crm", expressProxy("http://localhost:3901"));
-app.use("/tasks", expressProxy("http://localhost:3902"));
+app.use(
+  "/crm",
+  expressProxy("http://localhost:3901", {
+    limit: "50mb",
+  })
+);
+app.use(
+  "/tasks",
+  expressProxy("http://localhost:3902", {
+    limit: "50mb",
+  })
+);
 
 // WebSocket proxy
 const wsProxy = httpProxy.createProxyServer({

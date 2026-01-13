@@ -63,17 +63,19 @@ export const deleteTask = createAsyncThunk(
       taskId,
       taskTitle,
       hasAttachments,
+      attachmentKeys = [],
     },
     { getState, rejectWithValue }
   ) => {
     try {
       // 1. Handle S3 Cleanup immediately using the passed payload
-      if (hasAttachments && taskTitle) {
+      if (hasAttachments && attachmentKeys.length > 0) {
         try {
-          const response = await s3Api.delete("/delete-task-folder", {
+          await s3Api.delete("/delete-task-folder", {
             data: {
               workspaceSlug: workspaceSlug || "personal-tasks",
               taskName: taskTitle,
+              keys: attachmentKeys,
             },
           });
 
