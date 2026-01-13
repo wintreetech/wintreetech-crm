@@ -53,6 +53,7 @@ import {
 	selectEntities,
 	selectEntityLoading,
 } from "../store/slices/Entity.slice.js";
+import downloadExcel from "../utils/downloadExcel.js";
 
 const TableLoader = ({ columns = 7, message = "Loading..." }) => (
 	<tr>
@@ -413,20 +414,70 @@ function SalesDashboard() {
 					</div>
 
 					{/* 📥 Download All Processing URLs */}
-					<div className="flex justify-end w-full md:w-auto">
+
+					<div className="flex justify-end w-full gap-2 md:w-auto">
 						<button
-							onClick={() =>
-								window.open(
-									`${CRM_API_BASE}/processing-urls/download-all`,
-									"_blank"
-								)
-							}
+							onClick={() => {
+								let data = [];
+								let filename = "";
+
+								if (activeTab === "merchant") {
+									// Partner first, then Merchant
+									data = leads.map((lead) => ({
+										Partner: lead.partner,
+										Merchant: lead.companyName,
+									}));
+									filename = "Merchant_Partners.xlsx";
+								} else if (activeTab === "acquirer") {
+									// Flatten entities into multiple rows
+									acquirers.forEach((acq) => {
+										const entities =
+											Array.isArray(acq.entityName) && acq.entityName.length
+												? acq.entityName
+												: [""]; // At least one row if no entities
+										entities.forEach((entity) => {
+											data.push({
+												Partner: acq.partnerName,
+												Acquirer: acq.bankName,
+												Entity: entity,
+											});
+										});
+									});
+									filename = "Acquirer_Partners.xlsx";
+								}
+
+								if (data.length === 0) {
+									toast.error("No data to download");
+									return;
+								}
+
+								downloadExcel(data, filename);
+							}}
 							className="btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white border-none"
-							title="Download all processing URLs"
 						>
 							<FileSpreadsheet size={18} />
-							<span className="ml-1">Download All URLs</span>
+							<span className="ml-1">
+								{activeTab === "merchant"
+									? "Download Merchants"
+									: "Download Acquirers"}
+							</span>
 						</button>
+
+						{activeTab !== "acquirer" && (
+							<button
+								onClick={() =>
+									window.open(
+										`${CRM_API_BASE}/processing-urls/download-all`,
+										"_blank"
+									)
+								}
+								className="btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white border-none"
+								title="Download all processing URLs"
+							>
+								<FileSpreadsheet size={18} />
+								<span className="ml-1">Download All URLs</span>
+							</button>
+						)}
 					</div>
 				</div>
 				{/* Leads Table */}

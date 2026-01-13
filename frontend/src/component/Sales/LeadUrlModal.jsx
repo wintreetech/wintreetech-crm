@@ -298,7 +298,8 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 				{filtered.length > itemsPerPage && (
 					<div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mt-4 text-sm">
 						<span className="text-gray-600 dark:text-gray-400 order-1 sm:order-none text-center sm:text-left">
-							Page {page} of {totalPages}
+							Page {page} of {totalPages} :- Total{" "}
+							{urls[activeTab]?.length || 0}
 						</span>
 
 						<div className="flex justify-between sm:justify-end gap-2 order-2 sm:order-none">
