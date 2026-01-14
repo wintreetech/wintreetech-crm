@@ -9,15 +9,17 @@ import {
   Copy,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { api } from "../../api.js";
+
 // import CRM_API_BASE from "../../config";
-import { CRM_API_BASE } from "../../config.js";
+
 import { useDispatch, useSelector } from "react-redux";
 import {
   addProcessingUrls,
   deleteProcessingUrl,
   fetchProcessingUrls,
 } from "../../store/thunks/Sales.thunks.js";
+import { api } from "../../api.js";
+import { CRM_API_BASE } from "../../config.js";
 
 const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   if (!isOpen || !lead) return null;
@@ -185,6 +187,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
         </div>
 
         {/* Tabs */}
+        {/* Tabs — DaisyUI radio style */}
         <div className="tabs-box tabs mb-4">
           {/* Trusted tab */}
           <input
@@ -295,7 +298,8 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
         {filtered.length > itemsPerPage && (
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mt-4 text-sm">
             <span className="text-gray-600 dark:text-gray-400 order-1 sm:order-none text-center sm:text-left">
-              Page {page} of {totalPages}
+              Page {page} of {totalPages} :- Total{" "}
+              {urls[activeTab]?.length || 0}
             </span>
 
             <div className="flex justify-between sm:justify-end gap-2 order-2 sm:order-none">

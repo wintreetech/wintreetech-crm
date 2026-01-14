@@ -5,6 +5,8 @@ import AuthRoutes from "../api/auth.route.js";
 import protect from "../../middleware/protect.js";
 import processingUrlRoutes from "../api/processingUrl.route.js";
 import CurrencyRoutes from "../api/currency.route.js";
+import AcquirerRoutes from "../api/acquirer.route.js";
+import EntityRoutes from "../api/Entity.route.js";
 
 // router import
 const router = Router();
@@ -17,5 +19,7 @@ router.use(protect);
 router.use("/sales", SalesRoutes);
 router.use("/processing-urls", processingUrlRoutes);
 router.use("/currency", CurrencyRoutes);
+router.use("/acquirer", AcquirerRoutes);
+router.use("/entity", EntityRoutes);
 
 export default router;

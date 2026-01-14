@@ -14,6 +14,7 @@ import {
   updateSalesLeadStatus,
 } from "../../controller/sales.controller.js";
 import upload from "../../utils/upload.js";
+import { multerErrorHandler } from "../../middleware/multerErrorHandler.js";
 
 // 1. Static and Specific Prefix Routes (TOP)
 
@@ -24,7 +25,12 @@ router.get("/", getAllSalesLeads);
 router.post("/", createSalesLead);
 
 // Upload Route
-router.post("/upload", upload.array("files", 10), uploadSalesCustomerLeadData);
+router.post(
+  "/upload",
+  upload.array("files", 10),
+  uploadSalesCustomerLeadData,
+  multerErrorHandler
+);
 
 // Download Route
 router.post("/download", generateDownloadLink);

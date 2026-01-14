@@ -5,7 +5,11 @@ import usersReducer from "./slices/Users.slice.js";
 import salesReducer from "./slices/Sales.slice.js";
 import taskReducer from "./slices/Tasks.slice.js";
 import workspaceReducer from "./slices/Workspaces.slice.js";
+import acquirerReducer from "./slices/Acquirer.slice";
 import notificationReducer from "./slices/Notification.slice.js";
+import entityReducer from "./slices/Entity.slice.js";
+import acquirerChecklistReducer from "./slices/AcquirerChecklist.slice.js";
+import acquirerDocsReducer from "./slices/AcquirerDocuments.slice.js";
 import { myTasksRealtimeListener } from "./middleware/mytasksRealtime.middleware.js";
 import { workspacesRealtimeListener } from "./middleware/workspacesRealtime.middleware.js";
 
@@ -18,6 +22,10 @@ export const store = configureStore({
     tasks: taskReducer,
     workspaces: workspaceReducer,
     notifications: notificationReducer,
+    acquirer: acquirerReducer,
+    entity: entityReducer,
+    acquirerChecklist: acquirerChecklistReducer,
+    acquirerDocs: acquirerDocsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
