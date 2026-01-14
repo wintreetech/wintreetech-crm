@@ -55,7 +55,9 @@ const AssignTaskModal = ({
 
   const toggleMember = (name) => {
     setSelectedMembers((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]
+      prev.includes(name)
+        ? prev.filter((n) => n !== name)
+        : [...new Set([...prev, name])]
     );
     setAssignError("");
   };
@@ -279,7 +281,7 @@ const AssignTaskModal = ({
                         )}
                       </div>
 
-                      {!isEdit && (
+                      {(!isEdit || file instanceof File) && (
                         <button
                           type="button"
                           onClick={() => removeAttachment(i)}

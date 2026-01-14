@@ -241,7 +241,14 @@ function MainLayout() {
       </header>
 
       {/* LAYOUT */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+        {showSidebar && sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {showSidebar && (
           <aside
             className={`

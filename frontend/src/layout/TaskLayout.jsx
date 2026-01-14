@@ -176,6 +176,8 @@ function TaskLayout() {
           <button
             onClick={() => setSidebarOpen(true)}
             className="md:hidden p-2 rounded-lg hover:bg-gray-50/20"
+            aria-label="Open sidebar menu"
+            title="Menu"
           >
             <TextAlignJustify />
           </button>
