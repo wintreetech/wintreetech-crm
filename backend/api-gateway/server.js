@@ -21,6 +21,13 @@ const allowedOrigins = [
   "http://crm.wintreetech.com",
 ];
 
+// Determine URLs based on environment
+const CRM_URL = env === "local" ? "http://localhost:3901" : process.env.CRM_URL;
+const TASKS_URL =
+  env === "local" ? "http://localhost:3902" : process.env.TASKS_URL;
+const SOCKET_URL =
+  env === "local" ? "http://localhost:3902" : process.env.SOCKET_URL;
+
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -40,20 +47,20 @@ app.options(/.*/, cors());
 
 app.use(
   "/crm",
-  expressProxy("http://localhost:3901", {
+  expressProxy(CRM_URL, {
     limit: "50mb",
   })
 );
 app.use(
   "/tasks",
-  expressProxy("http://localhost:3902", {
+  expressProxy(TASKS_URL, {
     limit: "50mb",
   })
 );
 
 // WebSocket proxy
 const wsProxy = httpProxy.createProxyServer({
-  target: "http://localhost:3902",
+  target: SOCKET_URL,
   ws: true,
   changeOrigin: true,
   secure: false,

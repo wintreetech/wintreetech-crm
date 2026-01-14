@@ -1,6 +1,11 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:3939";
+const ENV = import.meta.env.VITE_ENV;
+
+const SOCKET_URL =
+  ENV === "prod"
+    ? import.meta.env.VITE_SOCKET_URL_PROD
+    : "http://localhost:3939";
 
 // ✅ one socket for whole app
 export const socket = io(SOCKET_URL, {
