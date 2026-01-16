@@ -8,7 +8,7 @@ const CRM_BASE =
 const TASKS_BASE = CRM_BASE + "tasks";
 
 export const CRM_API_BASE = CRM_BASE + "crm" + "/api/v1";
-export const TASKS_API_BASE = TASKS_BASE + "/tasks" + "/api/v1";
+export const TASKS_API_BASE = TASKS_BASE + "/api/v1";
 export const WORKSPACE_API_BASE = TASKS_BASE + "/workspaces" + "/api/v1";
 export const NOTIFICATION_API_BASE = TASKS_BASE + "/notifications" + "/api/v1";
 export const S3_API_BASE = TASKS_BASE + "/s3" + "/api/v1";
