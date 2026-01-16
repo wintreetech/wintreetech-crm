@@ -1,9 +1,12 @@
 import express from "express";
+import dotenv from "dotenv";
 import http from "http";
 import httpProxy from "http-proxy";
 import expressProxy from "express-http-proxy";
 import cors from "cors";
 import { keys } from "./utils/keys.js";
+
+dotenv.config();
 
 const env = process.env.ENV;
 
