@@ -22,6 +22,7 @@ import { socket } from "../socket/index.js";
 import { initNotificationSocket } from "../socket/notification.socket.jsx";
 import { fetchNotifications } from "../store/slices/Notification.slice.js";
 import { useSidebarCollapse } from "../hooks/useSidebarCollapse.js";
+import { fetchWorkspaces } from "../store/slices/Workspaces.slice.js";
 
 function TaskLayout() {
   const dispatch = useDispatch();
@@ -63,7 +64,7 @@ function TaskLayout() {
       toast.success("Logout successful");
     } catch (e) {
       toast.error(
-        typeof e === "string" ? e : "Logout failed (cleared locally)"
+        typeof e === "string" ? e : "Logout failed (cleared locally)",
       );
     } finally {
       navigate("/login");
@@ -121,6 +122,12 @@ function TaskLayout() {
       }
     };
   }, [socket, userId, dispatch]);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      dispatch(fetchWorkspaces(currentUser.id));
+    }
+  }, [dispatch, currentUser?.id]);
 
   const pageTitle = formatTitle(location.pathname, currentUser);
 

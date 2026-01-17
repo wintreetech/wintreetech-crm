@@ -77,7 +77,7 @@ const login = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "7d" },
     );
 
     const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
@@ -110,7 +110,7 @@ const login = async (req, res) => {
 
 //  Logout: clear the cookie
 const logout = async (_req, res) => {
-  res.clearCookie("auth_token"), { path: "/" };
+  (res.clearCookie("auth_token"), { path: "/" });
   return res.status(200).json({ message: "Logged out" });
 };
 

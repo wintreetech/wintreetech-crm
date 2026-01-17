@@ -42,7 +42,7 @@ app.use(
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
-  })
+  }),
 );
 
 // VERY IMPORTANT: respond to preflight before proxying
@@ -52,13 +52,13 @@ app.use(
   "/crm",
   expressProxy(CRM_URL, {
     limit: "50mb",
-  })
+  }),
 );
 app.use(
-  "/tasks",
+  "/taskflow",
   expressProxy(TASKS_URL, {
     limit: "50mb",
-  })
+  }),
 );
 
 // WebSocket proxy

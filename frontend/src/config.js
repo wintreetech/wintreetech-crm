@@ -5,10 +5,13 @@ const CRM_BASE =
     ? import.meta.env.VITE_PROD_URL
     : import.meta.env.VITE_LOCAL_URL;
 
-const TASKS_BASE = CRM_BASE + "tasks";
+const TASKS_BASE = CRM_BASE + "taskflow";
 
-export const CRM_API_BASE = CRM_BASE + "crm" + "/api/v1";
-export const TASKS_API_BASE = TASKS_BASE + "/tasks" + "/api/v1";
-export const WORKSPACE_API_BASE = TASKS_BASE + "/workspaces" + "/api/v1";
-export const NOTIFICATION_API_BASE = TASKS_BASE + "/notifications" + "/api/v1";
-export const S3_API_BASE = TASKS_BASE + "/s3" + "/api/v1";
+const API_VERSION = "/api/v1";
+
+export const CRM_API_BASE = CRM_BASE + "crm" + API_VERSION;
+export const TASKS_API_BASE = TASKS_BASE + API_VERSION;
+export const WORKSPACE_API_BASE = TASKS_BASE + "/workspaces" + API_VERSION;
+export const NOTIFICATION_API_BASE =
+  TASKS_BASE + "/notifications" + API_VERSION;
+export const S3_API_BASE = TASKS_BASE + "/s3" + API_VERSION;

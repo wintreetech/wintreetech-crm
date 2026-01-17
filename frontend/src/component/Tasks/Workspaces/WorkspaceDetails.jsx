@@ -38,7 +38,7 @@ const serializeAttachments = (atts = []) =>
           type: a.type,
           lastModified: a.lastModified,
         }
-      : a
+      : a,
   );
 
 const WorkspaceDetails = () => {
@@ -106,7 +106,7 @@ const WorkspaceDetails = () => {
       setWorkspaceColumns({
         workspaceSlug: workspace.slug,
         columns: newCols,
-      })
+      }),
     );
   };
 
@@ -119,10 +119,10 @@ const WorkspaceDetails = () => {
       if (data?.isEdit && taskToEdit?.id) {
         // 1. Separate new files from existing S3 files
         const newFiles = (data.attachments || []).filter(
-          (f) => f instanceof File
+          (f) => f instanceof File,
         );
         const existingS3Files = (data.attachments || []).filter(
-          (f) => !(f instanceof File)
+          (f) => !(f instanceof File),
         );
 
         // 2. Dispatch centralized action (triggers Middleware upload)
@@ -139,7 +139,7 @@ const WorkspaceDetails = () => {
               priority: data.priority,
               attachments: existingS3Files, // Keep existing URLs
             },
-          })
+          }),
         );
       } else {
         // Handle Create Logic (Keep as is, but ensure rawFiles is passed)
@@ -152,6 +152,7 @@ const WorkspaceDetails = () => {
           priority: data.priority,
           attachments: [],
           tags: ["New"],
+          createdBy: currentUser?.username,
           createdOn: new Date().toISOString(),
           isCompleted: false,
           status: "todo",
@@ -162,7 +163,7 @@ const WorkspaceDetails = () => {
             workspaceSlug,
             task: newTask,
             rawFiles: data.attachments, // Trigger S3 upload in middleware
-          })
+          }),
         );
       }
       // closeAssignModal();

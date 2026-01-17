@@ -70,7 +70,7 @@ const Dashboard = () => {
     {
       name: "Management",
       value: allUsers.filter(
-        (u) => u.department?.toLowerCase() === "management"
+        (u) => u.department?.toLowerCase() === "management",
       ).length,
       color: "#F87171",
     },
@@ -198,36 +198,6 @@ const Dashboard = () => {
             <Bar dataKey="revenue" fill="#10b981" barSize={30} />
           </BarChart>
         </ResponsiveContainer>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="bg-white p-5 rounded-2xl shadow hover:shadow-lg transition dark:bg-gray-900">
-        <h3 className="font-semibold text-gray-800 mb-4 dark:text-gray-500">
-          Recent Activity
-        </h3>
-        <ul className="space-y-3">
-          <li className="flex justify-between items-center">
-            <div>
-              <p className="text-gray-700">John Doe added a new user</p>
-              <p className="text-gray-400 text-sm">2 hours ago</p>
-            </div>
-            <span className="text-green-500 text-sm">+1</span>
-          </li>
-          <li className="flex justify-between items-center">
-            <div>
-              <p className="text-gray-700">Payment received from ACME Corp</p>
-              <p className="text-gray-400 text-sm">5 hours ago</p>
-            </div>
-            <span className="text-green-500 text-sm">+$1,200</span>
-          </li>
-          <li className="flex justify-between items-center">
-            <div>
-              <p className="text-gray-700">Sales report generated</p>
-              <p className="text-gray-400 text-sm">1 day ago</p>
-            </div>
-            <span className="text-indigo-500 text-sm">Report</span>
-          </li>
-        </ul>
       </div>
     </div>
   );

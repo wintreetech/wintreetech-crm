@@ -33,10 +33,10 @@ export const fetchMyTasks = createAsyncThunk(
       return res.data;
     } catch (err) {
       return rejectWithValue(
-        err?.response?.data?.message || err?.message || "Failed to fetch"
+        err?.response?.data?.message || err?.message || "Failed to fetch",
       );
     }
-  }
+  },
 );
 
 export const createMyTasksSpace = createAsyncThunk(
@@ -47,10 +47,12 @@ export const createMyTasksSpace = createAsyncThunk(
       return res.data;
     } catch (err) {
       return rejectWithValue(
-        err?.response?.data?.message || err?.message || "Failed to create space"
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to create space",
       );
     }
-  }
+  },
 );
 
 export const deleteTask = createAsyncThunk(
@@ -65,7 +67,7 @@ export const deleteTask = createAsyncThunk(
       hasAttachments,
       attachmentKeys = [],
     },
-    { getState, rejectWithValue }
+    { getState, rejectWithValue },
   ) => {
     try {
       // 1. Handle S3 Cleanup immediately using the passed payload
@@ -97,21 +99,21 @@ export const deleteTask = createAsyncThunk(
       }
 
       const updatedColumns = getUpdatedColumns(columns, columnId, (tasks) =>
-        tasks.filter((t) => String(t.id) !== String(taskId))
+        tasks.filter((t) => String(t.id) !== String(taskId)),
       );
 
       return { scope, workspaceSlug, columns: updatedColumns };
     } catch (err) {
       return rejectWithValue(err?.message || "Delete failed");
     }
-  }
+  },
 );
 
 export const updateTask = createAsyncThunk(
   "tasks/updateTask",
   async (
     { scope = "mytasks", workspaceSlug = null, columnId, taskId, updates },
-    { getState, rejectWithValue }
+    { getState, rejectWithValue },
   ) => {
     try {
       const state = getState();
@@ -127,15 +129,15 @@ export const updateTask = createAsyncThunk(
 
       const updatedColumns = getUpdatedColumns(columns, columnId, (tasks) =>
         tasks.map((t) =>
-          String(t.id) === String(taskId) ? { ...t, ...updates } : t
-        )
+          String(t.id) === String(taskId) ? { ...t, ...updates } : t,
+        ),
       );
 
       return { scope, workspaceSlug, columns: updatedColumns };
     } catch (err) {
       return rejectWithValue(err?.message || "Update failed");
     }
-  }
+  },
 );
 
 // --- Slice ---
@@ -197,13 +199,13 @@ const taskSlice = createSlice({
       .addMatcher(
         (action) =>
           [deleteTask.fulfilled.type, updateTask.fulfilled.type].includes(
-            action.type
+            action.type,
           ),
         (state, action) => {
           if (action.payload.scope === "mytasks") {
             state.columns = action.payload.columns || state.columns;
           }
-        }
+        },
       );
   },
 });

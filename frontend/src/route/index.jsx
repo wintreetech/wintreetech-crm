@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import App from "../App";
 import {
   SalesDashboard,
@@ -30,6 +30,11 @@ const router = createBrowserRouter([
       </ProtectedRoutes>
     ),
     children: [
+      {
+        index: true,
+        element: <Navigate to="/dashboard" replace />,
+      },
+
       // ✅ DASHBOARD
       {
         path: "dashboard",

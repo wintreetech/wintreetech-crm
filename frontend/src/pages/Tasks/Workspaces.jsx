@@ -19,6 +19,7 @@ import {
   fetchWorkspaces,
   deleteWorkspace,
   selectWorkspaceLoading,
+  selectIsSyncing,
 } from "../../store/slices/Workspaces.slice";
 
 // Helpers
@@ -44,7 +45,7 @@ const serializeAttachments = (atts = []) =>
           type: a.type,
           lastModified: a.lastModified,
         }
-      : a
+      : a,
   );
 
 const Workspaces = () => {
@@ -56,11 +57,13 @@ const Workspaces = () => {
   const [addOpen, setAddOpen] = useState(false);
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignWorkspace, setAssignWorkspace] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redux State
   const currentUser = useSelector(selectCurrentUser);
   const workspaces = useSelector(selectWorkspaces);
   const loading = useSelector(selectWorkspaceLoading);
+  const isSyncing = useSelector(selectIsSyncing);
 
   const hasPermission =
     currentUser?.role === "admin" || currentUser?.role === "superadmin";
@@ -72,11 +75,11 @@ const Workspaces = () => {
     { name: "Amara Vance", role: "SEO Specialist", avatar: "..." },
   ];
 
-  useEffect(() => {
-    if (currentUser?.id) {
-      dispatch(fetchWorkspaces(currentUser.id));
-    }
-  }, [dispatch, currentUser?.id]);
+  // useEffect(() => {
+  //   if (currentUser?.id) {
+  //     dispatch(fetchWorkspaces(currentUser.id));
+  //   }
+  // }, [dispatch, currentUser?.id]);
 
   // Modal Handlers
   const openAssignModal = (ws) => {
@@ -158,14 +161,23 @@ const Workspaces = () => {
           (currentUser?.email &&
             m.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
           (currentUser?.username &&
-            m.username?.toLowerCase() === currentUser.username.toLowerCase())
-      )
+            m.username?.toLowerCase() === currentUser.username.toLowerCase()),
+      ),
     );
   }, [workspaces, currentUser]);
 
   const filteredWorkspaces = visibleWorkspaces.filter((ws) =>
-    ws.title.toLowerCase().includes(searchTerm.toLowerCase())
+    ws.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  useEffect(() => {
+    // If we were submitting and Redux has finished syncing/loading
+    if (isSubmitting && !isSyncing && !loading) {
+      setAssignOpen(false);
+      setAssignWorkspace(null);
+      setIsSubmitting(false);
+    }
+  }, [isSyncing, loading, isSubmitting]);
 
   return (
     <div className="font-display bg-gray-50 dark:bg-gray-800 text-text-primary-light dark:text-text-primary-dark min-h-screen">
@@ -264,6 +276,7 @@ const Workspaces = () => {
       <AssignTaskModal
         open={assignOpen}
         onClose={closeAssignModal}
+        isSubmitting={isSubmitting}
         members={
           assignWorkspace?.members?.length
             ? assignWorkspace.members
@@ -271,6 +284,7 @@ const Workspaces = () => {
         }
         onAssign={(data) => {
           const workspaceSlug = assignWorkspace.slug;
+          setIsSubmitting(true);
 
           // HANDLE NEW TASK MODE ONLY
           const newTask = {
@@ -282,6 +296,7 @@ const Workspaces = () => {
             priority: data.priority,
             attachments: [], // Start empty; Middleware will fill this via S3
             tags: ["New"],
+            createdBy: currentUser?.username,
             createdOn: new Date().toISOString(),
             isCompleted: false,
             status: "todo",
@@ -292,13 +307,12 @@ const Workspaces = () => {
               workspaceSlug,
               task: newTask,
               rawFiles: data.attachments, // Passes files to Middleware for upload
-            })
+            }),
           );
 
-          closeAssignModal();
+          // closeAssignModal();
         }}
       />
-
       <AddWorkspaceModal
         open={addOpen}
         onClose={() => setAddOpen(false)}

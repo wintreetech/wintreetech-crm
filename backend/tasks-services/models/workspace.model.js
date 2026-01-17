@@ -16,8 +16,9 @@ const TaskSchema = new mongoose.Schema(
     isCompleted: { type: Boolean, default: false },
     assignees: { type: [String], default: [] }, // Array of member usernames/names
     attachments: { type: [mongoose.Schema.Types.Mixed], default: [] },
+    createdBy: { type: String, default: "" },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ColumnSchema = new mongoose.Schema(
@@ -25,7 +26,7 @@ const ColumnSchema = new mongoose.Schema(
     id: { type: String, required: true }, // "todo", "inprogress", "completed"
     tasks: { type: [TaskSchema], default: [] },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const WorkspaceSchema = new mongoose.Schema(
@@ -56,7 +57,7 @@ const WorkspaceSchema = new mongoose.Schema(
       ],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 WorkspaceSchema.set("toJSON", {

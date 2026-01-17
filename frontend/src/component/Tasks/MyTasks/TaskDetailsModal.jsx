@@ -31,7 +31,7 @@ const TaskDetailsModal = ({ open, task, onClose }) => {
         downloadWorkspaceDocs({
           fileUrl: file.url,
           fileName: file.name,
-        })
+        }),
       ).unwrap();
     } catch (error) {
       console.error("Download error:", error);
@@ -134,6 +134,24 @@ const TaskDetailsModal = ({ open, task, onClose }) => {
               )}
             </div>
           </div>
+
+          {task?.createdBy && (
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Assigned By
+              </h3>
+
+              <div className="flex flex-wrap gap-2 capitalize">
+                <div
+                  className="px-3 py-1 rounded-full bg-primary dark:bg-base-300
+        text-sm font-medium text-white border border-base-300
+        inline-flex items-center gap-2"
+                >
+                  <span>{task.createdBy}</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Completed indicator */}
           {task.isCompleted && (
