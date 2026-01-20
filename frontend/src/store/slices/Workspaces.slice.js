@@ -12,10 +12,10 @@ export const fetchWorkspaces = createAsyncThunk(
       return res.data;
     } catch (error) {
       return rejectWithValue(
-        error?.response?.data?.message || "Failed to fetch workspaces"
+        error?.response?.data?.message || "Failed to fetch workspaces",
       );
     }
-  }
+  },
 );
 
 export const createWorkspace = createAsyncThunk(
@@ -26,32 +26,36 @@ export const createWorkspace = createAsyncThunk(
       return res.data;
     } catch (error) {
       return rejectWithValue(
-        error?.response?.data?.message || "Failed to create workspace"
+        error?.response?.data?.message || "Failed to create workspace",
       );
     }
-  }
+  },
 );
 
 export const updateMembersInWorkspace = createAsyncThunk(
   "workspaces/updateMembers",
-  async ({ workspaceId, membersToAdd }, { getState, rejectWithValue }) => {
+  async (
+    { workspaceId, membersToAdd, senderId },
+    { getState, rejectWithValue },
+  ) => {
     try {
       const state = getState();
       const workspace = state.workspaces.list.find(
-        (w) => String(w.id) === String(workspaceId)
+        (w) => String(w.id) === String(workspaceId),
       );
       if (!workspace) throw new Error("Workspace not found locally");
 
       const res = await workspaceApi.post(`/${workspace.slug}/members`, {
         members: membersToAdd,
+        senderId,
       });
       return res.data;
     } catch (error) {
       return rejectWithValue(
-        error?.response?.data?.message || "Failed to update members"
+        error?.response?.data?.message || "Failed to update members",
       );
     }
-  }
+  },
 );
 
 export const deleteWorkspace = createAsyncThunk(
@@ -65,7 +69,7 @@ export const deleteWorkspace = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err?.message || "Delete workspace failed");
     }
-  }
+  },
 );
 
 export const downloadWorkspaceDocs = createAsyncThunk(
@@ -99,10 +103,10 @@ export const downloadWorkspaceDocs = createAsyncThunk(
     } catch (error) {
       console.error("Download Thunk Error:", error);
       return rejectWithValue(
-        error?.response?.data?.message || "Failed to get download link"
+        error?.response?.data?.message || "Failed to get download link",
       );
     }
-  }
+  },
 );
 
 // THUNK FOR AWS UPLOAD
@@ -110,7 +114,7 @@ export const uploadTaskFilesAction = createAsyncThunk(
   "workspaces/uploadTaskFiles",
   async (
     { workspaceSlug, taskId, rawFiles, existingAttachments = [] },
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const formData = new FormData();
@@ -139,7 +143,7 @@ export const uploadTaskFilesAction = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || error.message);
     }
-  }
+  },
 );
 
 // --- Slice ---
@@ -223,7 +227,7 @@ const WorkspacesSlice = createSlice({
     updateTaskAttachments: (state, action) => {
       const { taskId, attachments } = action.payload;
       const activeWorkspace = state.list.find(
-        (w) => w.slug === state.activeWorkspaceSlug
+        (w) => w.slug === state.activeWorkspaceSlug,
       );
 
       if (activeWorkspace && activeWorkspace.columns) {
@@ -233,7 +237,7 @@ const WorkspacesSlice = createSlice({
           if (foundTask) {
             // Replace or merge the attachments with the real S3 URLs
             foundTask.attachments = attachments.filter(
-              (a) => a.url && typeof a.url === "string"
+              (a) => a.url && typeof a.url === "string",
             );
           }
         });
@@ -247,7 +251,7 @@ const WorkspacesSlice = createSlice({
         const task = col.tasks?.find((t) => t.id === taskId);
         if (task) {
           task.attachments = task.attachments.filter(
-            (file) => file.key !== fileKey
+            (file) => file.key !== fileKey,
           );
         }
       });
@@ -301,7 +305,7 @@ const WorkspacesSlice = createSlice({
       .addCase(updateMembersInWorkspace.fulfilled, (state, action) => {
         const updatedWs = action.payload;
         const index = state.list.findIndex(
-          (w) => String(w.id) === String(updatedWs.id)
+          (w) => String(w.id) === String(updatedWs.id),
         );
         if (index !== -1) state.list[index] = updatedWs;
       })
@@ -356,6 +360,6 @@ export const selectWorkspaces = (state) => state.workspaces.list;
 export const selectWorkspaceLoading = (state) => state.workspaces.loading;
 export const selectActiveWorkspace = (state) =>
   state.workspaces.list.find(
-    (w) => w.slug === state.workspaces.activeWorkspaceSlug
+    (w) => w.slug === state.workspaces.activeWorkspaceSlug,
   );
 export const selectIsSyncing = (state) => state.workspaces.isSyncing;

@@ -1,5 +1,29 @@
 import { addNotification } from "../store/slices/Notification.slice.js";
 
+// Create the audio instance outside the function so it's loaded only once
+const notificationSound = new Audio("/notification.wav");
+
+// Function to unlock the audio context
+const unlockAudio = () => {
+  notificationSound
+    .play()
+    .then(() => {
+      // Success! Now pause it and reset
+      notificationSound.pause();
+      notificationSound.currentTime = 0;
+
+      // Remove the listener so we don't keep running this on every click
+      document.removeEventListener("click", unlockAudio);
+      // console.log("Audio unlocked and ready.");
+    })
+    .catch((err) => {
+      console.error("Audio unlock failed:", err);
+    });
+};
+
+// Add the listener to the document
+document.addEventListener("click", unlockAudio);
+
 export const initNotificationSocket = (socket, userId, dispatch) => {
   if (!socket || !userId) return;
 
@@ -10,6 +34,10 @@ export const initNotificationSocket = (socket, userId, dispatch) => {
   }
 
   const handleReceived = (newNotif) => {
+    notificationSound
+      .play()
+      .catch((err) => console.log("Still blocked:", err.message));
+
     // console.log("Real-time notification received:", newNotif);
     // 1. Update the Redux UI (your list and badge)
     dispatch(addNotification(newNotif));

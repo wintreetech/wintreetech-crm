@@ -35,7 +35,7 @@ const TeamMembers = () => {
     }
 
     const ws = workspaces.find(
-      (w) => String(w.id) === String(selectedWorkspaceId)
+      (w) => String(w.id) === String(selectedWorkspaceId),
     );
     const existingIds = Array.isArray(ws?.members)
       ? ws.members.map((m) => String(m?.id)).filter(Boolean)
@@ -50,7 +50,7 @@ const TeamMembers = () => {
   const actionLabel = useMemo(() => {
     if (!selectedWorkspaceId) return "Add to workspace";
     const ws = workspaces.find(
-      (w) => String(w.id) === String(selectedWorkspaceId)
+      (w) => String(w.id) === String(selectedWorkspaceId),
     );
     return ws?.members?.length > 0 ? "Update members" : "Add to workspace";
   }, [selectedWorkspaceId, workspaces]);
@@ -60,7 +60,7 @@ const TeamMembers = () => {
     setSelectedMemberIds((prev) =>
       prev.includes(userId)
         ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
+        : [...prev, userId],
     );
   };
 
@@ -83,7 +83,8 @@ const TeamMembers = () => {
         updateMembersInWorkspace({
           workspaceId: selectedWorkspaceId,
           membersToAdd: membersToAdd,
-        })
+          senderId: currentUser?.id,
+        }),
       ).unwrap();
 
       toast.success("Members added successfully");

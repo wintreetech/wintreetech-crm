@@ -15,7 +15,7 @@ export const registrWorkspaceSocket = (socket) => {
         const board = await Workspace.findOneAndUpdate(
           { _id: workspaceId },
           { $set: { columns } },
-          { new: true }
+          { new: true },
         ).lean();
 
         if (!board) throw new Error("Workspace not found");
@@ -26,7 +26,7 @@ export const registrWorkspaceSocket = (socket) => {
 
         for (const task of newTasks) {
           const oldTask = oldTasks.find(
-            (t) => String(t.id || t._id) === String(task.id || task._id)
+            (t) => String(t.id || t._id) === String(task.id || task._id),
           );
 
           // NEW TASK NOTIFICATION (Map Names to IDs)
@@ -39,7 +39,7 @@ export const registrWorkspaceSocket = (socket) => {
             const assigneeIds = assigneeNames
               .map((name) => {
                 const member = oldWorkspace.members.find(
-                  (m) => m.username === name
+                  (m) => m.username === name,
                 );
                 return member ? member.id : null;
               })
@@ -99,7 +99,7 @@ export const registrWorkspaceSocket = (socket) => {
       } catch (error) {
         socket.emit("error", { message: error.message });
       }
-    }
+    },
   );
 
   // UPDATE TASK (Used for the Edit Modal in Workspace)
@@ -113,12 +113,12 @@ export const registrWorkspaceSocket = (socket) => {
         if (!workspace) throw new Error("Workspace not found");
 
         const col = workspace.columns.find(
-          (c) => String(c.id) === String(columnId)
+          (c) => String(c.id) === String(columnId),
         );
         if (!col) throw new Error("Column not found");
 
         const taskIdx = col.tasks.findIndex(
-          (t) => String(t.id) === String(taskId)
+          (t) => String(t.id) === String(taskId),
         );
         if (taskIdx === -1) throw new Error("Task not found");
 
@@ -140,6 +140,6 @@ export const registrWorkspaceSocket = (socket) => {
       } catch (error) {
         socket.emit("error", { message: error.message });
       }
-    }
+    },
   );
 };

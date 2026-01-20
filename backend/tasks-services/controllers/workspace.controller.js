@@ -1,4 +1,6 @@
 import Workspace from "../models/workspace.model.js";
+import { emitEvent } from "../realtime/emitter.js";
+import { EVENTS } from "../socket/events.js";
 import { deleteS3WorkspaceFolder } from "../utils/s3Cleanup.js";
 
 /**
@@ -64,6 +66,19 @@ export const deleteWorkspace = async (req, res) => {
       });
     }
 
+    // Notify all users in the workspace room
+    emitEvent({
+      room: `workspace:${workspaceId}`,
+      event: EVENTS.WORKSPACE.DELETE_WORKSPACE,
+      payload: { workspaceId, slug },
+    });
+
+    //Notify everyone globally
+    emitEvent({
+      event: EVENTS.WORKSPACE.DELETE_WORKSPACE,
+      payload: { workspaceId, slug },
+    });
+
     // S3 CLEANUP: Delete the entire folder associated with this slug
     try {
       await deleteS3WorkspaceFolder(slug);
@@ -89,7 +104,7 @@ export const deleteWorkspace = async (req, res) => {
 export const addWorkspaceMember = async (req, res) => {
   try {
     const { slug } = req.params;
-    const { members } = req.body;
+    const { members, senderId } = req.body;
 
     if (!Array.isArray(members)) {
       return res.status(400).json({ message: "Members must be an array" });
@@ -101,15 +116,15 @@ export const addWorkspaceMember = async (req, res) => {
         members.map((m) => {
           const memberId = String(m.id || m._id);
           return [memberId, { ...m, id: memberId }];
-        })
-      ).values()
+        }),
+      ).values(),
     );
 
     // STEP 2: Use $set to overwrite with the unique list
     const updatedWorkspace = await Workspace.findOneAndUpdate(
       { slug },
       { $set: { members: uniqueMembers } },
-      { new: true }
+      { new: true },
     ).lean();
 
     if (!updatedWorkspace) {
@@ -118,6 +133,12 @@ export const addWorkspaceMember = async (req, res) => {
 
     // Normalize result ID
     updatedWorkspace.id = updatedWorkspace._id;
+
+    // SOCKET BROADCAST
+    emitEvent({
+      event: EVENTS.WORKSPACE.UPDATE_WORKSPACE,
+      payload: { ...updatedWorkspace, senderId },
+    });
 
     res.status(200).json(updatedWorkspace);
   } catch (error) {

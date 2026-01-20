@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Plus, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 
@@ -21,6 +21,10 @@ import {
   selectWorkspaceLoading,
   selectIsSyncing,
 } from "../../store/slices/Workspaces.slice";
+import {
+  onWorkspaceDeleted,
+  onWorkspaceUpdated,
+} from "../../socket/workspace.socket";
 
 // Helpers
 const slugify = (text) =>
@@ -142,6 +146,7 @@ const Workspaces = () => {
     if (window.confirm("Are you sure you want to delete this workspace?")) {
       try {
         await dispatch(deleteWorkspace({ slug, id: _id })).unwrap();
+
         toast.success("Workspace removed successfully");
       } catch (err) {
         toast.error(err || "Failed to delete workspace");
@@ -169,6 +174,40 @@ const Workspaces = () => {
   const filteredWorkspaces = visibleWorkspaces.filter((ws) =>
     ws.title.toLowerCase().includes(searchTerm.toLowerCase()),
   );
+
+  useEffect(() => {
+    // LISTEN FOR DELETION
+    onWorkspaceDeleted((data) => {
+      if (data?.workspaceId) {
+        dispatch(fetchWorkspaces());
+      }
+    });
+
+    // LISTEN FOR UPDATES (when a member is added to the workspace)
+    onWorkspaceUpdated((updatedWs) => {
+      const userId = String(currentUser?.id);
+      const senderId = String(updatedWs.senderId);
+      const isMemberNow = updatedWs.members?.some(
+        (m) => String(m.id || m._id) === userId,
+      );
+      const wasMemberBefore = workspaces.some(
+        (ws) => ws.id === updatedWs.id || ws._id === updatedWs.id,
+      );
+
+      if (isMemberNow || wasMemberBefore) {
+        dispatch(fetchWorkspaces());
+
+        // 2. Notification Logic: ONLY show the toast if I am NOT the sender
+        if (userId !== senderId) {
+          if (isMemberNow && !wasMemberBefore) {
+            toast.success(`You've been added to ${updatedWs.title}`);
+          } else if (!isMemberNow && wasMemberBefore) {
+            toast.error(`You've been removed from ${updatedWs.title}`);
+          }
+        }
+      }
+    });
+  }, [dispatch, currentUser, workspaces]);
 
   useEffect(() => {
     // If we were submitting and Redux has finished syncing/loading

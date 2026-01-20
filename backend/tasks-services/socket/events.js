@@ -17,6 +17,8 @@ export const EVENTS = {
     UPDATE_TASK: "workspace:update_task",
     DELETE_TASK: "workspace:delete_task",
     BOARD_SYNC: "workspace:board_sync",
+    DELETE_WORKSPACE: "workspace:delete_workspace",
+    UPDATE_WORKSPACE: "workspace:updated",
   },
 
   NOTIFICATION: {

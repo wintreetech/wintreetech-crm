@@ -8,7 +8,7 @@ export const initRabbitMQ = async () => {
   const connection = await amqp.connect(
     env === "prod"
       ? process.env.RABBITMQ_URL_PROD
-      : process.env.RABBITMQ_URL_LOCAL
+      : process.env.RABBITMQ_URL_LOCAL,
   );
   channel = await connection.createChannel();
   await channel.assertExchange("user_events", "topic", { durable: true });
@@ -35,7 +35,7 @@ export const publishAllUsers = async () => {
     "user_events",
     "user.fullsync",
     Buffer.from(JSON.stringify(data)),
-    { persistent: true }
+    { persistent: true },
   );
 
   console.log(`CRM Published ${users.length} users for initial sync.`);
@@ -59,6 +59,6 @@ export const publishUserSync = (user, actionType) => {
   channel.publish(
     "user_events",
     `user.${actionType.toLowerCase()}`,
-    Buffer.from(JSON.stringify(data))
+    Buffer.from(JSON.stringify(data)),
   );
 };

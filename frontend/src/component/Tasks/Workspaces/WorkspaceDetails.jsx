@@ -24,9 +24,11 @@ import {
 import {
   joinWorkspaceRoom,
   leaveWorkspaceRoom,
+  onWorkspaceDeleted,
   registerWorkspaceSocket,
 } from "../../../socket/workspace.socket";
 import { s3Api } from "../../../api";
+import toast from "react-hot-toast";
 
 // Helpers
 const serializeAttachments = (atts = []) =>
@@ -74,12 +76,20 @@ const WorkspaceDetails = () => {
     if (workspace?.id && workspace?.slug) {
       joinWorkspaceRoom(workspace.id);
       registerWorkspaceSocket(workspace.slug);
+
+      onWorkspaceDeleted((data) => {
+        if (data.workspaceId === workspace.id || data.slug === slug) {
+          toast.error("This workspace has been deleted by an admin.");
+          dispatch(fetchWorkspaces());
+          navigate("/tasks/workspaces");
+        }
+      });
     }
 
     return () => {
       if (workspace?.id) leaveWorkspaceRoom(workspace.id);
     };
-  }, [workspace?.id, workspace?.slug]);
+  }, [workspace?.id, workspace?.slug, navigate, slug]);
 
   // Handlers
   const handleBack = () => {
@@ -193,6 +203,12 @@ const WorkspaceDetails = () => {
       setIsSubmitting(false);
     }
   }, [isSyncing, loading, isSubmitting]);
+
+  useEffect(() => {
+    if (!loading && workspaces.length > 0 && slug && !workspace) {
+      navigate("/tasks/workspaces");
+    }
+  }, [loading, workspaces, workspace, slug, navigate]);
 
   if (loading && !workspace) {
     return (

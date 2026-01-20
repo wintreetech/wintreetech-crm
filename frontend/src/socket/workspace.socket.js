@@ -17,7 +17,7 @@ export const registerWorkspaceSocket = (workspaceSlug) => {
         workspaceSlug,
         columns: columns || [],
         isRemote: true, // Prevents the middleware from emitting this change back to the server
-      })
+      }),
     );
   });
 };
@@ -31,12 +31,35 @@ export const joinWorkspaceRoom = (workspaceId) => {
 };
 
 /**
+ * Listens for workspace updation (when add a member) and executes a callback
+ */
+export const onWorkspaceUpdated = (callback) => {
+  socket.off("workspace:updated");
+  socket.on("workspace:updated", (data) => {
+    if (callback) callback(data);
+  });
+};
+
+/**
+ * Listens for workspace deletion and executes a callback
+ */
+
+export const onWorkspaceDeleted = (onDeleteCallback) => {
+  socket.off("workspace:delete_workspace");
+
+  socket.on("workspace:delete_workspace", (data) => {
+    if (onDeleteCallback) onDeleteCallback(data);
+  });
+};
+
+/**
  * Leaves the workspace room and cleans up listeners.
  */
 export const leaveWorkspaceRoom = (workspaceId) => {
   if (!workspaceId) return;
   socket.emit("leave:workspace", { workspaceId });
   socket.off("workspace:board_sync");
+  socket.off("workspace:delete_workspace");
 };
 
 /**
