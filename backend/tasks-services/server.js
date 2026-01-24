@@ -25,7 +25,10 @@ app.use(
       // Allow requests with no origin like Postman or mobile apps
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (
+        allowedOrigins.indexOf(origin) !== -1 ||
+        origin.includes("ngrok-free.app")
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
@@ -33,7 +36,7 @@ app.use(
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true, // allow cookies
-  })
+  }),
 );
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));

@@ -1,6 +1,8 @@
 import UserNotification from "../models/notification.model.js";
 import { emitEvent } from "../realtime/emitter.js";
 import { EVENTS } from "../socket/events.js";
+import { sendPushNotification } from "../utils/webPush.js";
+import PushSubscription from "../models/pushSubscription.model.js";
 
 export const sendNotification = async ({
   recipients,
@@ -55,7 +57,7 @@ export const sendNotification = async ({
             // IMPORTANT: If the document is created (upsert), set the userId
             $setOnInsert: { userId: userId },
           },
-          { upsert: true, new: true }
+          { upsert: true, new: true },
         );
 
         // Real-time emit
@@ -64,10 +66,25 @@ export const sendNotification = async ({
           event: EVENTS.NOTIFICATION.RECEIVED,
           payload: notificationItem,
         });
-      })
-    );
 
-    console.log(`Pushed notification to ${validRecipientIds.length} users.`);
+        const subRecord = await PushSubscription.findOne({ userId });
+
+        if (subRecord && subRecord.deviceType === "mobile") {
+          console.log(
+            `[Push] User ${userId} is on mobile. Sending Web-Push...`,
+          );
+          await sendPushNotification(userId, {
+            title,
+            body: message,
+            link: metadata?.link || "/",
+          });
+        } else {
+          console.log(
+            `Pushed notification to ${validRecipientIds.length} users.`,
+          );
+        }
+      }),
+    );
 
     return { success: true };
   } catch (error) {

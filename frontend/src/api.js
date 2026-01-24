@@ -47,7 +47,7 @@ const authInterceptor = (instance) => {
 
         console.warn(
           "Unauthorized! Clearing session and redirecting...",
-          error
+          error,
         );
 
         // Clear Local Storage
@@ -59,7 +59,7 @@ const authInterceptor = (instance) => {
         window.location.href = "/login";
       }
       return Promise.reject(error);
-    }
+    },
   );
 };
 

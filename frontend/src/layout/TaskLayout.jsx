@@ -23,6 +23,7 @@ import { initNotificationSocket } from "../socket/notification.socket.jsx";
 import { fetchNotifications } from "../store/slices/Notification.slice.js";
 import { useSidebarCollapse } from "../hooks/useSidebarCollapse.js";
 import { fetchWorkspaces } from "../store/slices/Workspaces.slice.js";
+import { initNotifications } from "../utils/notificationManager.js";
 
 function TaskLayout() {
   const dispatch = useDispatch();
@@ -107,13 +108,16 @@ function TaskLayout() {
     }
   }, [dispatch, userId]);
 
-  // ✅ 3. GLOBAL NOTIFICATION SOCKET INITIALIZATION
+  // ✅ 3. GLOBAL NOTIFICATION SOCKET & MANAGER INITIALIZATION
   useEffect(() => {
     let cleanupFn;
 
     if (socket && userId) {
-      // console.log("Initializing Global Notification Socket for User:", userId);
+      // Initialize Socket for real-time UI updates
       cleanupFn = initNotificationSocket(socket, userId, dispatch);
+
+      // For mobile notifications notificationsManger.js registration & Desktop status sync
+      initNotifications(userId);
     }
 
     return () => {
@@ -123,6 +127,7 @@ function TaskLayout() {
     };
   }, [socket, userId, dispatch]);
 
+  // ✅ 4. FETCH WORKSPACES
   useEffect(() => {
     if (currentUser?.id) {
       dispatch(fetchWorkspaces(currentUser.id));

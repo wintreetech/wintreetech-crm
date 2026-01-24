@@ -23,7 +23,7 @@ export const markNotificationAsRead = async (req, res) => {
         userId,
         "notifications._id": notificationId,
       },
-      { $set: { "notifications.$.isRead": true } }
+      { $set: { "notifications.$.isRead": true } },
     );
 
     res.json({ success: true });

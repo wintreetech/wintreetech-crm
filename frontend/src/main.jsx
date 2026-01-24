@@ -10,11 +10,19 @@ import { getUserFromStorage } from "./store/slices/Auth.slice.js";
 
 store.dispatch(getUserFromStorage());
 
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .catch((err) => console.log("SW Registration failed:", err));
+  });
+}
+
 createRoot(document.getElementById("root")).render(
   <>
     <Provider store={store}>
       <Toaster reverseOrder={false} />
       <RouterProvider router={router} />
     </Provider>
-  </>
+  </>,
 );

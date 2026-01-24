@@ -1,0 +1,30 @@
+{
+  "short_name": "Wintree",
+  "name": "Wintree Tech Workspace",
+  "description": "Collaborative task and workspace management platform.",
+  "icons": [
+    {
+      "src": "/wintree_favicon.png",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/WintreeTech_Logo.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/WintreeTech_Logo.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "categories": ["productivity", "business"]
+}

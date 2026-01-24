@@ -35,7 +35,8 @@ app.use(
   cors({
     origin: function (origin, callback) {
       // allow no-origin (postman, server-to-server)
-      if (!origin) return callback(null, true);
+      if (!origin || origin.includes("ngrok-free.app"))
+        return callback(null, true);
 
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error("Not allowed by CORS"));
@@ -54,6 +55,7 @@ app.use(
     limit: "50mb",
   }),
 );
+
 app.use(
   "/taskflow",
   expressProxy(TASKS_URL, {
