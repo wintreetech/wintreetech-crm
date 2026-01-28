@@ -20,6 +20,7 @@ import TeamMembers from "../pages/Tasks/TeamMembers";
 import Notifications from "../pages/Notifications";
 import WorkspaceDetails from "../component/Tasks/Workspaces/WorkspaceDetails";
 import Analytics from "../pages/Tasks/Analytics";
+import ErrorBoundary from "../component/ErrorBoundary";
 
 const router = createBrowserRouter([
   {
@@ -29,6 +30,7 @@ const router = createBrowserRouter([
         <App />
       </ProtectedRoutes>
     ),
+    errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
@@ -135,6 +137,7 @@ const router = createBrowserRouter([
         <TaskLayout />
       </ProtectedRoutes>
     ),
+    errorElement: <ErrorBoundary />,
     children: [
       {
         path: "analytics",

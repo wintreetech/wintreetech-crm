@@ -60,7 +60,7 @@ function MainLayout() {
       toast.success("Logout successful");
     } catch (e) {
       toast.error(
-        typeof e === "string" ? e : "Logout failed (cleared locally)"
+        typeof e === "string" ? e : "Logout failed (cleared locally)",
       );
     } finally {
       navigate("/login");
