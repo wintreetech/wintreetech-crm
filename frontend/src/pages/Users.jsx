@@ -48,7 +48,7 @@ function User() {
       list = list.filter(
         (u) =>
           (u.username && u.username.toLowerCase().includes(q)) ||
-          (u.email && u.email.toLowerCase().includes(q))
+          (u.email && u.email.toLowerCase().includes(q)),
       );
     }
 
@@ -81,7 +81,7 @@ function User() {
       }
 
       const { message } = await dispatch(
-        updateUser({ id: formData._id, data: formData })
+        updateUser({ id: formData._id, data: formData }),
       ).unwrap();
 
       toast.success(message || "User updated");
@@ -107,7 +107,7 @@ function User() {
       toast.success(message || "User deleted successfully");
     } catch (err) {
       toast.error(
-        typeof err === "string" ? err : err?.message || "Delete failed"
+        typeof err === "string" ? err : err?.message || "Delete failed",
       );
     }
   };
@@ -242,6 +242,10 @@ function User() {
                               "bg-orange-100 text-orange-700 dark:bg-orange-800 dark:text-orange-100",
                             management:
                               "bg-pink-100 text-pink-700 dark:bg-pink-800 dark:text-pink-100",
+                            development:
+                              "bg-teal-100 text-teal-700 dark:bg-teal-800 dark:text-teal-100",
+                            settlement:
+                              "bg-amber-100 text-amber-700 dark:bg-amber-800 dark:text-amber-100",
                           }[user.department?.toLowerCase()] || "bg-gray-400"
                         }`}
                       >

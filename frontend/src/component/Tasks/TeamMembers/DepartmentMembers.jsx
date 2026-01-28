@@ -10,6 +10,8 @@ const departmentsOrder = [
   "support",
   "finance",
   "recon",
+  "development",
+  "settlement",
   "others",
 ];
 
@@ -96,8 +98,8 @@ const DepartmentMembers = ({
                   roleLower === "superadmin" || roleLower === "admin"
                     ? "purple"
                     : roleLower === "editor"
-                    ? "green"
-                    : "blue";
+                      ? "green"
+                      : "blue";
 
                 return (
                   <MemberCard

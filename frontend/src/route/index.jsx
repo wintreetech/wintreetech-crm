@@ -49,6 +49,8 @@ const router = createBrowserRouter([
               "recon",
               "support",
               "management",
+              "development",
+              "settlement",
             ]}
           >
             <Dashboard />
@@ -108,6 +110,32 @@ const router = createBrowserRouter([
         ),
       },
 
+      // ✅ DEVELOPMENT
+      {
+        path: "development",
+        element: (
+          <ProtectedRoutes
+            allowedRoles={["user", "admin", "superadmin"]}
+            allowedDepartments={["development"]}
+          >
+            <ComingSoon title="Web development" />
+          </ProtectedRoutes>
+        ),
+      },
+
+      // ✅ SETTLEMENT
+      {
+        path: "settlement",
+        element: (
+          <ProtectedRoutes
+            allowedRoles={["user", "admin", "superadmin"]}
+            allowedDepartments={["settlement"]}
+          >
+            <ComingSoon title="settlement" />
+          </ProtectedRoutes>
+        ),
+      },
+
       // ✅ USERS
       {
         path: "users",
@@ -132,6 +160,8 @@ const router = createBrowserRouter([
           "recon",
           "support",
           "management",
+          "development",
+          "settlement",
         ]}
       >
         <TaskLayout />

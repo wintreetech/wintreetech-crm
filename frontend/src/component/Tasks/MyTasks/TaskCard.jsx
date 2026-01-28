@@ -43,6 +43,14 @@ const TaskCard = ({
     priorityClass, // ✅ computed in parent
   } = task;
 
+  // Check if current user is an assignee
+  const isMyTask = (assignees || []).some(
+    (nameOrId) =>
+      String(nameOrId).toLowerCase() ===
+        String(currentUser?.username).toLowerCase() ||
+      String(nameOrId) === String(currentUser?.id || currentUser?._id),
+  );
+
   const textClass = isCompleted
     ? "line-through text-gray-500 dark:text-gray-400"
     : "text-gray-900 dark:text-white";
@@ -183,6 +191,12 @@ const TaskCard = ({
               <p className="text-xs font-medium">{dueLabel}</p>
             </div>
           </div>
+          {/* ✅ Specific part for current user */}
+          {isMyTask && !isCompleted && (
+            <span className="text-[12px] font-bold text-primary mt-0.5 uppercase tracking-wider italic">
+              Your Task
+            </span>
+          )}
         </div>
       )}
     </Draggable>

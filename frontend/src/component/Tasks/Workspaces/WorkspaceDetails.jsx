@@ -25,6 +25,7 @@ import {
   joinWorkspaceRoom,
   leaveWorkspaceRoom,
   onWorkspaceDeleted,
+  onWorkspaceUpdated,
   registerWorkspaceSocket,
 } from "../../../socket/workspace.socket";
 import { s3Api } from "../../../api";
@@ -82,6 +83,26 @@ const WorkspaceDetails = () => {
           toast.error("This workspace has been deleted by an admin.");
           dispatch(fetchWorkspaces());
           navigate("/tasks/workspaces");
+        }
+      });
+
+      // Listen for Member Removal (Update)
+      onWorkspaceUpdated((updatedWs) => {
+        // Ensure we are talking about the current workspace
+        if (String(updatedWs.id || updatedWs._id) === String(workspace.id)) {
+          const userId = String(currentUser?.id || currentUser?._id);
+
+          // Check if I am still a member
+          const stillMember = updatedWs.members?.some(
+            (m) => String(m.id || m._id) === userId,
+          );
+
+          // If I'm not a member and not a superadmin, kick me out immediately
+          if (!stillMember && currentUser?.role !== "superadmin") {
+            toast.error("Your access to this workspace has been revoked.");
+            dispatch(fetchWorkspaces()); // Refresh list to remove it from sidebar/dashboard
+            navigate("/tasks/workspaces", { replace: true });
+          }
         }
       });
     }

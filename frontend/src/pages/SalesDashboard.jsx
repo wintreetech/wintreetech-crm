@@ -194,7 +194,7 @@ function SalesDashboard() {
 
   const currentLeads = useMemo(
     () => activeData.slice(indexOfFirstLead, indexOfLastLead),
-    [activeData, indexOfFirstLead, indexOfLastLead]
+    [activeData, indexOfFirstLead, indexOfLastLead],
   );
 
   // Keep page in range if the filter shrinks the list
@@ -212,7 +212,7 @@ function SalesDashboard() {
       console.error(
         "Error submitting form:",
         error,
-        error.response?.data || error.message
+        error.response?.data || error.message,
       );
       toast.error("Failed to submit lead.");
     }
@@ -223,7 +223,7 @@ function SalesDashboard() {
     try {
       setLoadingLeadId(leadId);
       const { message } = await dispatch(
-        updateStatus({ id: leadId, status: newStatus })
+        updateStatus({ id: leadId, status: newStatus }),
       ).unwrap();
       toast.success(message || `Lead status updated to ${newStatus}`);
     } catch (err) {
@@ -245,14 +245,14 @@ function SalesDashboard() {
 
     try {
       const { message } = await dispatch(
-        updateLead({ id, data: payload })
+        updateLead({ id, data: payload }),
       ).unwrap();
       toast.success(message || "Lead updated");
       setEditOpen(false);
       setEditingLead(null);
     } catch (err) {
       toast.error(
-        typeof err === "string" ? err : err?.message || "Update failed"
+        typeof err === "string" ? err : err?.message || "Update failed",
       );
     }
   };
@@ -279,7 +279,7 @@ function SalesDashboard() {
       toast.success(message || "Deleted");
     } catch (err) {
       toast.error(
-        typeof err === "string" ? err : err?.message || "Delete failed"
+        typeof err === "string" ? err : err?.message || "Delete failed",
       );
     }
   };
@@ -371,7 +371,7 @@ function SalesDashboard() {
             {(() => {
               const totalLeads = leads.length;
               const activeLeads = leads.filter(
-                (l) => l.status === "Active"
+                (l) => l.status === "Active",
               ).length;
               const conversionRate =
                 totalLeads > 0 ? (activeLeads / totalLeads) * 100 : 0;
@@ -431,26 +431,24 @@ function SalesDashboard() {
 
           {/* 📥 Download All Processing URLs */}
 
-          <div className="flex justify-end w-full gap-2 md:w-auto">
+          <div className="flex flex-col w-full gap-2 sm:flex-row sm:justify-end sm:w-auto">
             <button
               onClick={() => {
                 let data = [];
                 let filename = "";
 
                 if (activeTab === "merchant") {
-                  // Partner first, then Merchant
                   data = leads.map((lead) => ({
                     Partner: lead.partner,
                     Merchant: lead.companyName,
                   }));
                   filename = "Merchant_Partners.xlsx";
                 } else if (activeTab === "acquirer") {
-                  // Flatten entities into multiple rows
                   acquirers.forEach((acq) => {
                     const entities =
                       Array.isArray(acq.entityName) && acq.entityName.length
                         ? acq.entityName
-                        : [""]; // At least one row if no entities
+                        : [""];
                     entities.forEach((entity) => {
                       data.push({
                         Partner: acq.partnerName,
@@ -469,10 +467,10 @@ function SalesDashboard() {
 
                 downloadExcel(data, filename);
               }}
-              className="btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white border-none"
+              className="btn btn-sm sm:btn-sm w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white border-none flex items-center justify-center gap-2"
             >
               <FileSpreadsheet size={18} />
-              <span className="ml-1">
+              <span className="whitespace-nowrap">
                 {activeTab === "merchant"
                   ? "Download Merchants"
                   : "Download Acquirers"}
@@ -484,14 +482,14 @@ function SalesDashboard() {
                 onClick={() =>
                   window.open(
                     `${CRM_API_BASE}/processing-urls/download-all`,
-                    "_blank"
+                    "_blank",
                   )
                 }
-                className="btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white border-none"
+                className="btn btn-sm sm:btn-sm w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white border-none flex items-center justify-center gap-2"
                 title="Download all processing URLs"
               >
                 <FileSpreadsheet size={18} />
-                <span className="ml-1">Download All URLs</span>
+                <span className="whitespace-nowrap">Download All URLs</span>
               </button>
             )}
           </div>
@@ -542,7 +540,7 @@ function SalesDashboard() {
                   const canShowToggle =
                     ["Open", "Active", "Inactive"].includes(lead.status) &&
                     ["Signed Contract & Complete", "Annexture"].includes(
-                      lead.subStatus
+                      lead.subStatus,
                     );
 
                   return (
@@ -557,14 +555,15 @@ function SalesDashboard() {
     (activeTab === "merchant" ? lead.partner : lead.partnerName) === "Dreamzpay"
       ? "bg-blue-100 text-blue-700 dark:bg-blue-700 dark:text-blue-100"
       : (activeTab === "merchant" ? lead.partner : lead.partnerName) ===
-        "Transactworld"
-      ? "bg-orange-100 text-orange-700 dark:bg-orange-700 dark:text-orange-100"
-      : (activeTab === "merchant" ? lead.partner : lead.partnerName) === "Visa"
-      ? "bg-purple-100 text-purple-700 dark:bg-purple-700 dark:text-purple-100"
-      : (activeTab === "merchant" ? lead.partner : lead.partnerName) ===
-        "Mastercard"
-      ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-700 dark:text-indigo-100"
-      : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100"
+          "Transactworld"
+        ? "bg-orange-100 text-orange-700 dark:bg-orange-700 dark:text-orange-100"
+        : (activeTab === "merchant" ? lead.partner : lead.partnerName) ===
+            "Visa"
+          ? "bg-purple-100 text-purple-700 dark:bg-purple-700 dark:text-purple-100"
+          : (activeTab === "merchant" ? lead.partner : lead.partnerName) ===
+              "Mastercard"
+            ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-700 dark:text-indigo-100"
+            : "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100"
   }`}
                         >
                           {activeTab === "merchant"
@@ -589,14 +588,14 @@ function SalesDashboard() {
                                                     lead.status === "Open"
                                                       ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
                                                       : lead.status === "Active"
-                                                      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                                                      : lead.status ===
-                                                        "Inactive"
-                                                      ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                                      : lead.status ===
-                                                        "Suspended"
-                                                      ? "bg-gray-200 text-gray-700"
-                                                      : "bg-gray-100 text-gray-800"
+                                                        ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                                        : lead.status ===
+                                                            "Inactive"
+                                                          ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
+                                                          : lead.status ===
+                                                              "Suspended"
+                                                            ? "bg-gray-200 text-gray-700"
+                                                            : "bg-gray-100 text-gray-800"
                                                   }`}
                             >
                               {lead.status}
@@ -648,7 +647,7 @@ function SalesDashboard() {
                                 year: "numeric",
                                 month: "short",
                                 day: "numeric",
-                              }
+                              },
                             )}
                           </td>
 
@@ -689,7 +688,7 @@ function SalesDashboard() {
                                         onClick={() =>
                                           handleLeadStatusChange(
                                             lead._id,
-                                            "Active"
+                                            "Active",
                                           )
                                         }
                                         className="text-green-600 hover:bg-green-100"
@@ -702,7 +701,7 @@ function SalesDashboard() {
                                         onClick={() =>
                                           handleLeadStatusChange(
                                             lead._id,
-                                            "Inactive"
+                                            "Inactive",
                                           )
                                         }
                                         className="text-red-600 hover:bg-red-100"
@@ -872,7 +871,7 @@ function SalesDashboard() {
                                 year: "numeric",
                                 month: "short",
                                 day: "numeric",
-                              }
+                              },
                             )}
                           </td>
 

@@ -61,7 +61,7 @@ const TaskDetailsModal = ({ open, task, onClose }) => {
         {/* Body */}
         <div className="py-5 space-y-6 max-h-[70vh] overflow-y-auto">
           {/* Description */}
-          <div className="overflow-hidden whitespace-normal">
+          <div className="overflow-hidden whitespace-pre-wrap">
             <p className="text-gray-600 dark:text-gray-300 leading-relaxed break-words">
               {task.description || "No description added."}
             </p>

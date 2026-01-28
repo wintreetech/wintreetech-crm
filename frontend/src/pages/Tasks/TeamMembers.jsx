@@ -27,6 +27,19 @@ const TeamMembers = () => {
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState("");
   const [selectedMemberIds, setSelectedMemberIds] = useState([]);
 
+  // Filter logic for the dropdown
+  const filteredWorkspacesForDropdown = useMemo(() => {
+    if (currentUser?.role === "superadmin") return workspaces;
+
+    return workspaces.filter((ws) =>
+      (ws.members || []).some(
+        (m) =>
+          String(m.id || m._id) === String(currentUser?.id) ||
+          m.email?.toLowerCase() === currentUser?.email?.toLowerCase(),
+      ),
+    );
+  }, [workspaces, currentUser]);
+
   // Sync selected members when workspace selection changes
   useEffect(() => {
     if (!selectedWorkspaceId) {
@@ -34,7 +47,7 @@ const TeamMembers = () => {
       return;
     }
 
-    const ws = workspaces.find(
+    const ws = filteredWorkspacesForDropdown.find(
       (w) => String(w.id) === String(selectedWorkspaceId),
     );
     const existingIds = Array.isArray(ws?.members)
@@ -118,7 +131,7 @@ const TeamMembers = () => {
                     <option value="" disabled>
                       Select Workspace
                     </option>
-                    {workspaces.map((ws) => (
+                    {filteredWorkspacesForDropdown.map((ws) => (
                       <option key={ws.id} value={ws.id} className="capitalize">
                         {ws.title}
                       </option>

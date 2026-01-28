@@ -43,7 +43,7 @@ const MyTasks = () => {
       id: currentUser?.id,
       username: currentUser?.username,
     }),
-    [currentUser]
+    [currentUser],
   );
 
   // 4. Initial Mount Fetch
@@ -73,7 +73,7 @@ const MyTasks = () => {
     };
 
     const nextCols = columns.map((c) =>
-      c.id === "todo" ? { ...c, tasks: [newTask, ...(c.tasks || [])] } : c
+      c.id === "todo" ? { ...c, tasks: [newTask, ...(c.tasks || [])] } : c,
     );
 
     dispatch(setMyTasksColumns(nextCols));
@@ -89,7 +89,7 @@ const MyTasks = () => {
         columnId: modal.columnId,
         taskId: modal.task.id,
         updates: updatedTaskData,
-      })
+      }),
     );
     closeModal();
   };
@@ -104,7 +104,7 @@ const MyTasks = () => {
     try {
       dispatch(setMyTasksColumns(newCols));
       const result = dispatch(
-        createMyTasksSpace({ user, columns: newCols })
+        createMyTasksSpace({ user, columns: newCols }),
       ).unwrap();
 
       toast.success("Space created successfully");

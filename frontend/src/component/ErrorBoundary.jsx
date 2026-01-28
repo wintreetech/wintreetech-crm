@@ -1,9 +1,13 @@
 import { useRouteError, useNavigate } from "react-router-dom";
 import { Undo2, RefreshCw, AlertCircle } from "lucide-react";
+import { useSelector } from "react-redux";
+import { selectCurrentUser } from "../store/slices/Auth.slice";
 
 function ErrorBoundary() {
   const error = useRouteError();
   const navigate = useNavigate();
+
+  const currentUser = useSelector(selectCurrentUser);
 
   return (
     // bg-base-200 gives that light gray (light mode) / dark gray (dark mode) look
@@ -40,15 +44,13 @@ function ErrorBoundary() {
         {/* Action Buttons */}
         <div className="flex flex-col gap-2">
           <button
-            onClick={() => navigate(0)}
-            className="btn btn-primary w-full gap-2"
-          >
-            <RefreshCw size={18} />
-            Try Again
-          </button>
-
-          <button
-            onClick={() => navigate("/")}
+            onClick={() =>
+              navigate(
+                currentUser?.role === "superadmin"
+                  ? "/dashboard"
+                  : `/${currentUser?.department?.toLowerCase() || ""}`,
+              )
+            }
             className="btn btn-ghost w-full gap-2 text-base-content/70"
           >
             <Undo2 size={18} />

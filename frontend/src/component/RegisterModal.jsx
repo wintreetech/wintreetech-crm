@@ -188,11 +188,13 @@ const RegisterModal = ({
 
                 {currentUser?.role === "superadmin" && (
                   <>
-                    <option value="finance">Finance</option>
+                    <option value="management">Management</option>
+                    <option value="development">Development</option>
                     <option value="sales">Sales</option>
+                    <option value="finance">Finance</option>
                     <option value="recon">Recon</option>
                     <option value="support">Support</option>
-                    <option value="management">Management</option>
+                    <option value="settlement">Settlement</option>
                   </>
                 )}
 
@@ -270,8 +272,8 @@ const RegisterModal = ({
                 ? "Updating..."
                 : "Creating..."
               : mode === "edit"
-              ? "Update User"
-              : "Register"}
+                ? "Update User"
+                : "Register"}
           </button>
         </form>
       </div>

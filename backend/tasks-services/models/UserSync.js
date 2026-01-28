@@ -9,10 +9,18 @@ const userSyncSchema = new Schema(
     role: { type: String, enum: ["user", "admin", "superadmin"] },
     department: {
       type: String,
-      enum: ["sales", "finance", "recon", "support", "management"],
+      enum: [
+        "sales",
+        "finance",
+        "recon",
+        "support",
+        "management",
+        "settlement",
+        "development",
+      ],
     },
   },
-  { timestamps: true, _id: false }
+  { timestamps: true, _id: false },
 );
 
 const UserSync = model("user_sync", userSyncSchema);
