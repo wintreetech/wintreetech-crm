@@ -72,6 +72,22 @@ function ProtectedRoutes({
     return children;
   }
 
+  //  If user is denied on "/" or "/dashboard"
+  if (location.pathname === "/" || location.pathname === "/dashboard") {
+    if (userDept) {
+      return <Navigate to={`/${userDept}`} replace />;
+    }
+  }
+
+  if (
+    location.pathname === "/tasks/analytics" ||
+    location.pathname === "/tasks/members"
+  ) {
+    if (userDept) {
+      return <Navigate to="/tasks/mytasks" replace />;
+    }
+  }
+
   // Else → redirect unauthorized
   return <Navigate to="/unauthorized" replace />;
 }

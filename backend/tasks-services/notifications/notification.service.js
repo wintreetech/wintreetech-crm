@@ -3,6 +3,7 @@ import { emitEvent } from "../realtime/emitter.js";
 import { EVENTS } from "../socket/events.js";
 import { sendPushNotification } from "../utils/webPush.js";
 import PushSubscription from "../models/pushSubscription.model.js";
+import { getIO } from "../socket/index.js";
 
 export const sendNotification = async ({
   recipients,
@@ -41,6 +42,8 @@ export const sendNotification = async ({
       createdAt: new Date(),
     };
 
+    const io = getIO(); //Get the socket instance
+
     // Update DB: Find user docs and PUSH the notification into the array
     // Use Promise.all with findOneAndUpdate to ensure userId is set on creation
     await Promise.all(
@@ -60,6 +63,11 @@ export const sendNotification = async ({
           { upsert: true, new: true },
         );
 
+        // Check Socket Status
+        const userRoom = `user:${userId}`;
+        const activeConnections = io.sockets.adapter.rooms.get(userRoom);
+        const isOnline = activeConnections && activeConnections.size > 0;
+
         // Real-time emit
         emitEvent({
           room: `user:${userId}`,
@@ -67,20 +75,31 @@ export const sendNotification = async ({
           payload: notificationItem,
         });
 
-        const subRecord = await PushSubscription.findOne({ userId });
+        /// HYBRID PUSH LOGIC
+        const subRecord = await PushSubscription.find({ userId });
 
-        if (subRecord && subRecord.deviceType === "mobile") {
-          console.log(
-            `[Push] User ${userId} is on mobile. Sending Web-Push...`,
-          );
-          await sendPushNotification(userId, {
-            title,
-            body: message,
-            link: metadata?.link || "/",
-          });
+        if (subRecord.length > 0) {
+          for (const record of subRecord) {
+            const isMobile = subRecord.deviceType === "mobile";
+
+            if (isMobile || !isOnline) {
+              console.log(
+                `[Push] Sending to ${userId} (${isMobile ? "Mobile" : "Desktop Offline"})`,
+              );
+              await sendPushNotification(record.subscription, {
+                title,
+                body: message,
+                link: metadata?.link || "/",
+              });
+            } else {
+              console.log(
+                `Pushed notification to ${validRecipientIds.length} users.`,
+              );
+            }
+          }
         } else {
           console.log(
-            `Pushed notification to ${validRecipientIds.length} users.`,
+            `Subscription record is ${subRecord.length} for the user: ${userId}`,
           );
         }
       }),

@@ -13,6 +13,8 @@ import {
   ChevronRight,
   ChevronLeft,
   TextAlignJustify,
+  FileBadge,
+  CodeXml,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -125,11 +127,25 @@ function MainLayout() {
       department: "recon",
     },
     {
+      name: "Settlement",
+      icon: <FileBadge size={18} />,
+      path: "settlement",
+      roles: ["superadmin", "admin", "user"],
+      department: "settlement",
+    },
+    {
       name: "Finance",
       icon: <DollarSign size={18} />,
       path: "finance",
       roles: ["superadmin", "admin", "user"],
       department: "finance",
+    },
+    {
+      name: "Development",
+      icon: <CodeXml size={18} />,
+      path: "development",
+      roles: ["superadmin", "admin", "user"],
+      department: "development",
     },
     {
       name: "Tasks",

@@ -42,16 +42,8 @@ const router = createBrowserRouter([
         path: "dashboard",
         element: (
           <ProtectedRoutes
-            allowedRoles={["superadmin", "admin"]}
-            allowedDepartments={[
-              "sales",
-              "finance",
-              "recon",
-              "support",
-              "management",
-              "development",
-              "settlement",
-            ]}
+            allowedRoles={["superadmin"]}
+            allowedDepartments={["management"]}
           >
             <Dashboard />
           </ProtectedRoutes>
@@ -170,8 +162,19 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
     children: [
       {
+        index: true,
+        element: <Navigate to="analytics" replace />,
+      },
+      {
         path: "analytics",
-        element: <Analytics />,
+        element: (
+          <ProtectedRoutes
+            allowedRoles={["superadmin", "admin"]}
+            allowedDepartments={["management"]}
+          >
+            <Analytics />
+          </ProtectedRoutes>
+        ),
       },
       {
         path: "mytasks",
@@ -187,7 +190,11 @@ const router = createBrowserRouter([
       },
       {
         path: "members",
-        element: <TeamMembers />,
+        element: (
+          <ProtectedRoutes allowedRoles={["superadmin", "admin"]}>
+            <TeamMembers />
+          </ProtectedRoutes>
+        ),
       },
       {
         path: "notifications",

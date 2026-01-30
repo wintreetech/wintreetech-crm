@@ -343,6 +343,7 @@ function TaskLayout() {
                 className={`hidden md:flex items-center w-full px-3 py-2 rounded-lg transition hover:bg-gray-800 gap-2 ${
                   sidebarCollapsed ? "justify-center" : ""
                 }`}
+                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
               >
                 {sidebarCollapsed ? (
                   <ChevronRight size={18} />

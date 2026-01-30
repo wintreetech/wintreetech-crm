@@ -3,6 +3,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { decryptData, encryptData } from "../../utils/cryptoUtils";
 
 import { api } from "../../api.js";
+import { unsubscribeNotifications } from "../../utils/notificationManager.js";
 
 //Thunks
 export const loginUser = createAsyncThunk(
@@ -25,27 +26,32 @@ export const loginUser = createAsyncThunk(
       console.error(err);
       return rejectWithValue(err.response?.data?.message || "Login failed");
     }
-  }
+  },
 );
 
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
+      try {
+        await unsubscribeNotifications();
+      } catch (e) {
+        console.warn("Push unsubscription skipped or failed during logout", e);
+      }
       // server clears the auth cookie
       await api.post("/auth/logout");
       // also clear any local persistence you keep
-      try {
-        localStorage.removeItem("currentUser");
-      } catch {}
+      localStorage.removeItem("currentUser");
+
       return true;
     } catch (err) {
+      localStorage.removeItem("currentUser");
       // even if server fails, we’ll still clear local state in the reducer
       return rejectWithValue(
-        err?.response?.data?.message || err?.message || "Logout failed"
+        err?.response?.data?.message || err?.message || "Logout failed",
       );
     }
-  }
+  },
 );
 
 export const getUserFromStorage = createAsyncThunk(
@@ -63,7 +69,7 @@ export const getUserFromStorage = createAsyncThunk(
       console.error("Error retrieving user from localStorage:", err);
       return null;
     }
-  }
+  },
 );
 
 // State

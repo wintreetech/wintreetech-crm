@@ -17,6 +17,7 @@ import {
 import { BarChart2, DollarSign, Users, Activity } from "lucide-react";
 import { useSelector } from "react-redux";
 import { selectAllUsers } from "../store/slices/Users.slice.js";
+import { selectCurrentUser } from "../store/slices/Auth.slice.js";
 
 // Sample data
 const salesData = [
@@ -40,6 +41,7 @@ const revenueData = [
 const Dashboard = () => {
   // All users
   const allUsers = useSelector(selectAllUsers);
+  const currentUser = useSelector(selectCurrentUser);
 
   // Generate the pie data dynamically as an array of objects
   const departmentPieData = [
@@ -74,6 +76,20 @@ const Dashboard = () => {
       ).length,
       color: "#F87171",
     },
+    {
+      name: "Development",
+      value: allUsers.filter(
+        (u) => u.department?.toLowerCase() === "development",
+      ).length,
+      color: "#79c3b6",
+    },
+    {
+      name: "Settlement",
+      value: allUsers.filter(
+        (u) => u.department?.toLowerCase() === "settlement",
+      ).length,
+      color: "#79c3b6",
+    },
   ];
 
   return (
@@ -82,7 +98,7 @@ const Dashboard = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-            Welcome
+            Welcome {currentUser.username}
           </h1>
           <p className="text-gray-500 mt-1">
             Manage your CRM and all department dashboards here.
@@ -161,7 +177,7 @@ const Dashboard = () => {
           <h3 className="font-semibold text-gray-800 mb-4 dark:text-gray-500">
             Department Distribution
           </h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
                 data={departmentPieData}
@@ -175,7 +191,7 @@ const Dashboard = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Legend verticalAlign="bottom" height={36} />
+              <Legend verticalAlign="bottom" height={80} />
             </PieChart>
           </ResponsiveContainer>
         </div>
