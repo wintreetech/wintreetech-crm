@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { selectActiveWorkspace } from "../../../store/slices/Workspaces.slice";
 import { deleteTask } from "../../../store/slices/Tasks.slice";
 import { selectCurrentUser } from "../../../store/slices/Auth.slice";
+import { socket } from "../../../socket";
 
 const COLUMN_CONFIG = {
   todo: "Todo",
@@ -22,7 +23,7 @@ const serializeAttachments = (atts = []) =>
           type: a.type,
           lastModified: a.lastModified,
         }
-      : a
+      : a,
   );
 
 const KanbanBoard = ({
@@ -85,15 +86,40 @@ const KanbanBoard = ({
 
   const enrichTask = (task) => {
     const dueLabel = computeDueLabel(task.dueDate, task.isCompleted);
+
+    // Calculate age for tag cleanup (checking if older than 24 hours)
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    let shouldClearTag = false;
+
+    // Fallback logic for clearing tags
+    if (task.createdAt) {
+      const now = new Date();
+      const createdAt = new Date(task.createdAt);
+      const diffInHours = (now - createdAt) / (1000 * 60 * 60);
+      if (diffInHours > 24) shouldClearTag = true;
+    } else if (task.dueDate) {
+      if (todayStr > task.dueDate) {
+        shouldClearTag = true;
+      }
+    }
+
+    // Force a new array reference so useEffect detects the change
+    const hasNewTag = task.tags?.some((tag) => tag.toLowerCase() === "new");
+    const updatedTags =
+      hasNewTag && shouldClearTag ? [] : [...(task.tags || [])];
+
     const finalStatusColor = task.statusColor || getStatusColor(dueLabel);
     const finalTagColor =
-      task.tagColor || (task.tags?.length > 0 ? getTagColor(task.tags[0]) : "");
+      task.tagColor ||
+      (task.tags?.length > 0 ? getTagColor(updatedTags[0]) : "");
     const priorityClass =
       priorityStyles[task.priority] ||
       "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200";
 
     return {
       ...task,
+      tags: updatedTags,
       dueLabel,
       finalStatusColor,
       finalTagColor,
@@ -126,15 +152,41 @@ const KanbanBoard = ({
 
   // Sync Redux -> Local State (e.g., on mount or when another user updates via socket)
   useEffect(() => {
+    const tasksToUpdateOnBackend = [];
+
     const cleaned = initialColumns.map((col) => {
       const { title, ...rest } = col;
       return {
         ...rest,
-        tasks: rest.tasks?.map(enrichTask) || [],
+        tasks:
+          rest.tasks?.map((task) => {
+            const enriched = enrichTask(task);
+
+            // If the enrichTask logic cleared the tags, add to our backend update list
+            if (task.tags?.length > 0 && enriched.tags?.length === 0) {
+              tasksToUpdateOnBackend.push(task.id);
+            }
+            return enriched;
+          }) || [],
       };
     });
     setColumns(cleaned);
-  }, [initialColumns]);
+
+    // ✅ SOCKET TRIGGER: Update the backend if expired tags were found
+    if (tasksToUpdateOnBackend.length > 0) {
+      if (scope === "mytasks") {
+        socket.emit("mytasks:clear_expired_tags", {
+          userId: currentUser?.id || currentUser?._id,
+          taskIds: tasksToUpdateOnBackend,
+        });
+      } else {
+        socket.emit("workspace:clear_expired_tags", {
+          workspaceId: workspace?.id || workspace?._id,
+          taskIds: tasksToUpdateOnBackend,
+        });
+      }
+    }
+  }, [initialColumns, scope]);
 
   // --- HANDLERS ---
 
@@ -150,7 +202,7 @@ const KanbanBoard = ({
     const newColumns = structuredClone(columns);
     const sourceCol = newColumns.find((col) => col.id === source.droppableId);
     const destinationCol = newColumns.find(
-      (col) => col.id === destination.droppableId
+      (col) => col.id === destination.droppableId,
     );
 
     if (!sourceCol || !destinationCol) return;
@@ -180,7 +232,7 @@ const KanbanBoard = ({
     // CAPTURE DATA BEFORE DELETION FOR s3
     const sourceColumn = columns.find((c) => c.id === columnId);
     const taskToCleanup = sourceColumn?.tasks?.find(
-      (t) => String(t.id) === String(taskId)
+      (t) => String(t.id) === String(taskId),
     );
 
     if (!taskToCleanup) {
@@ -199,7 +251,7 @@ const KanbanBoard = ({
         attachmentKeys: taskToCleanup.attachments?.map((att) => att.key) || [],
         taskTitle: taskToCleanup.title,
         hasAttachments: taskToCleanup.attachments?.length > 0,
-      })
+      }),
     );
 
     // UPDATE LOCAL UI
@@ -207,7 +259,7 @@ const KanbanBoard = ({
     const col = newCols.find((c) => c.id === columnId);
     if (col) {
       col.tasks = (col.tasks || []).filter(
-        (t) => String(t.id) !== String(taskId)
+        (t) => String(t.id) !== String(taskId),
       );
       setColumns(newCols);
       onColumnsChange?.(toPersistableColumns(newCols));
@@ -246,6 +298,7 @@ const KanbanBoard = ({
               onDeleteTask={handleDeleteTask}
               onEditTask={handleEditTask}
               showEdit={showEdit}
+              scope={scope}
             />
           ))}
         </div>

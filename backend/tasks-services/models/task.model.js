@@ -7,7 +7,7 @@ const TaskSchema = new mongoose.Schema(
     description: { type: String, default: "" },
     status: {
       type: String,
-      enum: ["New"],
+      // enum: ["New"],
       required: true,
     },
     dueDate: { type: String, default: null, required: true },
@@ -17,7 +17,7 @@ const TaskSchema = new mongoose.Schema(
     assignees: { type: [String], default: [] },
     attachments: { type: [String], default: [] },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const ColumnSchema = new mongoose.Schema(
@@ -25,7 +25,7 @@ const ColumnSchema = new mongoose.Schema(
     id: { type: String, required: true },
     tasks: { type: [TaskSchema], default: [] },
   },
-  { _id: false }
+  { _id: false },
 );
 
 const MyTasksBoardSchema = new mongoose.Schema(
@@ -39,7 +39,7 @@ const MyTasksBoardSchema = new mongoose.Schema(
       default: [],
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // one board per user
