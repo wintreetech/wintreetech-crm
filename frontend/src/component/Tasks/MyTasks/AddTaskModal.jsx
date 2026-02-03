@@ -23,7 +23,7 @@ const AddTaskModal = ({
       { value: "medium", label: "Medium" },
       { value: "low", label: "Low" },
     ],
-    []
+    [],
   );
 
   // Sync state with initialTask for editing
@@ -66,7 +66,7 @@ const AddTaskModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="modal modal-open" onClick={onClose}>
+    <div className="modal modal-open">
       <div
         className="modal-box w-full max-w-lg p-0 bg-white dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}

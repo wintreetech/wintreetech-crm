@@ -29,7 +29,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 
   // Redux state
   const { processingUrls, loading, error } = useSelector(
-    (state) => state.sales
+    (state) => state.sales,
   );
 
   const urls = processingUrls || { trusted: [], ftd: [] };
@@ -39,7 +39,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   const [newUrls, setNewUrls] = useState("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   // Fetch URLs for selected lead
   useEffect(() => {
@@ -67,10 +67,9 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   }, [urls, activeTab, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-  const current = filtered.slice(
-    (page - 1) * itemsPerPage,
-    page * itemsPerPage
-  );
+  const current = [...filtered]
+    .reverse()
+    .slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   // Add new URLs
   const handleAdd = async () => {
@@ -86,7 +85,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
           leadId: lead._id,
           urls: parsed,
           type: activeTab,
-        })
+        }),
       );
       toast.success("URLs added successfully");
       setNewUrls("");
@@ -105,7 +104,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
           leadId: lead._id,
           url,
           type: activeTab,
-        })
+        }),
       ).unwrap();
       toast.success("Deleted successfully");
     } catch {
@@ -118,7 +117,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
   const handleDownload = (type) => {
     window.open(
       `${CRM_API_BASE}/processing-urls/download/${lead._id}?type=${type}`,
-      "_blank"
+      "_blank",
     );
   };
 
@@ -148,8 +147,8 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
                 lead.partner === "Dreamzpay"
                   ? "bg-blue-100 text-blue-700"
                   : lead.partner === "Transactworld"
-                  ? "bg-orange-100 text-orange-700"
-                  : "bg-gray-100 text-gray-700"
+                    ? "bg-orange-100 text-orange-700"
+                    : "bg-gray-100 text-gray-700"
               } text-xs px-3 py-2 font-medium w-fit`}
             >
               {lead.partner || "Unknown Partner"}

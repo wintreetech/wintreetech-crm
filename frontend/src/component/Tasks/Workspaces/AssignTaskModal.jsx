@@ -42,14 +42,14 @@ const AssignTaskModal = ({
       { value: "medium", label: "Medium", className: "text-orange-600" },
       { value: "low", label: "Low", className: "text-green-600" },
     ],
-    []
+    [],
   );
 
   const filteredMembers = useMemo(() => {
     const q = assignSearch.trim().toLowerCase();
     if (!q) return members;
     return members.filter((m) =>
-      (m.username || m.name || "").toLowerCase().includes(q)
+      (m.username || m.name || "").toLowerCase().includes(q),
     );
   }, [members, assignSearch]);
 
@@ -57,7 +57,7 @@ const AssignTaskModal = ({
     setSelectedMembers((prev) =>
       prev.includes(name)
         ? prev.filter((n) => n !== name)
-        : [...new Set([...prev, name])]
+        : [...new Set([...prev, name])],
     );
     setAssignError("");
   };
@@ -204,7 +204,7 @@ const AssignTaskModal = ({
   if (!open) return null;
 
   return (
-    <div className="modal modal-open" onClick={handleClose}>
+    <div className="modal modal-open">
       <div
         className="modal-box w-full max-w-xl overflow-y-scroll"
         onClick={(e) => e.stopPropagation()}
