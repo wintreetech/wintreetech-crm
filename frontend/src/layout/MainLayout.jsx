@@ -49,7 +49,7 @@ function MainLayout() {
   const currentUser = useSelector(selectCurrentUser);
 
   const showSidebar =
-    currentUser.role === "superadmin" || currentUser.role === "admin";
+    currentUser?.role === "superadmin" || currentUser?.role === "admin";
 
   const toggleSection = (value) => {
     navigate(`/${value}`);
@@ -65,7 +65,7 @@ function MainLayout() {
         typeof e === "string" ? e : "Logout failed (cleared locally)",
       );
     } finally {
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   };
 
@@ -82,6 +82,7 @@ function MainLayout() {
   };
 
   useEffect(() => {
+    if (!currentUser) return;
     dispatch(fetchUsers())
       .unwrap()
       .catch((err) => {
@@ -151,7 +152,7 @@ function MainLayout() {
       name: "Tasks",
       icon: <ClipboardList size={18} />,
       path: `${
-        currentUser.role === "superadmin" ? "tasks/analytics" : "tasks/mytasks"
+        currentUser?.role === "superadmin" ? "tasks/analytics" : "tasks/mytasks"
       }`,
       roles: ["superadmin", "admin", "user"],
     },
@@ -160,7 +161,7 @@ function MainLayout() {
   const allowedSidebarItems = sidebarItems.filter((item) => {
     if (!currentUser) return false;
     if (!item.roles.includes(currentUser.role)) return false;
-    if (currentUser.role === "superadmin") return true;
+    if (currentUser?.role === "superadmin") return true;
     if (item.department && currentUser.department !== item.department)
       return false;
     return true;
@@ -205,8 +206,8 @@ function MainLayout() {
           </h1>
           <p className="text-gray-400 text-xs truncate">
             (
-            {currentUser.department.charAt(0).toUpperCase() +
-              currentUser.department.slice(1)}
+            {currentUser?.department.charAt(0).toUpperCase() +
+              currentUser?.department.slice(1)}
             )
           </p>
         </div>

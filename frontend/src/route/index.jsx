@@ -56,7 +56,7 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoutes
             allowedRoles={["user", "admin", "superadmin"]}
-            allowedDepartments={["sales", "recon"]}
+            allowedDepartments={["sales"]}
           >
             <SalesDashboard />
           </ProtectedRoutes>

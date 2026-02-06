@@ -68,7 +68,7 @@ function TaskLayout() {
         typeof e === "string" ? e : "Logout failed (cleared locally)",
       );
     } finally {
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   };
 
@@ -96,6 +96,7 @@ function TaskLayout() {
 
   // ✅ 2. FETCH USERS & INITIAL NOTIFICATIONS
   useEffect(() => {
+    if (!currentUser) return;
     dispatch(fetchUsers())
       .unwrap()
       .catch((err) => {

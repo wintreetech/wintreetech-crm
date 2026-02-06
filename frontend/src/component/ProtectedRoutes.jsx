@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom"; // <- use react-router-dom
+import { Navigate, useLocation } from "react-router-dom"; // <- use react-router-dom
 import { decryptData } from "../utils/cryptoUtils"; // adjust the path
 
 function ProtectedRoutes({
@@ -9,6 +9,8 @@ function ProtectedRoutes({
 }) {
   const [bootstrapping, setBootstrapping] = useState(true);
   const [user, setUser] = useState(null);
+
+  const location = useLocation();
 
   useEffect(() => {
     let mounted = true;
@@ -49,7 +51,7 @@ function ProtectedRoutes({
 
   // If not logged in → redirect to login
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   // ✅ Allow superadmin full access (no department restriction)

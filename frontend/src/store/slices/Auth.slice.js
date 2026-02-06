@@ -74,10 +74,7 @@ export const getUserFromStorage = createAsyncThunk(
 
 // State
 const initialState = {
-  currentUser: {
-    username: "",
-    email: "",
-  },
+  currentUser: null,
   loading: false,
   error: null,
 };
@@ -112,6 +109,7 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(logoutUser.fulfilled, (state) => {
+        state.currentUser = null;
         state.loading = false;
         state.error = null;
       })
