@@ -1,12 +1,12 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import App from "../App";
 import {
-  SalesDashboard,
-  ReconDashboard,
-  SupportDashboard,
-  FinanceDashboard,
-  Users,
-  Dashboard,
+	SalesDashboard,
+	ReconDashboard,
+	SupportDashboard,
+	FinanceDashboard,
+	Users,
+	Dashboard,
 } from "../pages";
 import Login from "../component/Login";
 import ProtectedRoutes from "../component/ProtectedRoutes";
@@ -21,198 +21,210 @@ import Notifications from "../pages/Notifications";
 import WorkspaceDetails from "../component/Tasks/Workspaces/WorkspaceDetails";
 import Analytics from "../pages/Tasks/Analytics";
 import ErrorBoundary from "../component/ErrorBoundary";
+import ForgotPassword from "../component/ForgotPassword";
+import NewPassword from "../component/NewPassword";
 
 const router = createBrowserRouter([
-  {
-    path: "/",
-    element: (
-      <ProtectedRoutes allowedRoles={["user", "admin", "superadmin"]}>
-        <App />
-      </ProtectedRoutes>
-    ),
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
+	{
+		path: "/",
+		element: (
+			<ProtectedRoutes allowedRoles={["user", "admin", "superadmin"]}>
+				<App />
+			</ProtectedRoutes>
+		),
+		errorElement: <ErrorBoundary />,
+		children: [
+			{
+				index: true,
+				element: <Navigate to="/dashboard" replace />,
+			},
 
-      // ✅ DASHBOARD
-      {
-        path: "dashboard",
-        element: (
-          <ProtectedRoutes
-            allowedRoles={["superadmin", "admin"]}
-            allowedDepartments={[
-              "sales",
-              "finance",
-              "recon",
-              "support",
-              "management",
-              "development",
-              "settlement",
-            ]}
-          >
-            <Dashboard />
-          </ProtectedRoutes>
-        ),
-      },
+			// ✅ DASHBOARD
+			{
+				path: "dashboard",
+				element: (
+					<ProtectedRoutes
+						allowedRoles={["superadmin", "admin"]}
+						allowedDepartments={[
+							"sales",
+							"finance",
+							"recon",
+							"support",
+							"management",
+							"development",
+							"settlement",
+						]}
+					>
+						<Dashboard />
+					</ProtectedRoutes>
+				),
+			},
 
-      // ✅ SALES
-      {
-        path: "sales",
-        element: (
-          <ProtectedRoutes
-            allowedRoles={["user", "admin", "superadmin"]}
-            allowedDepartments={["sales"]}
-          >
-            <SalesDashboard />
-          </ProtectedRoutes>
-        ),
-      },
+			// ✅ SALES
+			{
+				path: "sales",
+				element: (
+					<ProtectedRoutes
+						allowedRoles={["user", "admin", "superadmin"]}
+						allowedDepartments={["sales"]}
+					>
+						<SalesDashboard />
+					</ProtectedRoutes>
+				),
+			},
 
-      // ✅ RECON
-      {
-        path: "recon",
-        element: (
-          <ProtectedRoutes
-            allowedRoles={["user", "admin", "superadmin"]}
-            allowedDepartments={["recon"]}
-          >
-            <ComingSoon title="recon" />
-          </ProtectedRoutes>
-        ),
-      },
+			// ✅ RECON
+			{
+				path: "recon",
+				element: (
+					<ProtectedRoutes
+						allowedRoles={["user", "admin", "superadmin"]}
+						allowedDepartments={["recon"]}
+					>
+						<ComingSoon title="recon" />
+					</ProtectedRoutes>
+				),
+			},
 
-      // ✅ SUPPORT
-      {
-        path: "support",
-        element: (
-          <ProtectedRoutes
-            allowedRoles={["user", "admin", "superadmin"]}
-            allowedDepartments={["support"]}
-          >
-            <ComingSoon title="support" />
-          </ProtectedRoutes>
-        ),
-      },
+			// ✅ SUPPORT
+			{
+				path: "support",
+				element: (
+					<ProtectedRoutes
+						allowedRoles={["user", "admin", "superadmin"]}
+						allowedDepartments={["support"]}
+					>
+						<ComingSoon title="support" />
+					</ProtectedRoutes>
+				),
+			},
 
-      // ✅ FINANCE
-      {
-        path: "finance",
-        element: (
-          <ProtectedRoutes
-            allowedRoles={["user", "admin", "superadmin"]}
-            allowedDepartments={["finance"]}
-          >
-            <ComingSoon title="finance" />
-          </ProtectedRoutes>
-        ),
-      },
+			// ✅ FINANCE
+			{
+				path: "finance",
+				element: (
+					<ProtectedRoutes
+						allowedRoles={["user", "admin", "superadmin"]}
+						allowedDepartments={["finance"]}
+					>
+						<ComingSoon title="finance" />
+					</ProtectedRoutes>
+				),
+			},
 
-      // ✅ DEVELOPMENT
-      {
-        path: "development",
-        element: (
-          <ProtectedRoutes
-            allowedRoles={["user", "admin", "superadmin"]}
-            allowedDepartments={["development"]}
-          >
-            <ComingSoon title="Web development" />
-          </ProtectedRoutes>
-        ),
-      },
+			// ✅ DEVELOPMENT
+			{
+				path: "development",
+				element: (
+					<ProtectedRoutes
+						allowedRoles={["user", "admin", "superadmin"]}
+						allowedDepartments={["development"]}
+					>
+						<ComingSoon title="Web development" />
+					</ProtectedRoutes>
+				),
+			},
 
-      // ✅ SETTLEMENT
-      {
-        path: "settlement",
-        element: (
-          <ProtectedRoutes
-            allowedRoles={["user", "admin", "superadmin"]}
-            allowedDepartments={["settlement"]}
-          >
-            <ComingSoon title="settlement" />
-          </ProtectedRoutes>
-        ),
-      },
+			// ✅ SETTLEMENT
+			{
+				path: "settlement",
+				element: (
+					<ProtectedRoutes
+						allowedRoles={["user", "admin", "superadmin"]}
+						allowedDepartments={["settlement"]}
+					>
+						<ComingSoon title="settlement" />
+					</ProtectedRoutes>
+				),
+			},
 
-      // ✅ USERS
-      {
-        path: "users",
-        element: (
-          <ProtectedRoutes allowedRoles={["superadmin", "admin"]}>
-            <Users />
-          </ProtectedRoutes>
-        ),
-      },
-    ],
-  },
+			// ✅ USERS
+			{
+				path: "users",
+				element: (
+					<ProtectedRoutes allowedRoles={["superadmin", "admin"]}>
+						<Users />
+					</ProtectedRoutes>
+				),
+			},
+		],
+	},
 
-  // ✅ TASK MANAGER
-  {
-    path: "tasks",
-    element: (
-      <ProtectedRoutes
-        allowedRoles={["superadmin", "admin", "user"]}
-        allowedDepartments={[
-          "sales",
-          "finance",
-          "recon",
-          "support",
-          "management",
-          "development",
-          "settlement",
-        ]}
-      >
-        <TaskLayout />
-      </ProtectedRoutes>
-    ),
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        path: "analytics",
-        element: <Analytics />,
-      },
-      {
-        path: "mytasks",
-        element: <MyTasks />,
-      },
-      {
-        path: "workspaces",
-        element: <Workspaces />,
-      },
-      {
-        path: "workspaces/:id",
-        element: <WorkspaceDetails />,
-      },
-      {
-        path: "members",
-        element: <TeamMembers />,
-      },
-      {
-        path: "notifications",
-        element: <Notifications />,
-      },
-    ],
-  },
+	// ✅ TASK MANAGER
+	{
+		path: "tasks",
+		element: (
+			<ProtectedRoutes
+				allowedRoles={["superadmin", "admin", "user"]}
+				allowedDepartments={[
+					"sales",
+					"finance",
+					"recon",
+					"support",
+					"management",
+					"development",
+					"settlement",
+				]}
+			>
+				<TaskLayout />
+			</ProtectedRoutes>
+		),
+		errorElement: <ErrorBoundary />,
+		children: [
+			{
+				path: "analytics",
+				element: <Analytics />,
+			},
+			{
+				path: "mytasks",
+				element: <MyTasks />,
+			},
+			{
+				path: "workspaces",
+				element: <Workspaces />,
+			},
+			{
+				path: "workspaces/:id",
+				element: <WorkspaceDetails />,
+			},
+			{
+				path: "members",
+				element: <TeamMembers />,
+			},
+			{
+				path: "notifications",
+				element: <Notifications />,
+			},
+		],
+	},
 
-  // ✅ LOGIN PAGE
-  {
-    path: "/login",
-    element: <Login />,
-  },
+	// ✅ LOGIN PAGE
+	{
+		path: "/login",
+		element: <Login />,
+	},
 
-  // ✅ UNAUTHORIZED
-  {
-    path: "/unauthorized",
-    element: <Unauthorized />,
-  },
+	{
+		path: "/forgot-password",
+		element: <ForgotPassword />,
+	},
 
-  // ✅ CATCH ALL (NOT FOUND)
-  {
-    path: "*",
-    element: <NotFound />,
-  },
+	{
+		path: "/reset-password",
+		element: <NewPassword />,
+	},
+
+	// ✅ UNAUTHORIZED
+	{
+		path: "/unauthorized",
+		element: <Unauthorized />,
+	},
+
+	// ✅ CATCH ALL (NOT FOUND)
+	{
+		path: "*",
+		element: <NotFound />,
+	},
 ]);
 
 export default router;
