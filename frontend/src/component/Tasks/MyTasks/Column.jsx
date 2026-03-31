@@ -8,6 +8,7 @@ const Column = ({
   onDeleteTask,
   onEditTask,
   showEdit,
+  scope,
 }) => {
   return (
     <div className="bg-gray-100 rounded-xl p-2 flex flex-col gap-2 h-full dark:bg-gray-900 overflow-hidden">
@@ -42,6 +43,7 @@ const Column = ({
                 onDelete={onDeleteTask}
                 onEdit={onEditTask}
                 showEdit={showEdit}
+                scope={scope}
               />
             ))}
             {provided.placeholder}

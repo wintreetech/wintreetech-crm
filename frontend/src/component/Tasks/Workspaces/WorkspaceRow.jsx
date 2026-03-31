@@ -42,10 +42,10 @@ const WorkspaceRow = ({
   const canDelete =
     currentUser?.id &&
     createdBy?.id &&
-    String(currentUser.id) === String(createdBy.id) &&
+    String(currentUser?.id) === String(createdBy.id) &&
     currentUser?.username &&
     createdBy?.username &&
-    String(currentUser.username).toLowerCase() ===
+    String(currentUser?.username).toLowerCase() ===
       String(createdBy.username).toLowerCase();
 
   const showAssign = hasPermission && members.length !== 0;

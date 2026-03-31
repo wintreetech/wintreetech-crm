@@ -68,7 +68,7 @@ function TaskLayout() {
         typeof e === "string" ? e : "Logout failed (cleared locally)",
       );
     } finally {
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   };
 
@@ -96,6 +96,7 @@ function TaskLayout() {
 
   // ✅ 2. FETCH USERS & INITIAL NOTIFICATIONS
   useEffect(() => {
+    if (!currentUser) return;
     dispatch(fetchUsers())
       .unwrap()
       .catch((err) => {
@@ -343,6 +344,7 @@ function TaskLayout() {
                 className={`hidden md:flex items-center w-full px-3 py-2 rounded-lg transition hover:bg-gray-800 gap-2 ${
                   sidebarCollapsed ? "justify-center" : ""
                 }`}
+                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
               >
                 {sidebarCollapsed ? (
                   <ChevronRight size={18} />

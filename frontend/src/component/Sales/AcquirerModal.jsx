@@ -26,8 +26,8 @@ function AcquirerFormModal({
 				entityName: Array.isArray(initialData.entityName)
 					? initialData.entityName
 					: initialData.entityName
-					? [initialData.entityName]
-					: [],
+						? [initialData.entityName]
+						: [],
 				acquirerContact: initialData.contactPerson || "",
 				acquirerEmail: initialData.contactEmail || "",
 			});
@@ -189,7 +189,7 @@ function AcquirerFormModal({
 							Contact Email
 						</label>
 						<input
-							type="email"
+							type="text"
 							name="acquirerEmail"
 							value={formData.acquirerEmail}
 							onChange={handleChange}

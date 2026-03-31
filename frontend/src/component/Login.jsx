@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
@@ -22,6 +22,23 @@ const Login = () => {
 	const loading = useSelector(selectAuthLoading);
 	const currentUser = useSelector(selectCurrentUser);
 
+	// Redirect if already logged in
+
+	useEffect(() => {
+		if (!currentUser) return;
+
+		if (currentUser.role === "superadmin") {
+			navigate("/dashboard", { replace: true });
+			return;
+		}
+
+		if (currentUser.department) {
+			navigate(`/${currentUser.department.toLowerCase()}`, {
+				replace: true,
+			});
+		}
+	}, [currentUser, navigate]);
+
 	const handleChange = (e) => {
 		const { name, value } = e.target;
 		setLoginData({ ...loginData, [name]: value });
@@ -35,11 +52,9 @@ const Login = () => {
 			toast.success(message || "Login successful");
 
 			if (user.role === "superadmin") {
-				navigate("/dashboard");
-			} else if (user.role === "admin") {
-				navigate(`/${user.department.toLowerCase()}`);
+				navigate("/dashboard", { replace: true });
 			} else {
-				navigate(`/${user.department.toLowerCase()}`);
+				navigate(`/${user.department.toLowerCase()}`, { replace: true });
 			}
 		} catch (err) {
 			console.error(err);

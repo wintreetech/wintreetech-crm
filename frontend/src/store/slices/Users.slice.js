@@ -10,10 +10,10 @@ export const fetchUsers = createAsyncThunk(
       return res?.data?.data?.slice().reverse() || [];
     } catch (err) {
       return rejectWithValue(
-        err?.response?.data?.message || "Failed to fetch users"
+        err?.response?.data?.message || "Failed to fetch users",
       );
     }
-  }
+  },
 );
 
 export const registerUser = createAsyncThunk(
@@ -27,10 +27,10 @@ export const registerUser = createAsyncThunk(
       };
     } catch (err) {
       return rejectWithValue(
-        err?.response?.data?.message || "Failed to register user"
+        err?.response?.data?.message || "Failed to register user",
       );
     }
-  }
+  },
 );
 
 export const updateUser = createAsyncThunk(
@@ -44,10 +44,10 @@ export const updateUser = createAsyncThunk(
       };
     } catch (err) {
       return rejectWithValue(
-        err?.response?.data?.message || err?.message || "Failed to update user"
+        err?.response?.data?.message || err?.message || "Failed to update user",
       );
     }
-  }
+  },
 );
 
 export const deleteUser = createAsyncThunk(
@@ -61,10 +61,10 @@ export const deleteUser = createAsyncThunk(
       };
     } catch (err) {
       return rejectWithValue(
-        err?.response?.data?.message || "Failed to delete user"
+        err?.response?.data?.message || "Failed to delete user",
       );
     }
-  }
+  },
 );
 
 // State
@@ -83,7 +83,7 @@ const usersSlice = createSlice({
       state.list = action.payload || [];
     },
     clearUsers: (state, action) => {
-      (state.list = []), (state.error = null);
+      ((state.list = []), (state.error = null));
       state.loading = false;
     },
   },

@@ -40,13 +40,18 @@ const AcquirerSchema = new Schema(
 			required: true,
 			trim: true,
 			lowercase: true,
-			match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
+		},
+		// 🟢 Status Field
+		status: {
+			type: String,
+			enum: ["Processing", "Active", "Inactive"],
+			default: "Processing",
 		},
 	},
 	{
 		timestamps: true,
 		versionKey: false,
-	}
+	},
 );
 
 /* 🔐 Prevent duplicate bank + entity */

@@ -12,7 +12,7 @@ const checklistItemSchema = new Schema(
 		isCompleted: { type: Boolean, default: false },
 		completedAt: { type: Date },
 	},
-	{ _id: true }
+	{ _id: true },
 );
 
 /* -------------------------
@@ -60,7 +60,7 @@ const AcquirerDataSchema = new Schema(
 			default: [],
 		},
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
 export default model("AcquirerData", AcquirerDataSchema);

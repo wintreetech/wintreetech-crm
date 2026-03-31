@@ -6,6 +6,7 @@ import {
 	getAcquirerById,
 	updateAcquirer,
 	deleteAcquirer,
+	updateAcquirerStatus,
 } from "../../controller/acquirer.controller.js";
 
 import {
@@ -32,6 +33,8 @@ router.get("/", getAllAcquirers);
 router.get("/:id", getAcquirerById);
 router.post("/", createAcquirer);
 router.put("/:id", updateAcquirer);
+// Activate / Deactivate
+router.patch("/:id/status", updateAcquirerStatus);
 router.delete("/:id", deleteAcquirer);
 
 /* --------------------------------------
@@ -52,12 +55,12 @@ router.post(
 	"/data/:bankName/section/:sectionName/upload",
 	upload.array("files", 10),
 	uploadAcquirerDocument,
-	multerErrorHandler
+	multerErrorHandler,
 );
 
 router.get(
 	"/data/:bankName/section/:sectionName",
-	getAcquirerDocumentsBySection
+	getAcquirerDocumentsBySection,
 );
 router.post("/data/download", generateAcquirerDownloadLink);
 router.delete("/data/document/:documentId", deleteAcquirerDocument);

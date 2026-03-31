@@ -22,13 +22,30 @@ const TaskCard = ({
   onEdit,
   columnId,
   showEdit = false,
+  scope, //For locking the tasks for other users
 }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   const currentUser = useSelector(selectCurrentUser);
 
+  // Define our ID aliases for comparison
+  const currentUserId = String(currentUser?.id || currentUser?._id);
+  const taskOwnerId = String(task.userId || "");
+
+  // Determine if the user is authorized (Assigned OR Owner)
+  const isAuthorized =
+    task.assignees?.length === 0 ||
+    taskOwnerId === currentUserId ||
+    (task.assignees || []).some(
+      (name) =>
+        String(name).trim().toLowerCase() ===
+        String(currentUser?.username).trim().toLowerCase(),
+    );
+
   const hasPermission =
     currentUser?.role === "admin" || currentUser?.role === "superadmin";
+
+  const canDrag = scope === "mytasks" || isAuthorized;
 
   const {
     title,
@@ -71,7 +88,7 @@ const TaskCard = ({
     (assignees || []).length > 3 ? (assignees || []).length - 3 : 0;
 
   return (
-    <Draggable draggableId={task.id} index={index}>
+    <Draggable draggableId={task.id} index={index} isDragDisabled={!canDrag}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -81,7 +98,9 @@ const TaskCard = ({
             dueLabel === "Overdue"
               ? "bg-red-100 border border-red-500 dark:bg-red-900 dark:border-red-500"
               : "bg-white border border-gray-200"
-          } dark:bg-gray-800 p-4 gap-3 dark:border-gray-700/50 cursor-grab transition duration-100 ease-in-out ${
+          } dark:bg-gray-800 p-4 gap-3 dark:border-gray-700/50 ${
+            canDrag ? "cursor-grab" : "cursor-default opacity-85 shadow-none"
+          } transition duration-100 ease-in-out ${
             snapshot.isDragging ? "shadow-2xl border-primary" : "shadow-none"
           }`}
         >
@@ -192,7 +211,7 @@ const TaskCard = ({
             </div>
           </div>
           {/* ✅ Specific part for current user */}
-          {isMyTask && !isCompleted && (
+          {(isMyTask || task.assignees?.length === 0) && !isCompleted && (
             <span className="text-[12px] font-bold text-primary mt-0.5 uppercase tracking-wider italic">
               Your Task
             </span>

@@ -1,22 +1,40 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import { forgotPassword } from "../store/slices/Auth.slice";
+import { useDispatch } from "react-redux";
 
 const ForgotPassword = () => {
 	const [email, setEmail] = useState("");
-	const [status, setStatus] = useState("idle");
-	// idle | success | error
+	const [submitting, setSubmitting] = useState(false);
+	const [error, setError] = useState("");
 
-	const handleSubmit = (e) => {
+	const dispatch = useDispatch();
+
+	const handleSubmit = async (e) => {
 		e.preventDefault();
+		const normalizedEmail = email.trim();
 
-		// 🔹 UI-only logic
-		if (email === "example@mail.com") {
-			setStatus("success");
-			toast.success("Reset link sent to your email");
-		} else {
-			setStatus("error");
-			toast.error("Email not found");
+		if (!normalizedEmail) {
+			setError("Email is required.");
+			return;
+		}
+
+		setSubmitting(true);
+		setError("");
+
+		try {
+			const res = await dispatch(
+				forgotPassword({ email: normalizedEmail }),
+			).unwrap();
+			toast.success(res.message || "Reset link sent");
+			setEmail("");
+		} catch (err) {
+			const errorMessage = err || "Failed to send reset link";
+			setError(errorMessage);
+			toast.error(errorMessage);
+		} finally {
+			setSubmitting(false);
 		}
 	};
 
@@ -34,43 +52,49 @@ const ForgotPassword = () => {
 						</p>
 					</div>
 
-					{status === "success" ? (
-						<div className="bg-green-50 border border-green-200 text-green-700 rounded-lg p-4 text-center">
-							Reset link has been sent to your email.
-						</div>
-					) : (
-						<form onSubmit={handleSubmit} className="flex flex-col gap-5">
-							<div>
-								<label className="block text-gray-700 mb-2 dark:text-gray-300">
-									Email
-								</label>
-								<input
-									type="email"
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-									placeholder="example@mail.com"
-									required
-									className="w-full px-4 py-3 rounded-lg border border-gray-300
+					<form
+						onSubmit={handleSubmit}
+						noValidate
+						className="flex flex-col gap-5"
+					>
+						<div>
+							<label
+								htmlFor="forgot-email"
+								className="block text-gray-700 mb-2 dark:text-gray-300"
+							>
+								Email
+							</label>
+							<input
+								id="forgot-email"
+								name="email"
+								type="email"
+								value={email}
+								onChange={(e) => {
+									setEmail(e.target.value);
+									if (error) setError("");
+								}}
+								placeholder="example@mail.com"
+								required
+								className="w-full px-4 py-3 rounded-lg border border-gray-300
                   focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
                   dark:bg-gray-900 dark:border-gray-700 dark:text-white"
-								/>
-							</div>
+							/>
+						</div>
 
-							{status === "error" && (
-								<p className="text-sm text-red-600">
-									No account found with this email.
-								</p>
+						{error && <p className="text-sm text-red-600">{error}</p>}
+
+						<button
+							type="submit"
+							disabled={submitting}
+							className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{submitting ? (
+								<span className="loading loading-ring loading-xl"></span>
+							) : (
+								"Send Reset Link"
 							)}
-
-							<button
-								type="submit"
-								className="w-full bg-indigo-600 text-white py-3 rounded-lg
-                font-semibold hover:bg-indigo-700 transition"
-							>
-								Send Reset Link
-							</button>
-						</form>
-					)}
+						</button>
+					</form>
 
 					<Link
 						to="/login"

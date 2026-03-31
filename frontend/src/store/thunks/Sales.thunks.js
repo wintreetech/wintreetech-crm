@@ -7,324 +7,327 @@ import { workflowPhases } from "../../component/Sales/LeadWorkflowModal";
 
 // Helper to key documents cache by company + phase
 export const docKey = ({ companyName, subStatus }) =>
-  `${(companyName || "").toLowerCase()} :: ${(subStatus || "").toLowerCase()}`;
+	`${(companyName || "").toLowerCase()} :: ${(subStatus || "").toLowerCase()}`;
 
 // ------- Documents ops start -------
 
 // Fetch all the company documents data
 export const fetchDocuments = createAsyncThunk(
-  "sales/fetchDocuments",
-  async ({ companyName, subStatus }, { rejectWithValue }) => {
-    try {
-      const res = await api.get(
-        `/sales/${encodeURIComponent(companyName)}/${encodeURIComponent(
-          subStatus
-        )}`
-      );
+	"sales/fetchDocuments",
+	async ({ companyName, subStatus }, { rejectWithValue }) => {
+		try {
+			const res = await api.get(
+				`/sales/${encodeURIComponent(companyName)}/${encodeURIComponent(
+					subStatus,
+				)}`,
+			);
 
-      let docs = [];
-      if (res.data?.upload) {
-        docs = res.data.upload;
-      } else if (res.data?.companyName) {
-        docs = (res.data.companyData || []).flatMap((d) => d.upload || []);
-      }
-      return { key: docKey({ companyName, subStatus }), docs };
-    } catch (err) {
-      if (err?.response?.status === 404) {
-        // treat not-found as empty
-        return { key: docKey({ companyName, subStatus }), docs: [] };
-      }
-      return rejectWithValue(
-        err?.response?.data?.error || "Failed to fetch company documents."
-      );
-    }
-  }
+			let docs = [];
+			if (res.data?.upload) {
+				docs = res.data.upload;
+			} else if (res.data?.companyName) {
+				docs = (res.data.companyData || []).flatMap((d) => d.upload || []);
+			}
+			return { key: docKey({ companyName, subStatus }), docs };
+		} catch (err) {
+			if (err?.response?.status === 404) {
+				// treat not-found as empty
+				return { key: docKey({ companyName, subStatus }), docs: [] };
+			}
+			return rejectWithValue(
+				err?.response?.data?.error || "Failed to fetch company documents.",
+			);
+		}
+	},
 );
 
 // Upload a document
 export const uploadDocuments = createAsyncThunk(
-  "sales/uploadDocuments",
-  async (
-    { files, companyName, subStatus, uploadedBy, leadId },
-    { rejectWithValue }
-  ) => {
-    try {
-      // Pre-check (optional)
-      let isFirstUpload = false;
-      try {
-        const checkRes = await api.get(
-          `/sales/${encodeURIComponent(companyName)}/${encodeURIComponent(
-            subStatus
-          )}`
-        );
-        const existing =
-          checkRes.data?.upload ||
-          (checkRes.data?.companyData || []).flatMap((d) => d.upload || []);
-        if (!existing || existing.length === 0) isFirstUpload = true;
-      } catch (err) {
-        if (err?.response?.status === 404) isFirstUpload = true;
-      }
+	"sales/uploadDocuments",
+	async (
+		{ files, companyName, subStatus, uploadedBy, leadId },
+		{ rejectWithValue },
+	) => {
+		try {
+			// Pre-check (optional)
+			let isFirstUpload = false;
+			try {
+				const checkRes = await api.get(
+					`/sales/${encodeURIComponent(companyName)}/${encodeURIComponent(
+						subStatus,
+					)}`,
+				);
+				const existing =
+					checkRes.data?.upload ||
+					(checkRes.data?.companyData || []).flatMap((d) => d.upload || []);
+				if (!existing || existing.length === 0) isFirstUpload = true;
+			} catch (err) {
+				if (err?.response?.status === 404) isFirstUpload = true;
+			}
 
-      // ✅ Build FormData properly
-      const formData = new FormData();
-      formData.append("companyName", companyName);
-      formData.append("subStatus", subStatus);
-      formData.append("uploadedBy", uploadedBy);
+			// ✅ Build FormData properly
+			const formData = new FormData();
+			formData.append("companyName", companyName);
+			formData.append("subStatus", subStatus);
+			formData.append("uploadedBy", uploadedBy);
 
-      // ⚠️ Append files correctly — the key *must* match multer.array("files")
-      for (const file of files) {
-        formData.append("files", file);
-      }
+			// ⚠️ Append files correctly — the key *must* match multer.array("files")
+			for (const file of files) {
+				formData.append("files", file);
+			}
 
-      // ✅ Upload
-      const uploadRes = await api.post(`/sales/upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+			// ✅ Upload
+			const uploadRes = await api.post(`/sales/upload`, formData, {
+				headers: { "Content-Type": "multipart/form-data" },
+			});
 
-      // Fetch ALL data to check for Locks
-      const listRes = await api.get(
-        `/sales/docs/${encodeURIComponent(companyName)}`
-      );
-      const backendData = listRes.data?.companyData || listRes.data || [];
+			// Fetch ALL data to check for Locks
+			const listRes = await api.get(
+				`/sales/docs/${encodeURIComponent(companyName)}`,
+			);
+			const backendData = listRes.data?.companyData || listRes.data || [];
 
-      // Look for Signed Contract phase in the fetched data
-      const sccPhase = backendData.find(
-        (p) => p.subStatus === "Signed Contract & Complete"
-      );
+			// Look for Signed Contract phase in the fetched data
+			const sccPhase = backendData.find(
+				(p) => p.subStatus === "Signed Contract & Complete",
+			);
 
-      const isSCCLocked = sccPhase?.upload?.length > 0;
+			const isSCCLocked = sccPhase?.upload?.length > 0;
 
-      // If locked, keep SCC. If not, set to the phase we just uploaded to.
-      const finalSubStatus = isSCCLocked
-        ? "Signed Contract & Complete"
-        : subStatus;
+			// If locked, keep SCC. If not, set to the phase we just uploaded to.
+			const finalSubStatus = isSCCLocked
+				? "Signed Contract & Complete"
+				: subStatus;
 
-      await api.put(`/sales/${leadId}`, { subStatus: finalSubStatus });
+			await api.put(`/sales/${leadId}`, { subStatus: finalSubStatus });
 
-      // 7️⃣ Return data
-      // We find the specific docs for the view
-      const currentPhaseDocs =
-        backendData.find((d) => d.subStatus === subStatus)?.upload || [];
+			// 7️⃣ Return data
+			// We find the specific docs for the view
+			const currentPhaseDocs =
+				backendData.find((d) => d.subStatus === subStatus)?.upload || [];
 
-      return {
-        key: docKey({ companyName, subStatus }),
-        docs: currentPhaseDocs,
-        isFirstUpload,
-        leadId,
-        subStatus: finalSubStatus,
-        message: uploadRes.data?.message || "File(s) uploaded successfully",
-      };
-    } catch (err) {
-      console.error("❌ Upload error:", err);
-      return rejectWithValue(
-        err?.response?.data?.error ||
-          err?.response?.data?.message ||
-          "File upload failed"
-      );
-    }
-  }
+			return {
+				key: docKey({ companyName, subStatus }),
+				docs: currentPhaseDocs,
+				isFirstUpload,
+				leadId,
+				subStatus: finalSubStatus,
+				message: uploadRes.data?.message || "File(s) uploaded successfully",
+			};
+		} catch (err) {
+			console.error("❌ Upload error:", err);
+			return rejectWithValue(
+				err?.response?.data?.error ||
+					err?.response?.data?.message ||
+					"File upload failed",
+			);
+		}
+	},
 );
 
 // Download a document
 export const downloadDocuments = createAsyncThunk(
-  "sales/downloadDocuments",
-  async ({ id, fileUrl, fileName }, { rejectWithValue }) => {
-    try {
-      // Step 1️ — Get signed URL from backend
-      const { data } = await api.post("/sales/download", { fileUrl });
-      const { downloadUrl } = data;
+	"sales/downloadDocuments",
+	async ({ id, fileUrl, fileName }, { rejectWithValue }) => {
+		try {
+			// Step 1️ — Get signed URL from backend
+			const { data } = await api.post("/sales/download", { fileUrl });
+			const { downloadUrl } = data;
 
-      if (!downloadUrl) throw new Error("No download URL received");
+			if (!downloadUrl) throw new Error("No download URL received");
 
-      // Step 2️ — Fetch file as blob
-      const fileResponse = await axios.get(downloadUrl, {
-        responseType: "blob",
-      });
+			// Step 2️ — Fetch file as blob
+			const fileResponse = await axios.get(downloadUrl, {
+				responseType: "blob",
+			});
 
-      // Step 3️ — Trigger browser download
-      const blob = new Blob([fileResponse.data]);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", fileName || "file");
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+			// Step 3️ — Trigger browser download
+			const blob = new Blob([fileResponse.data]);
+			const url = window.URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+			link.setAttribute("download", fileName || "file");
+			document.body.appendChild(link);
+			link.click();
+			link.remove();
+			window.URL.revokeObjectURL(url);
 
-      toast.success(`File downloaded successfully!`);
+			toast.success(`File downloaded successfully!`);
 
-      // Return ID or any metadata to reducer
-      return { id, fileName };
-    } catch (error) {
-      console.error("❌ Download failed:", error);
-      toast.error("Unable to download file. Please try again.");
+			// Return ID or any metadata to reducer
+			return { id, fileName };
+		} catch (error) {
+			console.error("❌ Download failed:", error);
+			toast.error("Unable to download file. Please try again.");
 
-      return rejectWithValue(error.message || "Download failed");
-    }
-  }
+			return rejectWithValue(error.message || "Download failed");
+		}
+	},
 );
 
 // Delete a document
 export const deleteDocument = createAsyncThunk(
-  "sales/deleteDocument",
-  async (
-    { id, companyName, subStatus, uploadedBy, leadId },
-    { rejectWithValue }
-  ) => {
-    try {
-      // 1️⃣ Delete the document
-      const res = await api.delete(`/sales/document/${id}`);
-      if (!res.data?.success) {
-        return rejectWithValue(res.data?.error || "Failed to delete document.");
-      }
+	"sales/deleteDocument",
+	async (
+		{ id, companyName, subStatus, uploadedBy, leadId },
+		{ rejectWithValue },
+	) => {
+		try {
+			// 1️⃣ Delete the document
+			const res = await api.delete(`/sales/document/${id}`);
+			if (!res.data?.success) {
+				return rejectWithValue(res.data?.error || "Failed to delete document.");
+			}
 
-      const listRes = await api.get(
-        `/sales/docs/${encodeURIComponent(companyName)}`
-      );
+			const listRes = await api.get(
+				`/sales/docs/${encodeURIComponent(companyName)}`,
+			);
 
-      const backendData = listRes.data?.companyData || listRes.data || [];
+			const backendData = listRes.data?.companyData || listRes.data || [];
 
-      const allDocuments = workflowPhases.map((phase) => {
-        const found = backendData.find(
-          (p) => p.subStatus.toLowerCase() === phase.title.toLowerCase()
-        );
+			const allDocuments = workflowPhases.map((phase) => {
+				const found = backendData.find(
+					(p) => p.subStatus.toLowerCase() === phase.title.toLowerCase(),
+				);
 
-        return {
-          subStatus: phase.title,
-          upload: found?.upload || [],
-        };
-      });
+				return {
+					subStatus: phase.title,
+					upload: found?.upload || [],
+				};
+			});
 
-      // 3️⃣ NEW SUBSTATUS LOGIC (shared)
-      const newSubStatus = determineNewSubStatus(allDocuments);
+			// 3️⃣ NEW SUBSTATUS LOGIC (shared)
+			const newSubStatus = determineNewSubStatus(allDocuments);
 
-      // 4️⃣ Update lead
-      await api.put(`/sales/${leadId}`, { subStatus: newSubStatus });
+			// 4️⃣ Update lead
+			await api.put(`/sales/${leadId}`, { subStatus: newSubStatus });
 
-      // 5️⃣ Return payload for reducer
-      return {
-        id,
-        key: docKey({ companyName, subStatus, uploadedBy }),
-        companyName,
-        subStatus: newSubStatus,
-        leadId,
-      };
-    } catch (err) {
-      console.error("error while deleting document", err.message, err);
-      return rejectWithValue(
-        err?.response?.data?.error || "Something went wrong while deleting."
-      );
-    }
-  }
+			// 5️⃣ Return payload for reducer
+			return {
+				id,
+				key: docKey({ companyName, subStatus, uploadedBy }),
+				companyName,
+				subStatus: newSubStatus,
+				leadId,
+			};
+		} catch (err) {
+			console.error("error while deleting document", err.message, err);
+			return rejectWithValue(
+				err?.response?.data?.error || "Something went wrong while deleting.",
+			);
+		}
+	},
 );
 
 export const determineNewSubStatus = (allDocuments) => {
-  const LOCKED_PHASE = "Signed Contract & Complete";
-  const FIRST_PHASE = "Under Discussion";
+	const LOCKED_PHASE = "Signed Contract & Complete";
+	const FIRST_PHASE = "Under Discussion";
 
-  // Helper to get doc count for a specific phase
-  const getCount = (title) =>
-    allDocuments.find((p) => p.subStatus === title)?.upload?.length || 0;
+	// Helper to get doc count for a specific phase
+	const getCount = (title) =>
+		allDocuments.find((p) => p.subStatus === title)?.upload?.length || 0;
 
-  // 1️⃣ Lock Check: If SCC has documents, status MUST be SCC
-  if (getCount(LOCKED_PHASE) > 0) {
-    return LOCKED_PHASE;
-  }
+	// 1️⃣ Lock Check: If SCC has documents, status MUST be SCC
+	if (getCount(LOCKED_PHASE) > 0) {
+		return LOCKED_PHASE;
+	}
 
-  // 2️⃣ Find the latest phase that has documents (Iterate backwards)
-  // We assume workflowPhases is imported or available here
-  const lastActivePhase = [...workflowPhases].reverse().find((phase) => {
-    return getCount(phase.title) > 0;
-  });
+	// 2️⃣ Find the latest phase that has documents (Iterate backwards)
+	// We assume workflowPhases is imported or available here
+	const lastActivePhase = [...workflowPhases].reverse().find((phase) => {
+		return getCount(phase.title) > 0;
+	});
 
-  // 3️⃣ Return found phase OR default to first phase if everything is empty
-  return lastActivePhase ? lastActivePhase.title : FIRST_PHASE;
+	// 3️⃣ Return found phase OR default to first phase if everything is empty
+	return lastActivePhase ? lastActivePhase.title : FIRST_PHASE;
 };
 
 // ------- Documents ops end -------
 
 // ------- Lead ops start -------
 export const updateLead = createAsyncThunk(
-  "sales/updateLead",
-  async ({ id, data }, { rejectWithValue }) => {
-    try {
-      const res = await api.put(`/sales/${id}`, data);
-      return {
-        lead: res.data?.data, // updated lead from backend
-        message: res.data?.message || "Lead updated",
-      };
-    } catch (err) {
-      console.error(err);
-      return rejectWithValue(
-        err?.response?.data?.message || err?.message || "Failed to update lead"
-      );
-    }
-  }
+	"sales/updateLead",
+	async ({ id, data }, { rejectWithValue }) => {
+		try {
+			const res = await api.put(`/sales/${id}`, data);
+			return {
+				lead: res.data?.data, // updated lead from backend
+				message: res.data?.message || "Lead updated",
+			};
+		} catch (err) {
+			console.error(err);
+			return rejectWithValue(
+				err?.response?.data?.message || err?.message || "Failed to update lead",
+			);
+		}
+	},
 );
 
 // Fetch processing URLs for a lead
 export const fetchProcessingUrls = createAsyncThunk(
-  "sales/fetchProcessingUrls",
-  async (leadId, { rejectWithValue }) => {
-    try {
-      const { data } = await api.get(`/processing-urls/${leadId}`);
-      return {
-        leadId,
-        trustedUrls: data?.data?.trustedUrls || [],
-        ftdUrls: data?.data?.ftdUrls || [],
-      };
-    } catch (err) {
-      return rejectWithValue(
-        err?.response?.data?.message || "Failed to load processing URLs"
-      );
-    }
-  }
+	"sales/fetchProcessingUrls",
+	async (leadId, { rejectWithValue }) => {
+		try {
+			const { data } = await api.get(`/processing-urls/${leadId}`);
+			return {
+				leadId,
+				trustedUrls: data?.data?.trustedUrls || [],
+				ftdUrls: data?.data?.ftdUrls || [],
+				forexUrls: data?.data?.forexUrls || [],
+			};
+		} catch (err) {
+			return rejectWithValue(
+				err?.response?.data?.message || "Failed to load processing URLs",
+			);
+		}
+	},
 );
 
 // Add new processing URLs
 export const addProcessingUrls = createAsyncThunk(
-  "sales/addProcessingUrls",
-  async ({ leadId, urls, type }, { rejectWithValue }) => {
-    try {
-      const { data } = await api.post(`/processing-urls/${leadId}`, {
-        urls,
-        type,
-      });
+	"sales/addProcessingUrls",
+	async ({ leadId, urls, type }, { rejectWithValue }) => {
+		try {
+			const { data } = await api.post(`/processing-urls/${leadId}`, {
+				urls,
+				type,
+			});
 
-      return {
-        leadId,
-        trustedUrls: data?.data?.trustedUrls || [],
-        ftdUrls: data?.data?.ftdUrls || [],
-      };
-    } catch (err) {
-      return rejectWithValue(
-        err?.response?.data?.message || "Failed to add URLs"
-      );
-    }
-  }
+			return {
+				leadId,
+				trustedUrls: data?.data?.trustedUrls || [],
+				ftdUrls: data?.data?.ftdUrls || [],
+				forexUrls: data?.data?.forexUrls || [],
+			};
+		} catch (err) {
+			return rejectWithValue(
+				err?.response?.data?.message || "Failed to add URLs",
+			);
+		}
+	},
 );
 
 // Delete a processing URL
 export const deleteProcessingUrl = createAsyncThunk(
-  "sales/deleteProcessingUrl",
-  async ({ leadId, url, type }, { rejectWithValue }) => {
-    try {
-      const { data } = await api.delete(`/processing-urls/${leadId}`, {
-        data: { url, type },
-      });
+	"sales/deleteProcessingUrl",
+	async ({ leadId, url, type }, { rejectWithValue }) => {
+		try {
+			const { data } = await api.delete(`/processing-urls/${leadId}`, {
+				data: { url, type },
+			});
 
-      return {
-        leadId,
-        trustedUrls: data?.data?.trustedUrls || [],
-        ftdUrls: data?.data?.ftdUrls || [],
-      };
-    } catch (err) {
-      return rejectWithValue(
-        err?.response?.data?.message || "Failed to delete URL"
-      );
-    }
-  }
+			return {
+				leadId,
+				trustedUrls: data?.data?.trustedUrls || [],
+				ftdUrls: data?.data?.ftdUrls || [],
+				forexUrls: data?.data?.forexUrls || [],
+			};
+		} catch (err) {
+			return rejectWithValue(
+				err?.response?.data?.message || "Failed to delete URL",
+			);
+		}
+	},
 );
 
 // ------- Lead ops end -------

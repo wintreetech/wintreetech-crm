@@ -6,6 +6,7 @@ export const EVENTS = {
     SAVE_BOARD: "mytasks:save_board",
     DELETE_TASK: "mytasks:delete_task",
     UPDATE_TASK: "mytasks:update_task",
+    CLEAR_EXPIRED_TAGS: "mytasks:clear_expired_tags",
 
     BOARD_SYNC: "mytasks:board_sync",
   },
@@ -19,6 +20,7 @@ export const EVENTS = {
     BOARD_SYNC: "workspace:board_sync",
     DELETE_WORKSPACE: "workspace:delete_workspace",
     UPDATE_WORKSPACE: "workspace:updated",
+    CLEAR_EXPIRED_TAGS: "workspace:clear_expired_tags",
   },
 
   NOTIFICATION: {

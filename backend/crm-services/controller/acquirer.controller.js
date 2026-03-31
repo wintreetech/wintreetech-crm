@@ -17,6 +17,7 @@ export const createAcquirer = async (req, res) => {
 			entityName: entityNames, // array of entities
 			acquirerContact,
 			acquirerEmail,
+			status,
 		} = req.body;
 
 		// 🔒 Validate
@@ -43,33 +44,47 @@ export const createAcquirer = async (req, res) => {
 		const entities = entityNames.map(normalize);
 
 		// 🔍 Check if an acquirer already exists for this bank
-		let acquirer = await AcquirerModel.findOne({ bankName });
+		// let acquirer = await AcquirerModel.findOne({ bankName });
 
-		if (acquirer) {
-			// Merge entities, avoid duplicates
-			acquirer.entityName = Array.from(
-				new Set([...acquirer.entityName, ...entities])
-			);
-			acquirer.partnerName = partner; // optionally update partner if changed
-			acquirer.contactPerson = contactPerson;
-			acquirer.contactEmail = contactEmail;
+		// if (acquirer) {
+		// 	// Merge entities, avoid duplicates
+		// 	acquirer.entityName = Array.from(
+		// 		new Set([...acquirer.entityName, ...entities]),
+		// 	);
+		// 	acquirer.partnerName = partner; // optionally update partner if changed
+		// 	acquirer.contactPerson = contactPerson;
+		// 	acquirer.contactEmail = contactEmail;
 
-			await acquirer.save();
+		// 	await acquirer.save();
 
-			return res.status(200).json({
-				success: true,
-				message: "Acquirer updated with new entities",
-				data: acquirer,
+		// 	return res.status(200).json({
+		// 		success: true,
+		// 		message: "Acquirer updated with new entities",
+		// 		data: acquirer,
+		// 	});
+		// }
+
+		// Check duplicate only if same bank + same entity combination already exists
+		const existing = await AcquirerModel.findOne({
+			bankName,
+			entityName: { $in: entities },
+		});
+
+		if (existing) {
+			return res.status(409).json({
+				success: false,
+				message: "Acquirer already exists for this bank and entity",
 			});
 		}
 
 		// 💾 Create new acquirer record
-		acquirer = await AcquirerModel.create({
+		const acquirer = await AcquirerModel.create({
 			bankName,
 			partnerName: partner,
 			entityName: entities,
 			contactPerson,
 			contactEmail,
+			status: status || "Inactive",
 		});
 
 		return res.status(201).json({
@@ -153,6 +168,7 @@ export const updateAcquirer = async (req, res) => {
 			entityName,
 			acquirerContact,
 			acquirerEmail,
+			status,
 		} = req.body;
 
 		const acquirer = await AcquirerModel.findById(id);
@@ -188,7 +204,7 @@ export const updateAcquirer = async (req, res) => {
 		if (acquirerContact) acquirer.contactPerson = normalize(acquirerContact);
 		if (acquirerEmail)
 			acquirer.contactEmail = normalize(acquirerEmail).toLowerCase();
-
+		if (status) acquirer.status = status;
 		await acquirer.save();
 
 		return res.status(200).json({
@@ -239,6 +255,47 @@ export const deleteAcquirer = async (req, res) => {
 		return res.status(500).json({
 			success: false,
 			message: "Failed to delete acquirer",
+			error: err.message,
+		});
+	}
+};
+
+export const updateAcquirerStatus = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { status } = req.body;
+
+		const validStatuses = ["Processing", "Active", "Inactive"];
+
+		if (!validStatuses.includes(status)) {
+			return res.status(400).json({
+				success: false,
+				message: "Invalid status value",
+			});
+		}
+
+		const acquirer = await AcquirerModel.findById(id);
+
+		if (!acquirer) {
+			return res.status(404).json({
+				success: false,
+				message: "Acquirer not found",
+			});
+		}
+
+		acquirer.status = status;
+		await acquirer.save();
+
+		return res.status(200).json({
+			success: true,
+			message: "Status updated successfully",
+			data: acquirer,
+		});
+	} catch (err) {
+		console.error("Update Status Error:", err);
+		return res.status(500).json({
+			success: false,
+			message: "Failed to update status",
 			error: err.message,
 		});
 	}

@@ -25,8 +25,16 @@ const ProcessingUrlSchema = new Schema(
 				maxlength: [5000, "URL cannot exceed 5000 characters"],
 			},
 		],
+
+		forexUrls: [
+			{
+				type: String,
+				trim: true,
+				maxlength: [5000, "URL cannot exceed 5000 characters"],
+			},
+		],
 	},
-	{ timestamps: true }
+	{ timestamps: true },
 );
 
 // ✅ Ensure one record per company

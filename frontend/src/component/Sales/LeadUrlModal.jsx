@@ -32,14 +32,15 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 		(state) => state.sales,
 	);
 
-	const urls = processingUrls || { trusted: [], ftd: [] };
+	const urls = processingUrls || { trusted: [], ftd: [], forex: [] };
 
 	// Local UI state
 	const [activeTab, setActiveTab] = useState("trusted");
+	const [selectedUrls, setSelectedUrls] = useState([]);
 	const [newUrls, setNewUrls] = useState("");
 	const [search, setSearch] = useState("");
 	const [page, setPage] = useState(1);
-	const itemsPerPage = 5;
+	const itemsPerPage = 10;
 
 	// Fetch URLs for selected lead
 	useEffect(() => {
@@ -67,10 +68,9 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 	}, [urls, activeTab, search]);
 
 	const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-	const current = filtered.slice(
-		(page - 1) * itemsPerPage,
-		page * itemsPerPage,
-	);
+	const current = [...filtered]
+		.reverse()
+		.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
 	// Add new URLs
 	const handleAdd = async () => {
@@ -120,6 +120,59 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 			`${CRM_API_BASE}/processing-urls/download/${lead._id}?type=${type}`,
 			"_blank",
 		);
+	};
+
+	const handleSelect = (url) => {
+		setSelectedUrls((prev) =>
+			prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url],
+		);
+	};
+
+	const handleSelectAll = () => {
+		const allUrls = filtered;
+
+		if (selectedUrls.length === allUrls.length) {
+			setSelectedUrls([]); // unselect all
+		} else {
+			setSelectedUrls(allUrls); // select all
+		}
+	};
+
+	const handleDeleteSelected = async () => {
+		try {
+			for (const url of selectedUrls) {
+				await dispatch(
+					deleteProcessingUrl({
+						leadId: lead._id,
+						url,
+						type: activeTab,
+					}),
+				).unwrap();
+			}
+
+			setSelectedUrls([]);
+			toast.success("Selected URLs deleted");
+		} catch (err) {
+			console.error(err);
+			toast.error("Failed to delete selected URLs");
+		}
+	};
+
+	const handleDeleteAll = async () => {
+		try {
+			await dispatch(
+				deleteProcessingUrl({
+					leadId: lead._id,
+					type: activeTab,
+				}),
+			).unwrap();
+
+			setSelectedUrls([]);
+			toast.success("All URLs deleted");
+		} catch (err) {
+			console.error(err);
+			toast.error("Failed to delete all URLs");
+		}
 	};
 
 	if (!isOpen || !lead) return null;
@@ -177,6 +230,14 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 							</button>
 						)}
 						<button
+							onClick={() => handleDownload("forex")}
+							className="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white border-none"
+							title="Download Forex Excel"
+						>
+							<FileSpreadsheet size={18} />
+							<span className="ml-1">Forex</span>
+						</button>
+						<button
 							onClick={onClose}
 							className="btn btn-sm btn-circle hover:bg-gray-200 hover:text-black transition-colors"
 							title="Close"
@@ -198,6 +259,7 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 						checked={activeTab === "trusted"}
 						onChange={() => {
 							setActiveTab("trusted");
+							setSelectedUrls([]); // important
 							setPage(1);
 						}}
 					/>
@@ -218,6 +280,19 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 							/>
 						</>
 					)}
+
+					{/* Forex tab */}
+					<input
+						type="radio"
+						name="processing_tabs"
+						className="tab"
+						aria-label="Forex"
+						checked={activeTab === "forex"}
+						onChange={() => {
+							setActiveTab("forex");
+							setPage(1);
+						}}
+					/>
 				</div>
 
 				{/* Add URLs */}
@@ -233,8 +308,8 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 						className="btn btn-primary w-full mt-3 rounded-lg"
 						disabled={loading}
 					>
-						<Plus size={16} /> Add {activeTab === "trusted" ? "Trusted" : "FTD"}{" "}
-						URLs
+						<Plus size={16} /> Add{" "}
+						{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} URLs URLs
 					</button>
 				</div>
 
@@ -254,6 +329,39 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 						}}
 					/>
 				</div>
+				{/* Select All + Delete Buttons */}
+				{current.length > 0 && (
+					<div className="flex items-center justify-between mb-3">
+						<div className="flex items-center gap-2">
+							<input
+								type="checkbox"
+								className="checkbox checkbox-sm"
+								checked={
+									filtered.length > 0 && selectedUrls.length === filtered.length
+								}
+								onChange={handleSelectAll}
+							/>
+
+							{selectedUrls.length > 0 ? (
+								<span className="text-sm text-gray-600">
+									{selectedUrls.length} selected
+								</span>
+							) : (
+								<span className="text-sm text-gray-600">Select All</span>
+							)}
+						</div>
+
+						<button
+							onClick={handleDeleteSelected}
+							className="btn btn-sm bg-red-600 text-white"
+							disabled={selectedUrls.length === 0}
+						>
+							{selectedUrls.length === filtered.length
+								? `Delete All (${selectedUrls.length})`
+								: `Delete Selected (${selectedUrls.length})`}
+						</button>
+					</div>
+				)}
 
 				{/* List */}
 				<div className="max-h-[55vh] sm:max-h-[45vh] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg">
@@ -266,6 +374,13 @@ const LeadUrlModal = ({ isOpen, onClose, lead }) => {
 								className="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
 							>
 								<div className="flex items-center gap-2 w-10/12 truncate">
+									<input
+										type="checkbox"
+										className="checkbox checkbox-sm"
+										checked={selectedUrls.includes(url)}
+										onChange={() => handleSelect(url)}
+									/>
+
 									<LinkIcon size={16} className="text-blue-500 shrink-0" />
 									<span className="truncate text-gray-700 dark:text-gray-300">
 										{url}

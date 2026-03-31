@@ -1,6 +1,7 @@
 import Workspace from "../models/workspace.model.js";
 import { sendNotification } from "../notifications/notification.service.js";
 import { emitEvent } from "../realtime/emitter.js";
+import { clearExpiredTagsInBoard } from "../utils/taskCleanup.js";
 import { EVENTS } from "./events.js";
 
 export const registrWorkspaceSocket = (socket) => {
@@ -139,6 +140,37 @@ export const registrWorkspaceSocket = (socket) => {
         });
       } catch (error) {
         socket.emit("error", { message: error.message });
+      }
+    },
+  );
+
+  socket.on(
+    EVENTS.WORKSPACE.CLEAR_EXPIRED_TAGS,
+    async ({ workspaceId, taskIds }) => {
+      try {
+        console.log("Request recieved for tags clearing Workspace");
+
+        if (!workspaceId || !Array.isArray(taskIds) || taskIds.length === 0)
+          return;
+
+        const board = await Workspace.findById(workspaceId);
+        if (!board) return;
+
+        const updated = clearExpiredTagsInBoard(board, taskIds);
+
+        if (updated) {
+          await board.save();
+          emitEvent({
+            room: `workspace:${workspaceId}`,
+            event: EVENTS.WORKSPACE.BOARD_SYNC,
+            payload: { columns: board.columns },
+          });
+          console.log(
+            `[Workspace] Cleared tags for ${taskIds.length} tasks in ${workspaceId}`,
+          );
+        }
+      } catch (error) {
+        console.error("Workspace tag cleanup error:", error);
       }
     },
   );

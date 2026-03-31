@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
+import { useParams, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { resetPassword } from "../store/slices/Auth.slice";
 
 const NewPassword = () => {
 	const [password, setPassword] = useState("");
@@ -8,8 +11,11 @@ const NewPassword = () => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirm, setShowConfirm] = useState(false);
 	const [success, setSuccess] = useState(false);
+	const { token } = useParams();
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
 
-	const handleSubmit = (e) => {
+	const handleSubmit = async (e) => {
 		e.preventDefault();
 
 		if (password !== confirmPassword) {
@@ -17,9 +23,18 @@ const NewPassword = () => {
 			return;
 		}
 
-		// UI-only success
-		setSuccess(true);
-		toast.success("Password updated successfully");
+		try {
+			const res = await dispatch(resetPassword({ token, password })).unwrap();
+
+			toast.success(res.message || "Password updated");
+			setSuccess(true);
+
+			setTimeout(() => {
+				navigate("/login");
+			}, 2000);
+		} catch (err) {
+			toast.error(err);
+		}
 	};
 
 	return (

@@ -36,14 +36,23 @@ export const addProcessingUrls = async (req, res) => {
 		if (!Array.isArray(urls) || urls.length === 0) {
 			return res.status(400).json({ message: "URLs array is required" });
 		}
-		if (type && !["trusted", "ftd"].includes(type)) {
-			return res
-				.status(400)
-				.json({ message: "Type must be 'trusted' or 'ftd'" });
+
+		const allowedTypes = ["trusted", "ftd", "forex"];
+
+		if (type && !allowedTypes.includes(type)) {
+			return res.status(400).json({
+				message: "Type must be 'trusted', 'ftd', or 'forex'",
+			});
 		}
 
 		// normalize type (default to trusted)
-		const key = type === "ftd" ? "ftdUrls" : "trustedUrls";
+		const fieldMap = {
+			trusted: "trustedUrls",
+			ftd: "ftdUrls",
+			forex: "forexUrls",
+		};
+
+		const key = fieldMap[type || "trusted"];
 
 		// validate company exists
 		const company = await SalesModel.findById(companyId);
@@ -54,8 +63,8 @@ export const addProcessingUrls = async (req, res) => {
 			new Set(
 				urls
 					.map((u) => (typeof u === "string" ? u.trim() : ""))
-					.filter((u) => u.length > 0)
-			)
+					.filter((u) => u.length > 0),
+			),
 		);
 
 		let record = await ProcessingUrlModel.findOne({ company: companyId });
@@ -64,6 +73,7 @@ export const addProcessingUrls = async (req, res) => {
 				company: companyId,
 				trustedUrls: [],
 				ftdUrls: [],
+				forexUrls: [],
 			});
 		}
 
@@ -74,9 +84,12 @@ export const addProcessingUrls = async (req, res) => {
 			record[key] = [...record[key], ...toAdd];
 			// ensure overall uniqueness in arrays (just in case)
 			record.trustedUrls = Array.from(
-				new Set(record.trustedUrls.map((u) => u.trim()))
+				new Set(record.trustedUrls.map((u) => u.trim())),
 			);
 			record.ftdUrls = Array.from(new Set(record.ftdUrls.map((u) => u.trim())));
+			record.forexUrls = Array.from(
+				new Set((record.forexUrls || []).map((u) => u.trim())),
+			);
 			await record.save();
 			return res
 				.status(200)
@@ -103,7 +116,13 @@ export const deleteProcessingUrls = async (req, res) => {
 		const { companyId } = req.params;
 		const { url, type } = req.body;
 
-		const key = type === "ftd" ? "ftdUrls" : "trustedUrls";
+		const fieldMap = {
+			trusted: "trustedUrls",
+			ftd: "ftdUrls",
+			forex: "forexUrls",
+		};
+
+		const key = fieldMap[type || "trusted"];
 
 		const record = await ProcessingUrlModel.findOne({ company: companyId });
 		if (!record)
@@ -154,8 +173,13 @@ export const downloadProcessingUrls = async (req, res) => {
 			return res.status(404).json({ success: false, message: "No URLs found" });
 
 		// 🔍 3. Select URLs based on type
-		const urls =
-			type === "ftd" ? record.ftdUrls || [] : record.trustedUrls || [];
+		const fieldMap = {
+			trusted: record.trustedUrls || [],
+			ftd: record.ftdUrls || [],
+			forex: record.forexUrls || [],
+		};
+
+		const urls = fieldMap[type || "trusted"];
 
 		if (!urls.length)
 			return res
@@ -192,7 +216,7 @@ export const downloadProcessingUrls = async (req, res) => {
 		res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
 		res.setHeader(
 			"Content-Type",
-			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 		);
 
 		// ✅ Write file to response
@@ -256,6 +280,17 @@ export const downloadAllProcessingUrls = async (req, res) => {
 					type: "FTD",
 				});
 			});
+
+			// Forex URLs
+			(record.forexUrls || []).forEach((url) => {
+				sheet.addRow({
+					merchant,
+					partner,
+					url,
+					processing,
+					type: "Forex",
+				});
+			});
 		});
 
 		// 🗓️ 5. File name
@@ -266,7 +301,7 @@ export const downloadAllProcessingUrls = async (req, res) => {
 		res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
 		res.setHeader(
 			"Content-Type",
-			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+			"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 		);
 
 		await workbook.xlsx.write(res);

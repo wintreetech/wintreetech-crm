@@ -13,11 +13,19 @@ router.post("/save-subscription", async (req, res) => {
     const { userId, subscription, deviceType } = req.body;
     console.log(`[Backend] Received subscription request for User: ${userId}`);
 
+    // Subscription object is required to prevent 'null' entries
+    if (!subscription || !subscription.endpoint) {
+      return res
+        .status(400)
+        .json({ message: "Subscription data with endpoint is required" });
+    }
+
+    // Update based on the unique endpoint.
     await PushSubscription.findOneAndUpdate(
-      { userId },
+      { "subscription.endpoint": subscription.endpoint },
       {
         userId,
-        subscription: subscription || null,
+        subscription,
         deviceType: deviceType || "mobile",
       },
       { upsert: true, new: true },
@@ -28,6 +36,19 @@ router.post("/save-subscription", async (req, res) => {
     });
   } catch (error) {
     console.error("Save Subscription Error:", error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Unsubscribe route for logout
+router.post("/unsubscribe", async (req, res) => {
+  try {
+    const { endpoint } = req.body;
+    if (endpoint) {
+      await PushSubscription.deleteOne({ "subscription.endpoint": endpoint });
+    }
+    res.status(200).json({ message: "Unsubscribed successfully" });
+  } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
