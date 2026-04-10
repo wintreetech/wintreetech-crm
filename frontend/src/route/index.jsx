@@ -5,6 +5,7 @@ import {
 	ReconDashboard,
 	SupportDashboard,
 	FinanceDashboard,
+	DevelopmentDashboard,
 	Users,
 	Dashboard,
 } from "../pages";
@@ -112,7 +113,7 @@ const router = createBrowserRouter([
 						allowedRoles={["user", "admin", "superadmin"]}
 						allowedDepartments={["development"]}
 					>
-						<ComingSoon title="Web development" />
+						<DevelopmentDashboard />
 					</ProtectedRoutes>
 				),
 			},

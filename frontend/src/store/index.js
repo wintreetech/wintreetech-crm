@@ -3,6 +3,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/Auth.slice.js";
 import usersReducer from "./slices/Users.slice.js";
 import salesReducer from "./slices/Sales.slice.js";
+import developmentReducer from "./slices/Development.slice.js";
 import taskReducer from "./slices/Tasks.slice.js";
 import workspaceReducer from "./slices/Workspaces.slice.js";
 import acquirerReducer from "./slices/Acquirer.slice";
@@ -19,6 +20,7 @@ export const store = configureStore({
     auth: authReducer,
     users: usersReducer,
     sales: salesReducer,
+    development: developmentReducer,
     tasks: taskReducer,
     workspaces: workspaceReducer,
     notifications: notificationReducer,
