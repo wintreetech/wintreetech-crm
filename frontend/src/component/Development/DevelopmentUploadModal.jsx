@@ -9,6 +9,7 @@ import { uploadDevelopmentDocuments } from "../../store/thunks/Development.thunk
 function DevelopmentUploadModal({ title, isOpen, onClose, record }) {
   const dispatch = useDispatch();
   const [files, setFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   const MAX_FILES = 10;
 
   const currentUser = useSelector(selectCurrentUser);
@@ -22,8 +23,8 @@ function DevelopmentUploadModal({ title, isOpen, onClose, record }) {
 
   const loading = bucket?.loading ?? false;
 
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files);
+  const setSelectedFiles = (selectedFiles) => {
+    if (!selectedFiles.length) return;
 
     if (selectedFiles.length > MAX_FILES) {
       toast.error(`You can upload a maximum of ${MAX_FILES} files at once.`);
@@ -31,6 +32,32 @@ function DevelopmentUploadModal({ title, isOpen, onClose, record }) {
     }
 
     setFiles(selectedFiles);
+  };
+
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    setSelectedFiles(selectedFiles);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFiles = Array.from(e.dataTransfer?.files || []);
+    setSelectedFiles(droppedFiles);
   };
 
   const handleUpload = async () => {
@@ -82,8 +109,13 @@ function DevelopmentUploadModal({ title, isOpen, onClose, record }) {
 
         <label
           htmlFor={`development-file-upload-${title}`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
           className={`flex flex-col w-full border-2 border-dashed rounded-xl cursor-pointer transition-colors duration-300 ${
-            files.length
+            isDragging
+              ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/20"
+              : files.length
               ? "border-green-400 bg-green-50"
               : "border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-700/20 hover:bg-gray-100 dark:hover:bg-gray-700/40"
           }`}
